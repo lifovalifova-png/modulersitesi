@@ -13,9 +13,10 @@ interface QuickQuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   listing: Listing;
+  onSuccess?: () => void;
 }
 
-export default function QuickQuoteModal({ isOpen, onClose, listing }: QuickQuoteModalProps) {
+export default function QuickQuoteModal({ isOpen, onClose, listing, onSuccess }: QuickQuoteModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -78,6 +79,7 @@ export default function QuickQuoteModal({ isOpen, onClose, listing }: QuickQuote
       */
 
       setStatus('success');
+      onSuccess?.();
 
       // Reset form after 3 seconds and close modal
       setTimeout(() => {

@@ -1,104 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, MapPin, Clock, Flame } from 'lucide-react';
+import { toast } from 'sonner';
 import QuickQuoteModal from './QuickQuoteModal';
-
-interface Listing {
-  id: number;
-  title: string;
-  location: string;
-  price: string;
-  originalPrice?: string;
-  image: string;
-  category: string;
-  urgent: boolean;
-  discount?: number;
-}
-
-const flashDeals: Listing[] = [
-  {
-    id: 1,
-    title: "Kütahya'da 2 Adet Konteyner - ACİL SATILIK",
-    location: 'Kütahya',
-    price: '145.000 ₺',
-    originalPrice: '180.000 ₺',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop',
-    category: 'Yaşam Konteynerleri',
-    urgent: true,
-    discount: 20
-  },
-  {
-    id: 2,
-    title: '80 m² Prefabrik Ev - Sıfır',
-    location: 'Ankara',
-    price: '320.000 ₺',
-    image: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=300&fit=crop',
-    category: 'Prefabrik',
-    urgent: false
-  },
-  {
-    id: 3,
-    title: 'Tiny House 35 m² - Mobilyalı',
-    location: 'İzmir',
-    price: '280.000 ₺',
-    originalPrice: '320.000 ₺',
-    image: 'https://images.unsplash.com/photo-1587061949409-02df41d5e562?w=400&h=300&fit=crop',
-    category: 'Tiny House',
-    urgent: true,
-    discount: 12
-  },
-  {
-    id: 4,
-    title: 'Çelik Konstrüksiyon Depo 200 m²',
-    location: 'Bursa',
-    price: '450.000 ₺',
-    image: 'https://images.unsplash.com/photo-1565610222536-ef125c59da2e?w=400&h=300&fit=crop',
-    category: 'Çelik Yapılar',
-    urgent: false
-  },
-  {
-    id: 5,
-    title: '2. El Şantiye Konteyneri - 6m',
-    location: 'İstanbul',
-    price: '75.000 ₺',
-    originalPrice: '95.000 ₺',
-    image: 'https://images.unsplash.com/photo-1494145904049-0dca59b4bbad?w=400&h=300&fit=crop',
-    category: '2. El',
-    urgent: true,
-    discount: 21
-  },
-  {
-    id: 6,
-    title: 'Ahşap Bungalov 60 m² - Doğal',
-    location: 'Antalya',
-    price: '520.000 ₺',
-    image: 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=400&h=300&fit=crop',
-    category: 'Ahşap Yapılar',
-    urgent: false
-  },
-  {
-    id: 7,
-    title: 'Özel Proje Villa Tipi Prefabrik',
-    location: 'Muğla',
-    price: '890.000 ₺',
-    image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop',
-    category: 'Özel Projeler',
-    urgent: false
-  },
-  {
-    id: 8,
-    title: 'Konteyner Ofis - Hazır Teslimat',
-    location: 'Kocaeli',
-    price: '185.000 ₺',
-    originalPrice: '210.000 ₺',
-    image: 'https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=400&h=300&fit=crop',
-    category: 'Yaşam Konteynerleri',
-    urgent: true,
-    discount: 12
-  }
-];
+import { FLASH_DEALS, type FlashDeal } from '../data/flashDeals';
 
 export default function FlashDealsCarousel() {
-  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [selectedListing, setSelectedListing] = useState<FlashDeal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -122,17 +29,20 @@ export default function FlashDealsCarousel() {
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 320;
       scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
+        left: direction === 'left' ? -320 : 320,
+        behavior: 'smooth',
       });
     }
   };
 
-  const openQuoteModal = (listing: Listing) => {
+  const openQuoteModal = (listing: FlashDeal) => {
     setSelectedListing(listing);
     setIsModalOpen(true);
+  };
+
+  const handleSuccess = () => {
+    toast.success('Teklif talebiniz alındı! En kısa sürede sizinle iletişime geçeceğiz.');
   };
 
   return (
@@ -154,7 +64,7 @@ export default function FlashDealsCarousel() {
             </div>
           </div>
 
-          {/* Navigation Buttons - Desktop */}
+          {/* Navigation Buttons */}
           <div className="hidden md:flex gap-2">
             <button
               onClick={() => scroll('left')}
@@ -183,14 +93,14 @@ export default function FlashDealsCarousel() {
           </div>
         </div>
 
-        {/* Carousel Container */}
+        {/* Carousel */}
         <div className="relative">
           <div
             ref={scrollRef}
             className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {flashDeals.map((listing) => (
+            {FLASH_DEALS.map((listing) => (
               <div
                 key={listing.id}
                 className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow snap-start"
@@ -224,7 +134,7 @@ export default function FlashDealsCarousel() {
                     {listing.title}
                   </h3>
                   <div className="flex items-center text-gray-500 text-sm mb-3">
-                    <MapPin className="w-4 h-4 mr-1" />
+                    <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
                     {listing.location}
                   </div>
                   <div className="flex items-center justify-between mb-4">
@@ -252,11 +162,8 @@ export default function FlashDealsCarousel() {
 
           {/* Scroll Indicators - Mobile */}
           <div className="flex justify-center gap-1 mt-4 md:hidden">
-            {flashDeals.slice(0, 5).map((_, index) => (
-              <div
-                key={index}
-                className="w-2 h-2 rounded-full bg-gray-300"
-              />
+            {FLASH_DEALS.slice(0, 5).map((_, index) => (
+              <div key={index} className="w-2 h-2 rounded-full bg-gray-300" />
             ))}
           </div>
         </div>
@@ -268,6 +175,7 @@ export default function FlashDealsCarousel() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           listing={selectedListing}
+          onSuccess={handleSuccess}
         />
       )}
     </section>
