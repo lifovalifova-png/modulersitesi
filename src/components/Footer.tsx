@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Building2, Mail, Phone, MapPin, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { SITE_CONFIG } from '../config/site';
 
 export default function Footer() {
   return (
@@ -84,15 +85,15 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <MapPin className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                <span>Maslak Mah. AOS 55. Sk. 42 Maslak, Sarıyer/İstanbul</span>
+                <span>{SITE_CONFIG.address}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                <span>0850 123 45 67</span>
+                <span>{SITE_CONFIG.phone}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                <span>info@modulerpazar.com</span>
+                <span>{SITE_CONFIG.email}</span>
               </li>
             </ul>
           </div>

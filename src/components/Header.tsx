@@ -1,16 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Building2, ChevronDown, Search, User, Phone } from 'lucide-react';
-
-const categories = [
-  { name: 'Prefabrik', slug: 'prefabrik' },
-  { name: 'Çelik Yapılar', slug: 'celik-yapilar' },
-  { name: 'Yaşam Konteynerleri', slug: 'yasam-konteynerleri' },
-  { name: '2. El', slug: 'ikinci-el' },
-  { name: 'Özel Projeler', slug: 'ozel-projeler' },
-  { name: 'Ahşap Yapılar', slug: 'ahsap-yapilar' },
-  { name: 'Tiny House', slug: 'tiny-house' },
-];
+import { CATEGORIES } from '../data/categories';
+import { SITE_CONFIG } from '../config/site';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,7 +15,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <span className="flex items-center gap-2">
             <Phone className="w-4 h-4" />
-            <span className="hidden sm:inline">Destek Hattı:</span> 0850 123 45 67
+            <span className="hidden sm:inline">Destek Hattı:</span> {SITE_CONFIG.phone}
           </span>
           <Link to="/satici-formu" className="hover:underline">
             Ücretsiz İlan Ver
@@ -109,7 +101,7 @@ export default function Header() {
                   onMouseEnter={() => setCategoryDropdownOpen(true)}
                   onMouseLeave={() => setCategoryDropdownOpen(false)}
                 >
-                  {categories.map((cat) => (
+                  {CATEGORIES.map((cat) => (
                     <Link
                       key={cat.slug}
                       to={`/kategori/${cat.slug}`}
@@ -121,7 +113,7 @@ export default function Header() {
                 </div>
               )}
             </div>
-            {categories.map((cat) => (
+            {CATEGORIES.map((cat) => (
               <Link
                 key={cat.slug}
                 to={`/kategori/${cat.slug}`}
@@ -147,7 +139,7 @@ export default function Header() {
             </Link>
             <div className="pt-2 border-t border-gray-200 mt-2">
               <p className="text-sm text-gray-500 mb-2">Kategoriler</p>
-              {categories.map((cat) => (
+              {CATEGORIES.map((cat) => (
                 <Link
                   key={cat.slug}
                   to={`/kategori/${cat.slug}`}

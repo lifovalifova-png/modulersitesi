@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Building, Container, Home, Hammer, TreePine, Recycle, Star } from 'lucide-react';
+import { ArrowRight, Building, Container, Home, Hammer, TreePine, Recycle, Star, LucideIcon } from 'lucide-react';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
+import { CATEGORIES } from '../data/categories';
 
-const categories = [
-  { name: 'Prefabrik', slug: 'prefabrik', icon: Building, color: 'bg-blue-500', count: 234 },
-  { name: 'Çelik Yapılar', slug: 'celik-yapilar', icon: Hammer, color: 'bg-gray-600', count: 156 },
-  { name: 'Yaşam Konteynerleri', slug: 'yasam-konteynerleri', icon: Container, color: 'bg-orange-500', count: 189 },
-  { name: '2. El', slug: 'ikinci-el', icon: Recycle, color: 'bg-amber-500', count: 312 },
-  { name: 'Özel Projeler', slug: 'ozel-projeler', icon: Star, color: 'bg-purple-500', count: 87 },
-  { name: 'Ahşap Yapılar', slug: 'ahsap-yapilar', icon: TreePine, color: 'bg-green-600', count: 143 },
-  { name: 'Tiny House', slug: 'tiny-house', icon: Home, color: 'bg-emerald-500', count: 201 },
-];
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  'prefabrik':           Building,
+  'celik-yapilar':       Hammer,
+  'yasam-konteynerleri': Container,
+  'ikinci-el':           Recycle,
+  'ozel-projeler':       Star,
+  'ahsap-yapilar':       TreePine,
+  'tiny-house':          Home,
+};
 
 const stats = [
   { label: 'Aktif İlan', value: '2,500+' },
@@ -72,8 +73,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categories.map((category) => {
-              const Icon = category.icon;
+            {CATEGORIES.map((category) => {
+              const Icon = CATEGORY_ICONS[category.slug];
               return (
                 <Link
                   key={category.slug}
@@ -81,7 +82,7 @@ export default function HomePage() {
                   className="group bg-gray-50 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-300 rounded-xl p-5 transition-all duration-200"
                 >
                   <div className={`${category.color} w-12 h-12 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-6 h-6 text-white" />
+                    {Icon && <Icon className="w-6 h-6 text-white" />}
                   </div>
                   <h3 className="font-semibold text-gray-800 group-hover:text-emerald-700 transition">
                     {category.name}

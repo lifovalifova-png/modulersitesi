@@ -54,7 +54,7 @@ export default function QuickQuoteModal({ isOpen, onClose, listing }: QuickQuote
 
     try {
       // Webhook URL - Replace with your actual webhook URL
-      const webhookUrl = 'https://webhook.site/your-webhook-id';
+      const _webhookUrl = 'https://webhook.site/your-webhook-id';
 
       // In production, this would send to the actual webhook
       // For demo purposes, we'll simulate a successful response
@@ -65,7 +65,7 @@ export default function QuickQuoteModal({ isOpen, onClose, listing }: QuickQuote
 
       // Uncomment below for actual webhook call:
       /*
-      const response = await fetch(webhookUrl, {
+      const response = await fetch(_webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ export default function QuickQuoteModal({ isOpen, onClose, listing }: QuickQuote
         onClose();
       }, 3000);
 
-    } catch (error) {
+    } catch {
       setStatus('error');
       setErrorMessage('Bir hata oluştu. Lütfen tekrar deneyin.');
     }
@@ -116,9 +116,10 @@ export default function QuickQuoteModal({ isOpen, onClose, listing }: QuickQuote
           <h2 className="text-xl font-bold text-gray-800">Hızlı Teklif Al</h2>
           <button
             onClick={onClose}
+            aria-label="Modalı kapat"
             className="p-2 hover:bg-gray-100 rounded-full transition"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
           </button>
         </div>
 
@@ -219,8 +220,8 @@ export default function QuickQuoteModal({ isOpen, onClose, listing }: QuickQuote
 
             {/* Error Message */}
             {errorMessage && (
-              <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-2 rounded-lg">
-                <AlertCircle className="w-4 h-4" />
+              <div role="alert" className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-2 rounded-lg">
+                <AlertCircle className="w-4 h-4" aria-hidden="true" />
                 {errorMessage}
               </div>
             )}

@@ -1,16 +1,7 @@
 import React, { useState } from 'react';
 import { Zap, Phone, CheckCircle, Mail, MapPin, Send, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const categories = [
-  { name: "Prefabrik Yapılar", slug: "prefabrik" },
-  { name: "Çelik Yapılar", slug: "celik-yapilar" },
-  { name: "Yaşam Konteynerleri", slug: "yasam-konteynerleri" },
-  { name: "2. El Yapılar", slug: "ikinci-el" },
-  { name: "Özel Proje Konteynerleri", slug: "ozel-projeler" },
-  { name: "Ahşap Yapılar", slug: "ahsap-yapilar" },
-  { name: "Tiny House", slug: "tiny-house" }
-];
+import { CATEGORIES } from '../data/categories';
 
 const flashDeals = [
   {
@@ -61,7 +52,7 @@ interface FlashDealProps {
 const FlashDeal = ({ title, location, price, image, onQuote }: FlashDealProps) => (
   <div className="border rounded-xl overflow-hidden shadow-sm bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0 w-72 sm:w-80">
     <div className="relative h-40">
-      <img src={image} alt={title} className="w-full h-full object-cover" />
+      <img src={image} alt={`${title} — ${location}`} loading="lazy" className="w-full h-full object-cover" />
       <span className="absolute top-3 left-3 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold shadow-md">
         ACİL İLAN
       </span>
@@ -98,7 +89,7 @@ export default function Marketplace() {
     setIsSubmitting(true);
 
     // n8n Webhook URL - Buraya kendi URL'nizi yapıştırın
-    const webhookUrl = "https://your-n8n-instance.com/webhook/your-webhook-id";
+    const _webhookUrl = "https://your-n8n-instance.com/webhook/your-webhook-id";
 
     const payload = {
       product: productName,
@@ -161,7 +152,7 @@ export default function Marketplace() {
 
           {/* Categories - Horizontal Scroll */}
           <div className="flex space-x-4 overflow-x-auto pb-2 mt-4 scrollbar-hide">
-            {categories.map(cat => (
+            {CATEGORIES.map(cat => (
               <Link
                 key={cat.slug}
                 to={`/kategori/${cat.slug}`}
@@ -293,7 +284,7 @@ export default function Marketplace() {
             <div>
               <h4 className="text-white font-semibold mb-4">Kategoriler</h4>
               <ul className="space-y-2 text-sm">
-                {categories.slice(0, 4).map(cat => (
+                {CATEGORIES.slice(0, 4).map(cat => (
                   <li key={cat.slug}>
                     <Link to={`/kategori/${cat.slug}`} className="hover:text-primary transition">
                       {cat.name}

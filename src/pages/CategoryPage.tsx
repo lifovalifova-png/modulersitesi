@@ -2,16 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MapPin, Filter, Grid, List, ChevronDown } from 'lucide-react';
 import QuickQuoteModal from '../components/QuickQuoteModal';
-
-const categoryNames: Record<string, string> = {
-  'prefabrik': 'Prefabrik Evler',
-  'celik-yapilar': 'Çelik Yapılar',
-  'yasam-konteynerleri': 'Yaşam Konteynerleri',
-  'ikinci-el': '2. El İlanlar',
-  'ozel-projeler': 'Özel Projeler',
-  'ahsap-yapilar': 'Ahşap Yapılar',
-  'tiny-house': 'Tiny House'
-};
+import { CATEGORY_NAMES } from '../data/categories';
 
 const sampleListings = [
   {
@@ -77,7 +68,7 @@ export default function CategoryPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('newest');
 
-  const categoryName = categoryNames[slug || ''] || 'İlanlar';
+  const categoryName = CATEGORY_NAMES[slug ?? ''] ?? 'İlanlar';
 
   const openQuoteModal = (listing: typeof sampleListings[0]) => {
     setSelectedListing(listing);
@@ -106,15 +97,19 @@ export default function CategoryPage() {
             <div className="hidden md:flex items-center border border-gray-300 rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode('grid')}
+                aria-label="Izgara görünümü"
+                aria-pressed={viewMode === 'grid'}
                 className={`p-2 ${viewMode === 'grid' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:bg-gray-50'}`}
               >
-                <Grid className="w-5 h-5" />
+                <Grid className="w-5 h-5" aria-hidden="true" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
+                aria-label="Liste görünümü"
+                aria-pressed={viewMode === 'list'}
                 className={`p-2 ${viewMode === 'list' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:bg-gray-50'}`}
               >
-                <List className="w-5 h-5" />
+                <List className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -153,7 +148,8 @@ export default function CategoryPage() {
               <div className={`relative ${viewMode === 'list' ? 'w-48 flex-shrink-0' : 'h-48'}`}>
                 <img
                   src={listing.image}
-                  alt={listing.title}
+                  alt={`${listing.title} — ${listing.location}`}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">

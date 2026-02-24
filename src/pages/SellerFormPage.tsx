@@ -1,15 +1,6 @@
 import { useState } from 'react';
 import { Upload, X, CheckCircle, AlertCircle, Loader2, Building2, Image as ImageIcon } from 'lucide-react';
-
-const categories = [
-  { value: 'prefabrik', label: 'Prefabrik' },
-  { value: 'celik-yapilar', label: 'Çelik Yapılar' },
-  { value: 'yasam-konteynerleri', label: 'Yaşam Konteynerleri' },
-  { value: 'ikinci-el', label: '2. El' },
-  { value: 'ozel-projeler', label: 'Özel Projeler' },
-  { value: 'ahsap-yapilar', label: 'Ahşap Yapılar' },
-  { value: 'tiny-house', label: 'Tiny House' },
-];
+import { CATEGORIES } from '../data/categories';
 
 const cities = [
   'İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Adana', 'Konya', 'Gaziantep',
@@ -91,7 +82,7 @@ export default function SellerFormPage() {
       console.log('Images:', images);
 
       setStatus('success');
-    } catch (error) {
+    } catch {
       setStatus('error');
       setErrorMessage('Bir hata oluştu. Lütfen tekrar deneyin.');
     }
@@ -233,9 +224,9 @@ export default function SellerFormPage() {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                   >
                     <option value="">Kategori Seçin</option>
-                    {categories.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat.slug} value={cat.slug}>
+                        {cat.name}
                       </option>
                     ))}
                   </select>
@@ -325,7 +316,7 @@ export default function SellerFormPage() {
                   <div key={index} className="relative aspect-square">
                     <img
                       src={url}
-                      alt={`Preview ${index + 1}`}
+                      alt={`Ürün görseli ${index + 1}`}
                       className="w-full h-full object-cover rounded-lg"
                     />
                     <button
@@ -373,8 +364,8 @@ export default function SellerFormPage() {
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-3 rounded-lg mb-4">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <div role="alert" className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-3 rounded-lg mb-4">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
               {errorMessage}
             </div>
           )}

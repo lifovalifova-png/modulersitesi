@@ -160,6 +160,7 @@ export default function FlashDealsCarousel() {
             <button
               onClick={() => scroll('left')}
               disabled={!canScrollLeft}
+              aria-label="Önceki ilanlar"
               className={`p-2 rounded-full border transition ${
                 canScrollLeft
                   ? 'border-gray-300 hover:bg-emerald-50 hover:border-emerald-300 text-gray-600 hover:text-emerald-600'
@@ -171,6 +172,7 @@ export default function FlashDealsCarousel() {
             <button
               onClick={() => scroll('right')}
               disabled={!canScrollRight}
+              aria-label="Sonraki ilanlar"
               className={`p-2 rounded-full border transition ${
                 canScrollRight
                   ? 'border-gray-300 hover:bg-emerald-50 hover:border-emerald-300 text-gray-600 hover:text-emerald-600'
@@ -198,7 +200,8 @@ export default function FlashDealsCarousel() {
                 <div className="relative h-48">
                   <img
                     src={listing.image}
-                    alt={listing.title}
+                    alt={`${listing.title} — ${listing.location}`}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                   {listing.urgent && (
