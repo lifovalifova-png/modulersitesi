@@ -1,10 +1,18 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Building, Container, Home, Hammer, TreePine, Recycle, Star, type LucideIcon } from 'lucide-react';
+import {
+  ArrowRight, Building, Container, Home, Hammer, TreePine, Recycle, Star,
+  Zap, Search, CheckSquare, FileText, BarChart2,
+  UserPlus, ClipboardList, Handshake,
+  ShieldCheck, Tag, MapPin, Lock,
+  type LucideIcon,
+} from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
 import { CATEGORIES } from '../data/categories';
 
+/* ─── Kategori ikon eşlemesi ─────────────────────────────── */
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'prefabrik':           Building,
   'celik-yapilar':       Hammer,
@@ -15,30 +23,85 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'tiny-house':          Home,
 };
 
-const stats = [
-  { label: 'Aktif İlan',    value: '2,500+' },
+/* ─── İstatistikler ──────────────────────────────────────── */
+const STATS = [
+  { label: 'Aktif İlan',    value: '2.500+' },
   { label: 'Kayıtlı Firma', value: '850+'   },
   { label: 'Mutlu Müşteri', value: '12.000+'},
   { label: 'Şehir',         value: '81'     },
 ];
 
+/* ─── Nasıl Çalışır adımları ─────────────────────────────── */
+const CUSTOMER_STEPS = [
+  { icon: Search,      title: 'İlan Ara',      desc: 'Kategori, konum ve fiyat aralığına göre ilanları filtrele.' },
+  { icon: CheckSquare, title: '2 Firma Seç',   desc: 'Beğendiğin ilanlardan en fazla 2 firma seç.' },
+  { icon: FileText,    title: 'Teklif Al',     desc: 'Tek tıkla her iki firmaya teklif talebi gönder.' },
+  { icon: BarChart2,   title: 'Karşılaştır',  desc: 'Gelen teklifleri yan yana karşılaştır, en iyisini seç.' },
+];
+
+const PRODUCER_STEPS = [
+  { icon: UserPlus,       title: 'Üye Ol',          desc: 'Firma bilgilerinle ücretsiz kayıt ol, kimliğini doğrulat.' },
+  { icon: ClipboardList,  title: 'İlan Ver',         desc: 'Ürün ve hizmetlerini fotoğraf ve detaylarla listele.' },
+  { icon: Handshake,      title: 'Müşteriye Ulaş',  desc: 'Gelen teklif taleplerini değerlendir, anlaş.' },
+];
+
+/* ─── Güven artırıcı özellikler ──────────────────────────── */
+const TRUST_ITEMS = [
+  {
+    icon: ShieldCheck,
+    title: 'Doğrulanmış Firmalar',
+    desc: 'Her firma kimlik ve ticari sicil doğrulamasından geçer. Güvensiz satıcıya ulaşamazsın.',
+    color: 'bg-emerald-100 text-emerald-600',
+  },
+  {
+    icon: Tag,
+    title: 'Ücretsiz Teklif Sistemi',
+    desc: 'Platform üzerinden teklif almak tamamen ücretsizdir. Gizli ücret yok.',
+    color: 'bg-blue-100 text-blue-600',
+  },
+  {
+    icon: MapPin,
+    title: 'Bölge Bazlı Eşleşme',
+    desc: 'Bulunduğun bölgedeki firmalarla eşleş, gereksiz nakliye maliyeti ödeme.',
+    color: 'bg-amber-100 text-amber-600',
+  },
+  {
+    icon: Lock,
+    title: 'KVKK Uyumlu Güvenlik',
+    desc: 'Kişisel verilerinin işlenmesi Türk KVKK mevzuatına tam uyumlu şekilde yürütülür.',
+    color: 'bg-purple-100 text-purple-600',
+  },
+];
+
+/* ─── Bileşen ────────────────────────────────────────────── */
 export default function HomePage() {
+  const [activeTab, setActiveTab] = useState<'customer' | 'producer'>('customer');
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
 
       <main className="flex-1">
-        {/* Hero */}
+
+        {/* ── Hero ─────────────────────────────────────────── */}
         <section className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-4">
             <div className="max-w-3xl">
-              <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+
+              {/* Öne çıkan badge */}
+              <div className="inline-flex items-center gap-2 bg-amber-400 text-amber-900 text-sm font-bold px-4 py-1.5 rounded-full mb-6">
+                <Zap className="w-4 h-4" aria-hidden="true" />
+                Aynı anda 2 firmadan teklif al, en iyisini seç!
+              </div>
+
+              <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
                 Modüler Yapı Çözümlerinde Türkiye'nin En Büyük Pazarı
               </h1>
               <p className="text-lg md:text-xl text-emerald-100 mb-8">
                 Prefabrik evler, konteynerler, tiny house ve daha fazlası.
                 Binlerce ilan arasından size uygun olanı bulun veya kendi ilanınızı verin.
               </p>
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   to="/satici-formu"
@@ -57,7 +120,7 @@ export default function HomePage() {
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
-              {stats.map((stat) => (
+              {STATS.map((stat) => (
                 <div key={stat.label} className="bg-white/10 backdrop-blur rounded-lg p-4 text-center">
                   <div className="text-2xl md:text-3xl font-bold">{stat.value}</div>
                   <div className="text-emerald-200 text-sm">{stat.label}</div>
@@ -67,14 +130,16 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Categories */}
+        {/* ── Flaş Fırsatlar (Hero'nun hemen altı) ────────── */}
+        <FlashDealsCarousel />
+
+        {/* ── Kategoriler ──────────────────────────────────── */}
         <section className="py-12 md:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4">
             <div className="mb-8">
               <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Kategoriler</h2>
               <p className="text-gray-600 mt-1">İhtiyacınıza uygun kategoriyi seçin</p>
             </div>
-
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {CATEGORIES.map((category) => {
                 const Icon = CATEGORY_ICONS[category.slug];
@@ -98,10 +163,146 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Flash Deals */}
-        <FlashDealsCarousel />
+        {/* ── Nasıl Çalışır? ───────────────────────────────── */}
+        <section className="py-12 md:py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Nasıl Çalışır?</h2>
+              <p className="text-gray-600 mt-2">Hem alıcı hem satıcı için basit ve hızlı</p>
+            </div>
 
-        {/* CTA */}
+            {/* Tab seçici */}
+            <div className="flex justify-center mb-10">
+              <div className="inline-flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
+                <button
+                  onClick={() => setActiveTab('customer')}
+                  aria-pressed={activeTab === 'customer'}
+                  className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                    activeTab === 'customer'
+                      ? 'bg-emerald-600 text-white shadow'
+                      : 'text-gray-600 hover:text-emerald-600'
+                  }`}
+                >
+                  Alıcı / Müşteri
+                </button>
+                <button
+                  onClick={() => setActiveTab('producer')}
+                  aria-pressed={activeTab === 'producer'}
+                  className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                    activeTab === 'producer'
+                      ? 'bg-emerald-600 text-white shadow'
+                      : 'text-gray-600 hover:text-emerald-600'
+                  }`}
+                >
+                  Üretici / Firma
+                </button>
+              </div>
+            </div>
+
+            {/* Müşteri adımları */}
+            {activeTab === 'customer' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {CUSTOMER_STEPS.map((step, i) => {
+                  const Icon = step.icon;
+                  return (
+                    <div key={step.title} className="relative bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      {/* Bağlantı çizgisi */}
+                      {i < CUSTOMER_STEPS.length - 1 && (
+                        <div className="hidden lg:block absolute top-10 left-full w-6 border-t-2 border-dashed border-emerald-200 z-10" />
+                      )}
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
+                          {i + 1}
+                        </span>
+                        <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-emerald-600" aria-hidden="true" />
+                        </div>
+                      </div>
+                      <h3 className="font-semibold text-gray-800 mb-1">{step.title}</h3>
+                      <p className="text-sm text-gray-500">{step.desc}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Üretici adımları */}
+            {activeTab === 'producer' && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                {PRODUCER_STEPS.map((step, i) => {
+                  const Icon = step.icon;
+                  return (
+                    <div key={step.title} className="relative bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                      {i < PRODUCER_STEPS.length - 1 && (
+                        <div className="hidden sm:block absolute top-10 left-full w-6 border-t-2 border-dashed border-emerald-200 z-10" />
+                      )}
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
+                          {i + 1}
+                        </span>
+                        <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-emerald-600" aria-hidden="true" />
+                        </div>
+                      </div>
+                      <h3 className="font-semibold text-gray-800 mb-1">{step.title}</h3>
+                      <p className="text-sm text-gray-500">{step.desc}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* CTA */}
+            <div className="text-center mt-10">
+              {activeTab === 'customer' ? (
+                <Link
+                  to="/kategori/prefabrik"
+                  className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
+                >
+                  Hemen İlan Ara <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </Link>
+              ) : (
+                <Link
+                  to="/satici-formu"
+                  className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
+                >
+                  Ücretsiz Üye Ol <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </Link>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Neden ModülerPazar? ───────────────────────────── */}
+        <section className="py-12 md:py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Neden ModülerPazar?</h2>
+              <p className="text-gray-600 mt-2">
+                Güvenli, şeffaf ve ücretsiz — modüler yapı alım-satımında tek adres
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {TRUST_ITEMS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.title}
+                    className="bg-gray-50 border border-gray-100 rounded-2xl p-6 hover:shadow-md transition-shadow"
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${item.color}`}>
+                      <Icon className="w-6 h-6" aria-hidden="true" />
+                    </div>
+                    <h3 className="font-semibold text-gray-800 mb-2">{item.title}</h3>
+                    <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CTA — Firma ──────────────────────────────────── */}
         <section className="py-12 md:py-16 bg-gray-900 text-white">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
@@ -119,43 +320,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Why Us */}
-        <section className="py-12 md:py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-12">
-              Neden ModülerPazar?
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Güvenilir Satıcılar</h3>
-                <p className="text-gray-600">Tüm satıcılarımız doğrulanmış ve güvenilir firmalardır.</p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Hızlı Teklif</h3>
-                <p className="text-gray-600">Tek tıkla teklif alın, zaman kaybetmeden karşılaştırın.</p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">7/24 Destek</h3>
-                <p className="text-gray-600">Sorularınız için her zaman yanınızdayız.</p>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       <Footer />

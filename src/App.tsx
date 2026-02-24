@@ -3,6 +3,7 @@ import { Toaster } from 'sonner';
 import HomePage from './pages/HomePage';
 import SellerFormPage from './pages/SellerFormPage';
 import CategoryPage from './pages/CategoryPage';
+import LegalPage from './pages/LegalPage';
 import './App.css';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/satici-formu" element={<SellerFormPage />} />
         <Route path="/kategori/:slug" element={<CategoryPage />} />
+        <Route path="/yasal/:slug" element={<LegalPage />} />
       </Routes>
     </Router>
   );
