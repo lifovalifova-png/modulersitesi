@@ -7,9 +7,9 @@ export const SITE_CONFIG = {
 } as const;
 
 export const LEGAL_LINKS = {
-  kvkk:     '/yasal/kvkk-aydinlatma-metni',
-  gizlilik: '/yasal/gizlilik-politikasi',
-  kullanim: '/yasal/kullanim-kosullari',
+  kvkk:     '/kvkk',
+  gizlilik: '/gizlilik',
+  kullanim: '/kullanim-kosullari',
   cerez:    '/yasal/cerez-politikasi',
   mesafeli: '/yasal/mesafeli-satis-sozlesmesi',
 } as const;

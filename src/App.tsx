@@ -4,6 +4,9 @@ import HomePage from './pages/HomePage';
 import SellerFormPage from './pages/SellerFormPage';
 import CategoryPage from './pages/CategoryPage';
 import LegalPage from './pages/LegalPage';
+import KvkkPage from './pages/KvkkPage';
+import GizlilikPage from './pages/GizlilikPage';
+import KullanimKosullariPage from './pages/KullanimKosullariPage';
 import './App.css';
 
 function App() {
@@ -14,6 +17,9 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/satici-formu" element={<SellerFormPage />} />
         <Route path="/kategori/:slug" element={<CategoryPage />} />
+        <Route path="/kvkk" element={<KvkkPage />} />
+        <Route path="/gizlilik" element={<GizlilikPage />} />
+        <Route path="/kullanim-kosullari" element={<KullanimKosullariPage />} />
         <Route path="/yasal/:slug" element={<LegalPage />} />
       </Routes>
     </Router>
