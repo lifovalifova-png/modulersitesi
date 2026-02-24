@@ -54,8 +54,6 @@ export default function QuickQuoteModal({ isOpen, onClose, listing }: QuickQuote
 
     try {
       // Webhook URL - Replace with your actual webhook URL
-      const _webhookUrl = 'https://webhook.site/your-webhook-id';
-
       // In production, this would send to the actual webhook
       // For demo purposes, we'll simulate a successful response
       console.log('Sending payload to webhook:', payload);
@@ -65,7 +63,8 @@ export default function QuickQuoteModal({ isOpen, onClose, listing }: QuickQuote
 
       // Uncomment below for actual webhook call:
       /*
-      const response = await fetch(_webhookUrl, {
+      const webhookUrl = 'https://webhook.site/your-webhook-id';
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Zap, Phone, CheckCircle, Mail, MapPin, Send, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CATEGORIES } from '../data/categories';
@@ -88,9 +88,6 @@ export default function Marketplace() {
 
     setIsSubmitting(true);
 
-    // n8n Webhook URL - Buraya kendi URL'nizi yapıştırın
-    const _webhookUrl = "https://your-n8n-instance.com/webhook/your-webhook-id";
-
     const payload = {
       product: productName,
       location: location,
@@ -103,6 +100,7 @@ export default function Marketplace() {
     try {
       // Gerçek webhook çağrısı için aşağıdaki kodu aktif edin:
       /*
+      const webhookUrl = "https://your-n8n-instance.com/webhook/your-webhook-id";
       await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

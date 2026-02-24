@@ -115,10 +115,9 @@ export default function FlashDealsCarousel() {
   useEffect(() => {
     checkScrollPosition();
     const scrollContainer = scrollRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', checkScrollPosition);
-      return () => scrollContainer.removeEventListener('scroll', checkScrollPosition);
-    }
+    if (!scrollContainer) return;
+    scrollContainer.addEventListener('scroll', checkScrollPosition);
+    return () => scrollContainer.removeEventListener('scroll', checkScrollPosition);
   }, []);
 
   const scroll = (direction: 'left' | 'right') => {
