@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Building2, ChevronDown, Search, User, Phone, Map } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, User, Phone, Map } from 'lucide-react';
 import { CATEGORIES } from '../data/categories';
 import { SITE_CONFIG } from '../config/site';
+import logoSrc from '../assets/logo.svg';
 
 /* ─── 81 il listesi ───────────────────────────────────────── */
 const CITIES = [
@@ -114,11 +115,8 @@ export default function Header() {
         <div className="flex items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <Building2 className="w-8 h-8 text-emerald-600" aria-hidden="true" />
-            <span className="text-xl font-bold text-gray-800">
-              Modüler<span className="text-emerald-600">Pazar</span>
-            </span>
+          <Link to="/" className="flex items-center flex-shrink-0" aria-label="ModülerPazar ana sayfa">
+            <img src={logoSrc} alt="ModülerPazar" className="h-8 w-auto" />
           </Link>
 
           {/* ── Desktop Search Bar with Filters ──────────── */}

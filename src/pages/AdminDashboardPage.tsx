@@ -25,6 +25,7 @@ import {
   LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle,
   Upload, Save, X, Menu, ShieldCheck, Clock,
 } from 'lucide-react';
+import logoSrc from '../assets/logo.svg';
 import { auth, db, storage } from '../lib/firebase';
 
 /* ═══════════════════════════════════════════════════════════
@@ -699,11 +700,8 @@ export default function AdminDashboardPage() {
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <BuildingIcon className="w-6 h-6 text-emerald-600" />
-              <span className="font-bold text-gray-800 text-sm">
-                Modüler<span className="text-emerald-600">Pazar</span>
-                <span className="ml-1 text-xs text-gray-400 font-normal">Admin</span>
-              </span>
+              <img src={logoSrc} alt="ModülerPazar" className="h-7 w-auto" />
+              <span className="text-xs text-gray-400 font-medium border-l border-gray-200 pl-2">Admin</span>
             </div>
           </div>
 
