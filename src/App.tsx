@@ -8,6 +8,9 @@ import KvkkPage from './pages/KvkkPage';
 import GizlilikPage from './pages/GizlilikPage';
 import KullanimKosullariPage from './pages/KullanimKosullariPage';
 import FirmalarHaritaPage from './pages/FirmalarHaritaPage';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminRoute from './components/AdminRoute';
 import './App.css';
 
 function App() {
@@ -23,6 +26,12 @@ function App() {
         <Route path="/kullanim-kosullari" element={<KullanimKosullariPage />} />
         <Route path="/firmalar-harita" element={<FirmalarHaritaPage />} />
         <Route path="/yasal/:slug" element={<LegalPage />} />
+        <Route path="/admin" element={<AdminLoginPage />} />
+        <Route path="/admin/dashboard" element={
+          <AdminRoute>
+            <AdminDashboardPage />
+          </AdminRoute>
+        } />
       </Routes>
     </Router>
   );
