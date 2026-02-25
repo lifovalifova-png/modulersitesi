@@ -184,7 +184,7 @@ const SECURITY_ADMINISTRATIVE = [
   'Veri erişimi "bilinmesi gereken" prensibiyle sınırlandırılmıştır',
   'Veri işleme sözleşmeleri (DPA) tüm iş ortaklarıyla imzalanmaktadır',
   'Veri ihlali müdahale planı (Incident Response Plan) mevcuttur',
-  'İhlal durumunda KVKK Kurulu'na 72 saat içinde bildirim yapılmaktadır',
+  'İhlal durumunda KVKK Kurulu\'na 72 saat içinde bildirim yapılmaktadır',
   'Etkilenen veri sahiplerine makul sürede bildirim gönderilmektedir',
 ];
 

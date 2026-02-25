@@ -88,7 +88,7 @@ const ADMIN_MEASURES = [
   '"Bilinmesi gereken" prensibiyle minimum veri erişimi',
   'Tüm iş ortaklarıyla Veri İşleme Anlaşması (DPA) imzalanmaktadır',
   'Veri ihlali müdahale planı (IRP) ve tatbikatlar',
-  'İhlal halinde KVKK Kurulu'na 72 saat içinde bildirim',
+  'İhlal halinde KVKK Kurulu\'na 72 saat içinde bildirim',
   'Etkilenen veri sahiplerine şeffaf ve zamanında bildirim',
 ];
 
