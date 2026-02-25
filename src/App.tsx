@@ -11,6 +11,7 @@ import FirmalarHaritaPage from './pages/FirmalarHaritaPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminRoute from './components/AdminRoute';
+import LogoKitPage from './pages/LogoKitPage';
 import './App.css';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
             <AdminDashboardPage />
           </AdminRoute>
         } />
+        <Route path="/logo-kit" element={<LogoKitPage />} />
       </Routes>
     </Router>
   );

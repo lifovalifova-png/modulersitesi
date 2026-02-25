@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 218 34" fill="none" role="img" aria-label="ModülerPazar — beyaz versiyon">
+  <title>ModülerPazar</title>
+
+  <g transform="translate(0,3)">
+    <!-- Satır 1 -->
+    <rect x="0"  y="0"  width="13" height="13" rx="2.5" fill="#ffffff"/>
+    <rect x="15" y="0"  width="21" height="13" rx="2.5" fill="rgba(255,255,255,0.80)"/>
+    <!-- Satır 2 -->
+    <rect x="0"  y="15" width="21" height="13" rx="2.5" fill="rgba(255,255,255,0.80)"/>
+    <rect x="23" y="15" width="13" height="13" rx="2.5" fill="#ffffff"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text
+    x="46"
+    y="22"
+    font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+    font-size="21"
+    font-weight="700"
+    fill="#ffffff"
+  >Modüler<tspan fill="rgba(255,255,255,0.75)">Pazar</tspan></text>
+</svg>
