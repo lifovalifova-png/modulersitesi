@@ -7,6 +7,7 @@ import LegalPage from './pages/LegalPage';
 import KvkkPage from './pages/KvkkPage';
 import GizlilikPage from './pages/GizlilikPage';
 import KullanimKosullariPage from './pages/KullanimKosullariPage';
+import FirmalarHaritaPage from './pages/FirmalarHaritaPage';
 import './App.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/kvkk" element={<KvkkPage />} />
         <Route path="/gizlilik" element={<GizlilikPage />} />
         <Route path="/kullanim-kosullari" element={<KullanimKosullariPage />} />
+        <Route path="/firmalar-harita" element={<FirmalarHaritaPage />} />
         <Route path="/yasal/:slug" element={<LegalPage />} />
       </Routes>
     </Router>

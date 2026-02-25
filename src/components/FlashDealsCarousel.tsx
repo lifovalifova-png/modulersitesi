@@ -1,73 +1,125 @@
-import { useRef, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, MapPin, Clock, Flame } from 'lucide-react';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, MapPin, Clock, Flame, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import QuickQuoteModal from './QuickQuoteModal';
 import { FLASH_DEALS, type FlashDeal } from '../data/flashDeals';
 
+/* Kategori → slug eşlemesi (CategoryPage yönlendirmesi için) */
+const CATEGORY_COLORS: Record<string, string> = {
+  'Prefabrik':           'bg-emerald-100 text-emerald-700',
+  'Yaşam Konteynerleri': 'bg-blue-100 text-blue-700',
+  'Tiny House':          'bg-purple-100 text-purple-700',
+  'Çelik Yapılar':       'bg-gray-200 text-gray-700',
+  'Ahşap Yapılar':       'bg-amber-100 text-amber-700',
+  'Özel Projeler':       'bg-pink-100 text-pink-700',
+  '2. El':               'bg-orange-100 text-orange-700',
+};
+
+const AUTO_SCROLL_INTERVAL = 3000; // ms
+const CARD_WIDTH = 320 + 16; // w-80 + gap-4
+
 export default function FlashDealsCarousel() {
   const [selectedListing, setSelectedListing] = useState<FlashDeal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isPausedRef = useRef(false);
 
-  const checkScrollPosition = () => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  useEffect(() => {
-    checkScrollPosition();
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-    scrollContainer.addEventListener('scroll', checkScrollPosition);
-    return () => scrollContainer.removeEventListener('scroll', checkScrollPosition);
+  /* ── Scroll helpers ─────────────────────────────────────── */
+  const scrollToIndex = useCallback((index: number) => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollTo({
+      left: index * CARD_WIDTH,
+      behavior: 'smooth',
+    });
+    setActiveIndex(index);
   }, []);
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -320 : 320,
-        behavior: 'smooth',
-      });
-    }
-  };
+  const scrollBy = useCallback((direction: 'left' | 'right') => {
+    const total = FLASH_DEALS.length;
+    setActiveIndex((prev) => {
+      const next =
+        direction === 'right'
+          ? (prev + 1) % total
+          : (prev - 1 + total) % total;
+      scrollToIndex(next);
+      return next;
+    });
+  }, [scrollToIndex]);
 
+  /* ── Auto-scroll ────────────────────────────────────────── */
+  const startAutoScroll = useCallback(() => {
+    if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+    autoScrollRef.current = setInterval(() => {
+      if (!isPausedRef.current) {
+        scrollBy('right');
+      }
+    }, AUTO_SCROLL_INTERVAL);
+  }, [scrollBy]);
+
+  useEffect(() => {
+    startAutoScroll();
+    return () => {
+      if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+    };
+  }, [startAutoScroll]);
+
+  /* ── Sync dot indicator with manual scroll ──────────────── */
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const idx = Math.round(el.scrollLeft / CARD_WIDTH);
+      setActiveIndex(idx);
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  /* ── Modal helpers ──────────────────────────────────────── */
   const openQuoteModal = (listing: FlashDeal) => {
+    isPausedRef.current = true;
     setSelectedListing(listing);
     setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    isPausedRef.current = false;
   };
 
   const handleSuccess = () => {
     toast.success('Teklif talebiniz alındı! En kısa sürede sizinle iletişime geçeceğiz.');
   };
 
+  const canScrollLeft  = activeIndex > 0;
+  const canScrollRight = activeIndex < FLASH_DEALS.length - 1;
+
   return (
     <section className="py-12 md:py-16 bg-gradient-to-b from-amber-50 to-white">
       <div className="max-w-7xl mx-auto px-4">
+
         {/* Section Header */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <div className="bg-red-500 text-white p-2 rounded-lg animate-pulse">
-              <Flame className="w-6 h-6" />
+              <Flame className="w-6 h-6" aria-hidden="true" />
             </div>
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
                 Flaş Fırsatlar
               </h2>
               <p className="text-gray-600 text-sm flex items-center gap-1 mt-1">
-                <Clock className="w-4 h-4" /> Sınırlı süreli indirimli ilanlar
+                <Clock className="w-4 h-4" aria-hidden="true" /> Sınırlı süreli indirimli ilanlar
               </p>
             </div>
           </div>
 
-          {/* Navigation Buttons */}
+          {/* Nav Buttons */}
           <div className="hidden md:flex gap-2">
             <button
-              onClick={() => scroll('left')}
+              onClick={() => { scrollBy('left'); startAutoScroll(); }}
               disabled={!canScrollLeft}
               aria-label="Önceki ilanlar"
               className={`p-2 rounded-full border transition ${
@@ -79,7 +131,7 @@ export default function FlashDealsCarousel() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
-              onClick={() => scroll('right')}
+              onClick={() => { scrollBy('right'); startAutoScroll(); }}
               disabled={!canScrollRight}
               aria-label="Sonraki ilanlar"
               className={`p-2 rounded-full border transition ${
@@ -94,76 +146,99 @@ export default function FlashDealsCarousel() {
         </div>
 
         {/* Carousel */}
-        <div className="relative">
+        <div
+          className="relative"
+          onMouseEnter={() => { isPausedRef.current = true; }}
+          onMouseLeave={() => { isPausedRef.current = false; }}
+        >
           <div
             ref={scrollRef}
             className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {FLASH_DEALS.map((listing) => (
-              <div
-                key={listing.id}
-                className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow snap-start"
-              >
-                {/* Image */}
-                <div className="relative h-48">
-                  <img
-                    src={listing.image}
-                    alt={`${listing.title} — ${listing.location}`}
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                  />
-                  {listing.urgent && (
-                    <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                      ACİL
-                    </div>
-                  )}
-                  {listing.discount && (
-                    <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
-                      %{listing.discount} İNDİRİM
-                    </div>
-                  )}
-                  <div className="absolute bottom-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                    {listing.category}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2 min-h-[48px]">
-                    {listing.title}
-                  </h3>
-                  <div className="flex items-center text-gray-500 text-sm mb-3">
-                    <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
-                    {listing.location}
-                  </div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-lg font-bold text-emerald-600">
-                        {listing.price}
+            {FLASH_DEALS.map((listing) => {
+              const badgeClass = CATEGORY_COLORS[listing.category] ?? 'bg-gray-100 text-gray-600';
+              return (
+                <div
+                  key={listing.id}
+                  className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow snap-start"
+                >
+                  {/* Image */}
+                  <div className="relative h-48">
+                    <img
+                      src={listing.image}
+                      alt={`${listing.title} — ${listing.location}`}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                    {listing.urgent && (
+                      <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                        ACİL
                       </div>
-                      {listing.originalPrice && (
-                        <div className="text-sm text-gray-400 line-through">
-                          {listing.originalPrice}
-                        </div>
-                      )}
-                    </div>
+                    )}
+                    {listing.discount && (
+                      <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
+                        %{listing.discount} İNDİRİM
+                      </div>
+                    )}
                   </div>
-                  <button
-                    onClick={() => openQuoteModal(listing)}
-                    className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition"
-                  >
-                    Hızlı Teklif Al
-                  </button>
+
+                  {/* Content */}
+                  <div className="p-4">
+                    {/* City + Category badges */}
+                    <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        <MapPin className="w-3 h-3" aria-hidden="true" />
+                        {listing.location}
+                      </span>
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${badgeClass}`}>
+                        <Tag className="w-3 h-3" aria-hidden="true" />
+                        {listing.category}
+                      </span>
+                    </div>
+
+                    <h3 className="font-semibold text-gray-800 mb-3 line-clamp-2 min-h-[48px]">
+                      {listing.title}
+                    </h3>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <div className="text-lg font-bold text-emerald-600">
+                          {listing.price}
+                        </div>
+                        {listing.originalPrice && (
+                          <div className="text-sm text-gray-400 line-through">
+                            {listing.originalPrice}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => openQuoteModal(listing)}
+                      className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition"
+                    >
+                      Hızlı Teklif Al
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Scroll Indicators - Mobile */}
-          <div className="flex justify-center gap-1 mt-4 md:hidden">
-            {FLASH_DEALS.slice(0, 5).map((_, index) => (
-              <div key={index} className="w-2 h-2 rounded-full bg-gray-300" />
+          {/* Dot Indicators */}
+          <div className="flex justify-center gap-1.5 mt-4">
+            {FLASH_DEALS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => { scrollToIndex(i); startAutoScroll(); }}
+                aria-label={`${i + 1}. ilana git`}
+                className={`rounded-full transition-all duration-300 ${
+                  i === activeIndex
+                    ? 'w-5 h-2 bg-emerald-500'
+                    : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                }`}
+              />
             ))}
           </div>
         </div>
@@ -173,7 +248,7 @@ export default function FlashDealsCarousel() {
       {selectedListing && (
         <QuickQuoteModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={handleCloseModal}
           listing={selectedListing}
           onSuccess={handleSuccess}
         />
