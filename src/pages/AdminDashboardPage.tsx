@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   onAuthStateChanged,
@@ -14,19 +14,14 @@ import {
   deleteDoc,
   setDoc,
 } from 'firebase/firestore';
-import {
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-} from 'firebase/storage';
 import { toast } from 'sonner';
 import {
   LayoutDashboard, Settings, Zap, Building2 as BuildingIcon,
   LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle,
-  Upload, Save, X, Menu, ShieldCheck, Clock,
+  Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
 } from 'lucide-react';
 import logoSrc from '../assets/logo.svg';
-import { auth, db, storage } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 
 /* ═══════════════════════════════════════════════════════════
    TYPES
@@ -168,11 +163,8 @@ function OverviewTab() {
    TAB 2 — SITE SETTINGS
 ════════════════════════════════════════════════════════════ */
 function SettingsTab() {
-  const [settings,    setSettings]    = useState<SiteSettings>(DEFAULT_SETTINGS);
-  const [logoFile,    setLogoFile]    = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState('');
-  const [saving,      setSaving]      = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [saving,   setSaving]   = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'settings', 'site'), (snap) => {
@@ -181,25 +173,10 @@ function SettingsTab() {
     return unsub;
   }, []);
 
-  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
-  };
-
   const handleSave = async () => {
     setSaving(true);
     try {
-      let logoUrl = settings.logoUrl;
-      if (logoFile) {
-        const sRef = storageRef(storage, 'logos/site-logo');
-        await uploadBytes(sRef, logoFile);
-        logoUrl = await getDownloadURL(sRef);
-        setLogoFile(null);
-        setLogoPreview('');
-      }
-      await setDoc(doc(db, 'settings', 'site'), { ...settings, logoUrl });
+      await setDoc(doc(db, 'settings', 'site'), settings);
       toast.success('Ayarlar başarıyla kaydedildi.');
     } catch {
       toast.error('Kaydetme sırasında hata oluştu.');
@@ -208,9 +185,9 @@ function SettingsTab() {
     }
   };
 
-  const Field = ({ label, id, value, onChange, type = 'text' }: {
+  const Field = ({ label, id, value, onChange, type = 'text', placeholder }: {
     label: string; id: string; value: string;
-    onChange: (v: string) => void; type?: string;
+    onChange: (v: string) => void; type?: string; placeholder?: string;
   }) => (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -219,58 +196,64 @@ function SettingsTab() {
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
       />
     </div>
   );
 
-  const currentLogo = logoPreview || settings.logoUrl;
-
   return (
     <div className="max-w-2xl space-y-6">
       <h2 className="text-lg font-semibold text-gray-800">Site Ayarları</h2>
 
-      {/* Logo */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h3 className="font-semibold text-gray-700 text-sm">Site Logosu</h3>
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden flex-shrink-0">
-            {currentLogo
-              ? <img src={currentLogo} alt="Logo" className="w-full h-full object-contain" />
-              : <BuildingIcon className="w-8 h-8 text-gray-300" />
-            }
-          </div>
-          <div>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 border border-gray-300 text-gray-700 text-sm px-4 py-2 rounded-lg hover:bg-gray-50 transition"
-            >
-              <Upload className="w-4 h-4" />
-              {logoFile ? logoFile.name : 'Logo Yükle'}
-            </button>
-            <p className="text-xs text-gray-400 mt-1">PNG, JPG — maks. 2 MB önerilir</p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleLogoSelect}
-              className="hidden"
-              aria-label="Logo dosyası seç"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Site config */}
+      {/* Platform Bilgileri */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
         <h3 className="font-semibold text-gray-700 text-sm">Platform Bilgileri</h3>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Site Adı"  id="siteName"   value={settings.name}    onChange={(v) => setSettings((p) => ({ ...p, name: v }))} />
-          <Field label="Telefon"   id="sitePhone"  value={settings.phone}   onChange={(v) => setSettings((p) => ({ ...p, phone: v }))} />
-          <Field label="E-posta"   id="siteEmail"  value={settings.email}   onChange={(v) => setSettings((p) => ({ ...p, email: v }))}  type="email" />
+          <Field label="Site Adı" id="siteName"  value={settings.name}  onChange={(v) => setSettings((p) => ({ ...p, name: v }))} />
+          <Field label="Telefon"  id="sitePhone" value={settings.phone} onChange={(v) => setSettings((p) => ({ ...p, phone: v }))} />
+          <Field label="E-posta"  id="siteEmail" value={settings.email} onChange={(v) => setSettings((p) => ({ ...p, email: v }))} type="email" />
         </div>
-        <Field label="Slogan / Alt Başlık" id="siteTagline" value={settings.tagline} onChange={(v) => setSettings((p) => ({ ...p, tagline: v }))} />
+        <Field
+          label="Slogan / Alt Başlık"
+          id="siteTagline"
+          value={settings.tagline}
+          onChange={(v) => setSettings((p) => ({ ...p, tagline: v }))}
+        />
+      </div>
+
+      {/* Logo URL */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <h3 className="font-semibold text-gray-700 text-sm">Logo URL</h3>
+        <Field
+          label="Logo URL"
+          id="siteLogoUrl"
+          value={settings.logoUrl}
+          onChange={(v) => setSettings((p) => ({ ...p, logoUrl: v }))}
+          placeholder="https://example.com/logo.png"
+        />
+        {/* Önizleme */}
+        {settings.logoUrl && (
+          <div className="flex items-center gap-3 pt-1">
+            <div className="w-16 h-16 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <img
+                src={settings.logoUrl}
+                alt="Logo önizleme"
+                className="w-full h-full object-contain"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+            </div>
+            <a
+              href={settings.logoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-emerald-600 hover:underline"
+            >
+              <LinkIcon className="w-3 h-3" />
+              URL'yi aç
+            </a>
+          </div>
+        )}
       </div>
 
       <button

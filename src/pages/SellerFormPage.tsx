@@ -1,395 +1,552 @@
 import { useState } from 'react';
-import { Upload, X, CheckCircle, AlertCircle, Loader2, Building2, Image as ImageIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  CheckCircle, AlertCircle, Loader2, ChevronRight, ChevronLeft,
+  Factory, Store, Check,
+} from 'lucide-react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { CATEGORIES } from '../data/categories';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
-const cities = [
-  'İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Adana', 'Konya', 'Gaziantep',
-  'Mersin', 'Diyarbakır', 'Kayseri', 'Eskişehir', 'Samsun', 'Denizli', 'Şanlıurfa',
-  'Trabzon', 'Kocaeli', 'Sakarya', 'Manisa', 'Malatya', 'Erzurum', 'Balıkesir',
-  'Kütahya', 'Muğla', 'Aydın', 'Tekirdağ', 'Mardin', 'Van', 'Diğer'
+/* ─── Veri ───────────────────────────────────────────────────── */
+
+const CITIES = [
+  'Adana','Adıyaman','Afyonkarahisar','Ağrı','Amasya','Ankara','Antalya','Artvin',
+  'Aydın','Balıkesir','Bilecik','Bingöl','Bitlis','Bolu','Burdur','Bursa','Çanakkale',
+  'Çankırı','Çorum','Denizli','Diyarbakır','Edirne','Elazığ','Erzincan','Erzurum',
+  'Eskişehir','Gaziantep','Giresun','Gümüşhane','Hakkari','Hatay','Isparta','Mersin',
+  'İstanbul','İzmir','Kars','Kastamonu','Kayseri','Kırklareli','Kırşehir','Kocaeli',
+  'Konya','Kütahya','Malatya','Manisa','Kahramanmaraş','Mardin','Muğla','Muş',
+  'Nevşehir','Niğde','Ordu','Rize','Sakarya','Samsun','Siirt','Sinop','Sivas',
+  'Tekirdağ','Tokat','Trabzon','Tunceli','Şanlıurfa','Uşak','Van','Yozgat',
+  'Zonguldak','Aksaray','Bayburt','Karaman','Kırıkkale','Batman','Şırnak',
+  'Bartın','Ardahan','Iğdır','Yalova','Karabük','Kilis','Osmaniye','Düzce',
 ];
 
+const FIRMA_YAPILARI = [
+  { value: 'sahis',   label: 'Şahıs Şirketi' },
+  { value: 'limited', label: 'Limited Şirket' },
+  { value: 'anonim',  label: 'Anonim Şirket'  },
+  { value: 'diger',   label: 'Diğer'           },
+];
+
+const STEPS = ['Firma Bilgileri', 'İletişim ve Konum', 'Ürün ve Hizmetler'];
+
+/* ─── Form state tipi ────────────────────────────────────────── */
+
+interface FormState {
+  firmaType:       'uretici' | 'satici' | '';
+  firmaAdi:        string;
+  vergiNo:         string;
+  firmaYapisi:     string;
+  yetkiliAdi:      string;
+  telefon:         string;
+  eposta:          string;
+  sehir:           string;
+  ilce:            string;
+  adres:           string;
+  kategoriler:     string[];
+  hizmetBolgeleri: string[];
+  tanitimMetni:    string;
+  kvkkOnay:        boolean;
+  kullanimOnay:    boolean;
+}
+
+const EMPTY: FormState = {
+  firmaType: '', firmaAdi: '', vergiNo: '', firmaYapisi: '',
+  yetkiliAdi: '', telefon: '', eposta: '', sehir: '', ilce: '', adres: '',
+  kategoriler: [], hizmetBolgeleri: [],
+  tanitimMetni: '', kvkkOnay: false, kullanimOnay: false,
+};
+
+/* ─── Helpers ────────────────────────────────────────────────── */
+
+const cls = 'w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent';
+
+function Field({ label, required, error, children }: {
+  label: string; required?: boolean; error?: string; children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      {children}
+      {error && (
+        <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+          <AlertCircle className="w-3 h-3" />{error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function toggle<T>(arr: T[], val: T): T[] {
+  return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
+}
+
+/* ─── Sayfa ──────────────────────────────────────────────────── */
+
 export default function SellerFormPage() {
-  const [formData, setFormData] = useState({
-    companyName: '',
-    contactName: '',
-    phone: '',
-    email: '',
-    title: '',
-    category: '',
-    location: '',
-    price: '',
-    description: '',
-    kvkkAccepted: false,
-    marketingAccepted: false
-  });
-  const [images, setImages] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [step,    setStep]    = useState(0);
+  const [form,    setForm]    = useState<FormState>(EMPTY);
+  const [errors,  setErrors]  = useState<Partial<Record<keyof FormState, string>>>({});
+  const [status,  setStatus]  = useState<'idle' | 'loading' | 'success'>('idle');
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const newImages = Array.from(files).slice(0, 5 - images.length);
-      setImages([...images, ...newImages]);
+  const set = <K extends keyof FormState>(key: K, val: FormState[K]) =>
+    setForm((f) => ({ ...f, [key]: val }));
 
-      // Create preview URLs
-      const newPreviews = newImages.map(file => URL.createObjectURL(file));
-      setPreviewUrls([...previewUrls, ...newPreviews]);
+  /* ── Doğrulama ─────────────────────────────────────────────── */
+
+  function validateStep(s: number): boolean {
+    const e: typeof errors = {};
+
+    if (s === 0) {
+      if (!form.firmaType)  e.firmaType  = 'Lütfen firma türü seçin.';
+      if (!form.firmaAdi.trim())  e.firmaAdi  = 'Firma adı zorunludur.';
+      if (!/^\d{10}$/.test(form.vergiNo)) e.vergiNo = 'Vergi numarası tam olarak 10 rakam olmalıdır.';
+      if (!form.firmaYapisi) e.firmaYapisi = 'Firma yapısı seçiniz.';
     }
-  };
 
-  const removeImage = (index: number) => {
-    const newImages = [...images];
-    const newPreviews = [...previewUrls];
+    if (s === 1) {
+      if (!form.yetkiliAdi.trim()) e.yetkiliAdi = 'Yetkili adı soyadı zorunludur.';
+      if (!/^[0-9+\s()-]{10,}$/.test(form.telefon)) e.telefon = 'Geçerli bir telefon numarası girin.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.eposta)) e.eposta = 'Geçerli bir e-posta adresi girin.';
+      if (!form.sehir) e.sehir = 'Şehir seçimi zorunludur.';
+    }
 
-    // Revoke the URL to free memory
-    URL.revokeObjectURL(newPreviews[index]);
+    if (s === 2) {
+      if (form.kategoriler.length === 0) e.kategoriler = 'En az bir kategori seçiniz.';
+      if (!form.kvkkOnay)     e.kvkkOnay     = 'KVKK metnini kabul etmelisiniz.';
+      if (!form.kullanimOnay) e.kullanimOnay = 'Kullanım koşullarını kabul etmelisiniz.';
+    }
 
-    newImages.splice(index, 1);
-    newPreviews.splice(index, 1);
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
 
-    setImages(newImages);
-    setPreviewUrls(newPreviews);
-  };
+  function next() {
+    if (validateStep(step)) setStep((s) => s + 1);
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  function back() {
+    setErrors({});
+    setStep((s) => s - 1);
+  }
+
+  /* ── Gönderim ──────────────────────────────────────────────── */
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    if (!formData.kvkkAccepted) {
-      setErrorMessage('KVKK aydınlatma metnini kabul etmeniz gerekmektedir.');
-      return;
-    }
-
-    if (images.length === 0) {
-      setErrorMessage('En az bir ürün görseli yüklemeniz gerekmektedir.');
-      return;
-    }
-
+    if (!validateStep(2)) return;
     setStatus('loading');
-    setErrorMessage('');
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // In production, you would:
-      // 1. Upload images to storage
-      // 2. Send form data to your API/webhook
-
-      console.log('Form submitted:', formData);
-      console.log('Images:', images);
-
+      await addDoc(collection(db, 'firmBasvurulari'), {
+        firmaType:       form.firmaType,
+        firmaAdi:        form.firmaAdi.trim(),
+        vergiNo:         form.vergiNo,
+        firmaYapisi:     form.firmaYapisi,
+        yetkiliAdi:      form.yetkiliAdi.trim(),
+        telefon:         form.telefon.trim(),
+        eposta:          form.eposta.trim(),
+        sehir:           form.sehir,
+        ilce:            form.ilce.trim(),
+        adres:           form.adres.trim(),
+        kategoriler:     form.kategoriler,
+        hizmetBolgeleri: form.hizmetBolgeleri,
+        tanitimMetni:    form.tanitimMetni.trim(),
+        durum:           'beklemede',
+        olusturmaTarihi: serverTimestamp(),
+      });
       setStatus('success');
     } catch {
-      setStatus('error');
-      setErrorMessage('Bir hata oluştu. Lütfen tekrar deneyin.');
+      setErrors({ firmaAdi: 'Bir hata oluştu. Lütfen tekrar deneyin.' });
+      setStatus('idle');
     }
-  };
+  }
+
+  /* ── Başarı ekranı ─────────────────────────────────────────── */
 
   if (status === 'success') {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-emerald-600" />
+      <>
+        <Header />
+        <main className="min-h-[70vh] flex items-center justify-center px-4 bg-gray-50">
+          <div className="text-center max-w-md py-16">
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-emerald-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Başvurunuz Alındı!</h1>
+            <p className="text-gray-500 mb-8">
+              Firma kaydınız incelemeye alındı. En kısa sürede{' '}
+              <span className="font-medium text-gray-700">{form.eposta}</span> adresine
+              dönüş yapılacaktır.
+            </p>
+            <Link
+              to="/"
+              className="inline-block bg-emerald-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
+            >
+              Ana Sayfaya Dön
+            </Link>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">
-            İlanınız Başarıyla Oluşturuldu!
-          </h1>
-          <p className="text-gray-600 mb-6">
-            İlanınız incelendikten sonra yayına alınacaktır.
-            En kısa sürede e-posta ile bilgilendirileceksiniz.
-          </p>
-          <a
-            href="/"
-            className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
-          >
-            Ana Sayfaya Dön
-          </a>
-        </div>
-      </div>
+        </main>
+        <Footer />
+      </>
     );
   }
 
+  /* ── Form ──────────────────────────────────────────────────── */
+
   return (
-    <div className="py-8 md:py-12 bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Building2 className="w-8 h-8 text-emerald-600" />
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            Ücretsiz İlan Ver
-          </h1>
-          <p className="text-gray-600">
-            Ürünlerinizi binlerce potansiyel müşteriye tanıtın
-          </p>
-        </div>
+    <>
+      <Header />
+      <main className="bg-gray-50 py-10 min-h-screen">
+        <div className="max-w-2xl mx-auto px-4">
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
-          {/* Company Information */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
-              Firma Bilgileri
-            </h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Firma Adı *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.companyName}
-                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="Firma adınız"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Yetkili Adı *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.contactName}
-                  onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="İletişim kurulacak kişi"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Telefon *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="05XX XXX XX XX"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  E-posta *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="firma@email.com"
-                />
-              </div>
-            </div>
+          {/* Başlık */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">
+              Ücretsiz Kayıt Ol
+            </h1>
+            <p className="text-gray-500 text-sm">Binlerce alıcıya firmanızı tanıtın.</p>
           </div>
 
-          {/* Listing Information */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
-              İlan Bilgileri
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  İlan Başlığı *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="Örn: 80m² Prefabrik Ev - Sıfır"
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Kategori *
-                  </label>
-                  <select
-                    required
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  >
-                    <option value="">Kategori Seçin</option>
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat.slug} value={cat.slug}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Konum *
-                  </label>
-                  <select
-                    required
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  >
-                    <option value="">Şehir Seçin</option>
-                    {cities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fiyat (₺) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="Örn: 250000"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Açıklama
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={4}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                  placeholder="Ürününüz hakkında detaylı bilgi verin..."
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Image Upload */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
-              Ürün Görselleri *
-            </h2>
-
-            {/* Upload Area */}
-            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-400 transition">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="hidden"
-                id="image-upload"
-                disabled={images.length >= 5}
-              />
-              <label
-                htmlFor="image-upload"
-                className={`cursor-pointer ${images.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 font-medium">
-                  {images.length >= 5 ? 'Maksimum görsel sayısına ulaşıldı' : 'Görsel yüklemek için tıklayın'}
-                </p>
-                <p className="text-sm text-gray-400 mt-1">PNG, JPG (max. 5 görsel)</p>
-              </label>
-            </div>
-
-            {/* Preview Images */}
-            {previewUrls.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
-                {previewUrls.map((url, index) => (
-                  <div key={index} className="relative aspect-square">
-                    <img
-                      src={url}
-                      alt={`Ürün görseli ${index + 1}`}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+          {/* Adım göstergesi */}
+          <div className="flex items-center mb-8">
+            {STEPS.map((label, i) => (
+              <div key={i} className="flex items-center flex-1 last:flex-none">
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                    i < step  ? 'bg-emerald-500 text-white'
+                    : i === step ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
+                    : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {i < step ? <Check className="w-4 h-4" /> : i + 1}
                   </div>
-                ))}
+                  <span className={`mt-1 text-xs font-medium hidden sm:block ${i === step ? 'text-emerald-700' : 'text-gray-400'}`}>
+                    {label}
+                  </span>
+                </div>
+                {i < STEPS.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-2 rounded transition-colors ${i < step ? 'bg-emerald-400' : 'bg-gray-200'}`} />
+                )}
               </div>
-            )}
+            ))}
           </div>
 
-          {/* KVKK Checkboxes */}
-          <div className="mb-6 space-y-3">
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="kvkk"
-                checked={formData.kvkkAccepted}
-                onChange={(e) => setFormData({ ...formData, kvkkAccepted: e.target.checked })}
-                className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
-              />
-              <label htmlFor="kvkk" className="text-sm text-gray-600">
-                <a href="#" className="text-emerald-600 hover:underline">KVKK Aydınlatma Metni</a>'ni
-                ve <a href="#" className="text-emerald-600 hover:underline">Kullanım Koşulları</a>'nı
-                okudum, kabul ediyorum. *
-              </label>
-            </div>
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="marketing"
-                checked={formData.marketingAccepted}
-                onChange={(e) => setFormData({ ...formData, marketingAccepted: e.target.checked })}
-                className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
-              />
-              <label htmlFor="marketing" className="text-sm text-gray-600">
-                Kampanya ve duyurulardan haberdar olmak istiyorum.
-              </label>
-            </div>
-          </div>
+          {/* Kart */}
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 space-y-5">
 
-          {/* Error Message */}
-          {errorMessage && (
-            <div role="alert" className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-3 rounded-lg mb-4">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-              {errorMessage}
-            </div>
-          )}
+              <h2 className="text-lg font-bold text-gray-900 pb-3 border-b border-gray-100">
+                {step + 1}. {STEPS[step]}
+              </h2>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={status === 'loading'}
-            className="w-full bg-emerald-600 text-white py-3.5 rounded-lg font-semibold hover:bg-emerald-700 transition flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {status === 'loading' ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                İlan Oluşturuluyor...
-              </>
-            ) : (
-              <>
-                <Upload className="w-5 h-5" />
-                İlanı Yayınla
-              </>
-            )}
-          </button>
-        </form>
-      </div>
-    </div>
+              {/* ══ ADIM 1 ══════════════════════════════════════════ */}
+              {step === 0 && (
+                <>
+                  {/* Firma türü */}
+                  <Field label="Firma Türü" required error={errors.firmaType}>
+                    <div className="grid grid-cols-2 gap-3 mt-1">
+                      {([
+                        { value: 'uretici', label: 'Üretici',     Icon: Factory, desc: 'Kendi ürünlerini üretiyor' },
+                        { value: 'satici',  label: 'Satıcı / Bayi', Icon: Store,   desc: 'Distribütör ya da bayi'  },
+                      ] as const).map(({ value, label, Icon, desc }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => { set('firmaType', value); setErrors((e) => ({ ...e, firmaType: undefined })); }}
+                          className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 text-center transition ${
+                            form.firmaType === value
+                              ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                              : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                          }`}
+                        >
+                          <Icon className="w-7 h-7" />
+                          <span className="font-semibold text-sm">{label}</span>
+                          <span className="text-xs text-gray-400 leading-tight">{desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+
+                  {/* Firma adı */}
+                  <Field label="Firma Adı" required error={errors.firmaAdi}>
+                    <input
+                      type="text"
+                      value={form.firmaAdi}
+                      onChange={(e) => set('firmaAdi', e.target.value)}
+                      placeholder="Örn: ABC Prefabrik Ltd. Şti."
+                      className={cls}
+                    />
+                  </Field>
+
+                  {/* Vergi no */}
+                  <Field label="Vergi Numarası" required error={errors.vergiNo}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={10}
+                      value={form.vergiNo}
+                      onChange={(e) => set('vergiNo', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="10 haneli vergi numarası"
+                      className={cls}
+                    />
+                  </Field>
+
+                  {/* Firma yapısı */}
+                  <Field label="Firma Yapısı" required error={errors.firmaYapisi}>
+                    <select
+                      value={form.firmaYapisi}
+                      onChange={(e) => set('firmaYapisi', e.target.value)}
+                      className={cls + ' bg-white'}
+                    >
+                      <option value="">Seçiniz…</option>
+                      {FIRMA_YAPILARI.map((f) => (
+                        <option key={f.value} value={f.value}>{f.label}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </>
+              )}
+
+              {/* ══ ADIM 2 ══════════════════════════════════════════ */}
+              {step === 1 && (
+                <>
+                  <Field label="Yetkili Adı Soyadı" required error={errors.yetkiliAdi}>
+                    <input
+                      type="text"
+                      value={form.yetkiliAdi}
+                      onChange={(e) => set('yetkiliAdi', e.target.value)}
+                      placeholder="Ad Soyad"
+                      className={cls}
+                    />
+                  </Field>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Field label="Telefon" required error={errors.telefon}>
+                      <input
+                        type="tel"
+                        value={form.telefon}
+                        onChange={(e) => set('telefon', e.target.value)}
+                        placeholder="05XX XXX XX XX"
+                        className={cls}
+                      />
+                    </Field>
+                    <Field label="E-posta" required error={errors.eposta}>
+                      <input
+                        type="email"
+                        value={form.eposta}
+                        onChange={(e) => set('eposta', e.target.value)}
+                        placeholder="firma@email.com"
+                        className={cls}
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Field label="Şehir" required error={errors.sehir}>
+                      <select
+                        value={form.sehir}
+                        onChange={(e) => set('sehir', e.target.value)}
+                        className={cls + ' bg-white'}
+                      >
+                        <option value="">Şehir seçin…</option>
+                        {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </Field>
+                    <Field label="İlçe">
+                      <input
+                        type="text"
+                        value={form.ilce}
+                        onChange={(e) => set('ilce', e.target.value)}
+                        placeholder="İlçe adı"
+                        className={cls}
+                      />
+                    </Field>
+                  </div>
+
+                  <Field label="Adres">
+                    <textarea
+                      value={form.adres}
+                      onChange={(e) => set('adres', e.target.value)}
+                      rows={3}
+                      placeholder="Açık adres"
+                      className={cls + ' resize-none'}
+                    />
+                  </Field>
+                </>
+              )}
+
+              {/* ══ ADIM 3 ══════════════════════════════════════════ */}
+              {step === 2 && (
+                <>
+                  {/* Kategoriler — çoklu seçim chip */}
+                  <Field label="Ürün Kategorileri" required error={errors.kategoriler}>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {CATEGORIES.map((cat) => {
+                        const sel = form.kategoriler.includes(cat.slug);
+                        return (
+                          <button
+                            key={cat.slug}
+                            type="button"
+                            onClick={() => set('kategoriler', toggle(form.kategoriler, cat.slug))}
+                            className={`px-3 py-1.5 rounded-full border text-sm font-medium transition ${
+                              sel
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            }`}
+                          >
+                            {sel && <Check className="inline w-3 h-3 mr-1" />}
+                            {cat.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </Field>
+
+                  {/* Hizmet bölgeleri */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Hizmet Verilen Bölgeler
+                      <span className="ml-1 text-xs text-gray-400 font-normal">(birden fazla seçilebilir)</span>
+                    </label>
+                    <div className="border border-gray-200 rounded-lg p-3 max-h-44 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5">
+                      {CITIES.map((city) => {
+                        const sel = form.hizmetBolgeleri.includes(city);
+                        return (
+                          <label key={city} className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={sel}
+                              onChange={() => set('hizmetBolgeleri', toggle(form.hizmetBolgeleri, city))}
+                              className="w-3.5 h-3.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                            />
+                            <span className="text-sm text-gray-600">{city}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {form.hizmetBolgeleri.length > 0 && (
+                      <p className="text-xs text-emerald-600 mt-1">
+                        {form.hizmetBolgeleri.length} il seçildi
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Tanıtım metni */}
+                  <Field label="Firma Tanıtım Metni">
+                    <textarea
+                      value={form.tanitimMetni}
+                      onChange={(e) => set('tanitimMetni', e.target.value)}
+                      rows={4}
+                      maxLength={1000}
+                      placeholder="Firmanızı ve sunduğunuz hizmetleri kısaca tanıtın…"
+                      className={cls + ' resize-none'}
+                    />
+                    <p className="text-xs text-gray-400 mt-1 text-right">
+                      {form.tanitimMetni.length} / 1000
+                    </p>
+                  </Field>
+
+                  {/* Onaylar */}
+                  <div className="space-y-3 pt-2 border-t border-gray-100">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.kvkkOnay}
+                        onChange={(e) => set('kvkkOnay', e.target.checked)}
+                        className="mt-0.5 w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                      />
+                      <span className="text-sm text-gray-600">
+                        <Link to="/kvkk" target="_blank" className="text-emerald-600 hover:underline">
+                          KVKK Aydınlatma Metni
+                        </Link>
+                        'ni okudum ve kişisel verilerimin işlenmesine onay veriyorum.
+                        <span className="text-red-500 ml-0.5">*</span>
+                      </span>
+                    </label>
+                    {errors.kvkkOnay && (
+                      <p className="text-xs text-red-600 flex items-center gap-1 pl-7">
+                        <AlertCircle className="w-3 h-3" />{errors.kvkkOnay}
+                      </p>
+                    )}
+
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.kullanimOnay}
+                        onChange={(e) => set('kullanimOnay', e.target.checked)}
+                        className="mt-0.5 w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                      />
+                      <span className="text-sm text-gray-600">
+                        <Link to="/kullanim-kosullari" target="_blank" className="text-emerald-600 hover:underline">
+                          Kullanım Koşulları
+                        </Link>
+                        'nı okudum ve kabul ediyorum.
+                        <span className="text-red-500 ml-0.5">*</span>
+                      </span>
+                    </label>
+                    {errors.kullanimOnay && (
+                      <p className="text-xs text-red-600 flex items-center gap-1 pl-7">
+                        <AlertCircle className="w-3 h-3" />{errors.kullanimOnay}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Genel hata (Firestore) */}
+                  {errors.firmaAdi && status === 'idle' && (
+                    <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-3 rounded-lg">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />{errors.firmaAdi}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Navigasyon butonları */}
+            <div className="flex justify-between mt-5">
+              {step > 0 ? (
+                <button
+                  type="button"
+                  onClick={back}
+                  className="flex items-center gap-1.5 px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Geri
+                </button>
+              ) : <div />}
+
+              {step < STEPS.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={next}
+                  className="flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition"
+                >
+                  İleri
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className="flex items-center gap-2 px-8 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {status === 'loading' ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" />Gönderiliyor…</>
+                  ) : (
+                    <><CheckCircle className="w-4 h-4" />Başvuruyu Gönder</>
+                  )}
+                </button>
+              )}
+            </div>
+          </form>
+
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 }
