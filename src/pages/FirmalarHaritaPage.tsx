@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import markerIcon    from 'leaflet/dist/images/marker-icon.png';
+import markerIcon2x  from 'leaflet/dist/images/marker-icon-2x.png';
+import markerShadow  from 'leaflet/dist/images/marker-shadow.png';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { FIRMS, type Firm } from '../data/firms';
@@ -10,11 +13,12 @@ import { CATEGORIES } from '../data/categories';
 import { ShieldCheck, MapPin, Phone, Tag, ChevronDown } from 'lucide-react';
 
 /* ── Fix default Leaflet marker icons (Vite asset issue) ─── */
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl:       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconUrl:       markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl:     markerShadow,
 });
 
 /* ── Custom colored marker ──────────────────────────────── */

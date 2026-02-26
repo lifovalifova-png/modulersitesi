@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import markerIcon    from 'leaflet/dist/images/marker-icon.png';
+import markerIcon2x  from 'leaflet/dist/images/marker-icon-2x.png';
+import markerShadow  from 'leaflet/dist/images/marker-shadow.png';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { CATEGORIES } from '../data/categories';
@@ -13,11 +16,12 @@ import {
 } from 'lucide-react';
 
 /* ─── Leaflet icon fix (Vite) ────────────────────────────────── */
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconUrl:       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconUrl:       markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl:     markerShadow,
 });
 
 /* ─── Veri ───────────────────────────────────────────────────── */
