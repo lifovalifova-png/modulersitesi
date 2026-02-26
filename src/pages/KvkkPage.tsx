@@ -74,6 +74,16 @@ const DATA_CATEGORIES = [
 /* ─── Amaç & hukuki dayanak tablosu ──────────────────────── */
 const PURPOSES = [
   {
+    purpose: 'Teklif talebi alma ve işleme süreçleri',
+    legal: 'Sözleşmenin kurulması ve ifası',
+    article: 'KVKK m. 5/2-c',
+  },
+  {
+    purpose: 'Teklif taleplerinin üretici ve satıcı firmalara iletilmesi',
+    legal: 'Açık rıza (form onayı)',
+    article: 'KVKK m. 5/1',
+  },
+  {
     purpose: 'Üyelik kaydı ve hesap yönetimi',
     legal: 'Sözleşmenin kurulması ve ifası',
     article: 'KVKK m. 5/2-c',
@@ -314,9 +324,49 @@ export default function KvkkPage() {
               </div>
             </section>
 
-            {/* 4 — Veri Aktarımı */}
+            {/* 4 — Veri Toplama Yöntemi ve Hukuki Sebep */}
             <section className="mb-10">
-              <SectionTitle>4. Kişisel Verilerin Aktarıldığı Taraflar ve Aktarım Koşulları</SectionTitle>
+              <SectionTitle>4. Veri Toplama Yöntemi ve Hukuki Sebep</SectionTitle>
+              <p className="text-gray-600 leading-relaxed mb-4">
+                Kişisel verileriniz, platformdaki aşağıdaki formlar aracılığıyla doğrudan
+                sizden toplanmaktadır. Her form için KVKK 5. maddesi kapsamındaki hukuki
+                dayanak aşağıda belirtilmiştir:
+              </p>
+              <div className="space-y-3 mb-4">
+                {([
+                  {
+                    form: 'Teklif Al Formu',
+                    desc: 'Ad, soyad, telefon ve e-posta bilgileriniz alınır; teklif talep ettiğiniz üretici veya satıcı firmaya iletilir.',
+                    legal: 'Sözleşme ifası (m. 5/2-c) + Açık rıza — firma aktarımı için (m. 5/1)',
+                  },
+                  {
+                    form: 'İletişim Formu',
+                    desc: 'Ad, soyad, e-posta ve mesaj içeriği toplanır; platform desteği amacıyla işlenir.',
+                    legal: 'Meşru menfaat (m. 5/2-f)',
+                  },
+                  {
+                    form: 'İlan Ver / Firma Kayıt Formu',
+                    desc: 'Firma adı, vergi numarası, iletişim ve konum bilgileri toplanır; platform üzerinde ilan olarak yayımlanır.',
+                    legal: 'Sözleşmenin kurulması ve ifası (m. 5/2-c)',
+                  },
+                ] as const).map((item) => (
+                  <div key={item.form} className="bg-gray-50 rounded-xl p-4 text-sm">
+                    <p className="font-semibold text-gray-800 mb-1">{item.form}</p>
+                    <p className="text-gray-600 mb-2">{item.desc}</p>
+                    <p className="text-xs font-medium text-emerald-700">KVKK {item.legal}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500">
+                Açık rıza gerektiren işlemlerde (teklif talebinin firmaya iletilmesi) formun
+                altında ayrıca onay kutusu yer almaktadır. Onayınızı istediğiniz zaman geri
+                alabilirsiniz; bu durum diğer veri işleme faaliyetlerini etkilemez.
+              </p>
+            </section>
+
+            {/* 5 — Veri Aktarımı */}
+            <section className="mb-10">
+              <SectionTitle>5. Kişisel Verilerin Aktarıldığı Taraflar ve Aktarım Koşulları</SectionTitle>
 
               <h3 className="font-semibold text-gray-700 mb-2 mt-4">4.1 Yurt İçi Aktarım</h3>
               <p className="text-gray-600 leading-relaxed mb-3">
@@ -324,7 +374,8 @@ export default function KvkkPage() {
               </p>
               <ul className="space-y-3 text-gray-600 mb-4">
                 {[
-                  { bold: 'Platform üyesi firmalar:', text: 'Teklif talebinizde seçtiğiniz firmalarla yalnızca talep kapsamındaki verileriniz paylaşılır.' },
+                  { bold: 'Üretici ve satıcı firmalar:', text: 'Teklif talebinizde yer alan ad, telefon ve e-posta bilgileriniz yalnızca talebi karşılayacak firmaya iletilir. Bu aktarım KVKK m. 8 uyarınca açık rızanıza ve sözleşme ifasına dayanır.' },
+                  { bold: 'Firebase (Google LLC) — Bulut Altyapı:', text: 'Platformun veritabanı ve kimlik doğrulama hizmetleri Firebase üzerinde çalışmaktadır. Form verileri Google Cloud sunucularında saklanır. Aktarım KVKK m. 9 uyarınca SCCs güvencesiyle gerçekleştirilmektedir.' },
                   { bold: 'Ödeme hizmet sağlayıcıları:', text: 'Fatura bilgileri ödeme altyapısı sağlayıcılarıyla sözleşmesel güvence altında paylaşılır.' },
                   { bold: 'Yetkili kurum ve kuruluşlar:', text: 'Mahkemeler, savcılıklar, vergi daireleri ve düzenleyici kurumlar yasal zorunluluk kapsamında.' },
                   { bold: 'Denetçi ve danışmanlar:', text: 'Hukuki veya mali denetim süreçlerinde gizlilik sözleşmesiyle bağlı profesyoneller.' },
@@ -353,6 +404,7 @@ export default function KvkkPage() {
                   </thead>
                   <tbody>
                     {[
+                      ['Firebase (Google Cloud)', 'ABD', 'Üyelik, form ve ilan verileri', 'SCCs / Google DPA'],
                       ['Google Analytics', 'ABD', 'Anonim teknik veriler', 'SCCs / Yeterlilik kararı'],
                       ['Cloudflare', 'ABD', 'IP, teknik log', 'SCCs'],
                       ['SMTP / E-posta altyapısı', 'AB/ABD', 'E-posta adresi', 'SCCs'],
@@ -379,7 +431,7 @@ export default function KvkkPage() {
 
             {/* 5 — Saklama Süreleri */}
             <section className="mb-10">
-              <SectionTitle>5. Kişisel Veri Saklama Süreleri</SectionTitle>
+              <SectionTitle>6. Kişisel Veri Saklama Süreleri</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-4">
                 Verileriniz yalnızca işlenme amacının gerektirdiği süre boyunca saklanır. Amaç ortadan
                 kalktığında veya yasal saklama süresi dolduğunda veriler silinir, yok edilir veya
@@ -407,10 +459,10 @@ export default function KvkkPage() {
 
             {/* 6 — Haklar */}
             <section className="mb-10">
-              <SectionTitle>6. Veri Sahibinin Hakları (KVKK Madde 11)</SectionTitle>
+              <SectionTitle>7. Veri Sahibinin Hakları (KVKK Madde 11)</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-4">
                 KVKK'nın 11. maddesi uyarınca kişisel verilerinize ilişkin aşağıdaki haklara sahipsiniz.
-                Bu haklarınızı kullanmak için 7. bölümdeki başvuru yöntemini izleyiniz.
+                Bu haklarınızı kullanmak için 8. bölümdeki başvuru yöntemini izleyiniz.
               </p>
               <div className="space-y-3">
                 {RIGHTS.map((right, i) => (
@@ -433,7 +485,7 @@ export default function KvkkPage() {
 
             {/* 7 — Başvuru Yöntemi */}
             <section className="mb-10">
-              <SectionTitle>7. Başvuru Yöntemi ve Yanıt Süresi</SectionTitle>
+              <SectionTitle>8. Başvuru Yöntemi ve Yanıt Süresi</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-4">
                 KVKK kapsamındaki haklarınızı kullanmak için aşağıdaki kanallardan herhangi birini
                 tercih edebilirsiniz:
@@ -486,7 +538,7 @@ export default function KvkkPage() {
 
             {/* 8 — Çerez Politikası */}
             <section className="mb-10">
-              <SectionTitle>8. Çerez (Cookie) Politikası Özeti</SectionTitle>
+              <SectionTitle>9. Çerez (Cookie) Politikası Özeti</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-4">
                 Platformumuz zorunlu, analitik ve pazarlama çerezleri kullanmaktadır. Zorunlu çerezler
                 hizmetin işleyişi için gereklidir; diğerleri yalnızca onayınız dahilinde etkinleştirilir.
@@ -513,7 +565,7 @@ export default function KvkkPage() {
 
             {/* 9 — Güvenlik Tedbirleri */}
             <section className="mb-10">
-              <SectionTitle>9. Güvenlik Tedbirleri</SectionTitle>
+              <SectionTitle>10. Güvenlik Tedbirleri</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-4">
                 KVKK'nın 12. maddesi uyarınca kişisel verilerinizin hukuka aykırı işlenmesini ve
                 yetkisiz erişimi önlemek amacıyla aşağıdaki teknik ve idari tedbirler alınmaktadır:
@@ -528,7 +580,7 @@ export default function KvkkPage() {
 
             {/* 10 — Değişiklik Bildirimi */}
             <section className="mb-8">
-              <SectionTitle>10. Aydınlatma Metnindeki Değişiklikler</SectionTitle>
+              <SectionTitle>11. Aydınlatma Metnindeki Değişiklikler</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-3">
                 Bu Aydınlatma Metni, yasal değişiklikler, yeni hizmetler veya Kurul kararları
                 doğrultusunda güncellenebilir. Değişiklikler şu şekilde duyurulur:

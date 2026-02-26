@@ -213,9 +213,18 @@ export default function QuickQuoteModal({ isOpen, onClose, listing, onSuccess }:
                 onChange={(e) => setFormData({ ...formData, kvkkAccepted: e.target.checked })}
                 className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
               />
-              <label htmlFor="kvkk" className="text-sm text-gray-600">
-                <a href="#" className="text-emerald-600 hover:underline">KVKK Aydınlatma Metni</a>'ni
-                okudum ve kişisel verilerimin işlenmesini kabul ediyorum. *
+              <label htmlFor="kvkk" className="text-sm text-gray-600 leading-relaxed">
+                Kişisel verilerimin{' '}
+                <a
+                  href="/kvkk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-600 hover:underline font-medium"
+                >
+                  Aydınlatma Metni
+                </a>{' '}
+                çerçevesinde işlenmesini ve teklif hazırlanması amacıyla ilgili firmalara
+                aktarılmasını onaylıyorum. *
               </label>
             </div>
 
@@ -248,7 +257,7 @@ export default function QuickQuoteModal({ isOpen, onClose, listing, onSuccess }:
 
             {/* Info Text */}
             <p className="text-xs text-gray-500 text-center">
-              Bilgileriniz 3. şahıslarla paylaşılmayacaktır.
+              Bilgileriniz yalnızca teklif hazırlanması amacıyla ilgili firmaya iletilecektir.
             </p>
           </form>
         )}
