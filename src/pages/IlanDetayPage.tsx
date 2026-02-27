@@ -6,10 +6,11 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { FLASH_DEALS, type FlashDeal } from '../data/flashDeals';
 import { CATEGORIES } from '../data/categories';
+import { useTeklifSepet } from '../context/TeklifSepetContext';
 import {
   MapPin, Tag, Calendar, ShieldCheck, Phone, ChevronLeft, ChevronRight,
   Send, CheckCircle, AlertCircle, Loader2, X, Eye, EyeOff, Star,
-  ArrowLeft, Zap,
+  ArrowLeft, Zap, ShoppingBag,
 } from 'lucide-react';
 
 /* ── Kategori badge renkleri ────────────────────────────── */
@@ -302,6 +303,7 @@ function SimilarCard({ deal, onQuote }: { deal: FlashDeal; onQuote: (d: FlashDea
 export default function IlanDetayPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addFirm, isInSepet, isFull, openDrawer } = useTeklifSepet();
 
   const listing = FLASH_DEALS.find((d) => d.id === Number(id));
 
@@ -320,6 +322,9 @@ export default function IlanDetayPage() {
   const [similarModal, setSimilarModal] = useState<{
     open: boolean; deal: FlashDeal | null;
   }>({ open: false, deal: null });
+
+  /* TeklifSepeti — sepete eklendi feedback */
+  const [sepetFeedback, setSepetFeedback] = useState<'idle' | 'added'>('idle');
 
   if (!listing) {
     return (
@@ -596,14 +601,45 @@ export default function IlanDetayPage() {
                   Teklif Al
                 </button>
 
-                {/* İkincil Teklif — sitenin ana özelliği */}
-                <button
-                  onClick={() => setModal({ open: true, type: 'secondary' })}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm"
-                >
-                  <Zap className="w-4 h-4" />
-                  2. Firmadan da Teklif Al
-                </button>
+                {/* İkincil Teklif — TeklifSepeti entegrasyonu */}
+                {isInSepet(listing.id) ? (
+                  <button
+                    onClick={openDrawer}
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Sepette ✓ — Görüntüle
+                  </button>
+                ) : isFull ? (
+                  <button
+                    onClick={openDrawer}
+                    className="w-full bg-gray-100 text-gray-500 font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-gray-200 transition"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    Sepet Dolu (2/2) — Görüntüle
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      const result = addFirm(listing);
+                      if (result === 'added') {
+                        setSepetFeedback('added');
+                        setTimeout(() => setSepetFeedback('idle'), 2500);
+                      }
+                    }}
+                    className={`w-full font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm ${
+                      sepetFeedback === 'added'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-amber-500 hover:bg-amber-600 text-white'
+                    }`}
+                  >
+                    {sepetFeedback === 'added' ? (
+                      <><CheckCircle className="w-4 h-4" />Sepete Eklendi ✓</>
+                    ) : (
+                      <><Zap className="w-4 h-4" />2. Firmadan da Teklif Al</>
+                    )}
+                  </button>
+                )}
 
                 <p className="text-[11px] text-gray-400 text-center leading-relaxed px-1">
                   💡 Birden fazla firmadan teklif alarak en uygun fiyatı ve en iyi hizmeti karşılaştırın.
