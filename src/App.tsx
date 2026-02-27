@@ -12,6 +12,7 @@ import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminRoute from './components/AdminRoute';
 import LogoKitPage from './pages/LogoKitPage';
+import IlanDetayPage from './pages/IlanDetayPage';
 import './App.css';
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
           </AdminRoute>
         } />
         <Route path="/logo-kit" element={<LogoKitPage />} />
+        <Route path="/ilan/:id" element={<IlanDetayPage />} />
       </Routes>
     </Router>
   );

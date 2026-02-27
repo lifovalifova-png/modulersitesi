@@ -1,10 +1,9 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, MapPin, Clock, Flame, Tag } from 'lucide-react';
-import { toast } from 'sonner';
-import QuickQuoteModal from './QuickQuoteModal';
-import { FLASH_DEALS, type FlashDeal } from '../data/flashDeals';
+import { FLASH_DEALS } from '../data/flashDeals';
 
-/* Kategori → slug eşlemesi (CategoryPage yönlendirmesi için) */
+/* Kategori → renk eşlemesi */
 const CATEGORY_COLORS: Record<string, string> = {
   'Prefabrik':           'bg-emerald-100 text-emerald-700',
   'Yaşam Konteynerleri': 'bg-blue-100 text-blue-700',
@@ -15,24 +14,19 @@ const CATEGORY_COLORS: Record<string, string> = {
   '2. El':               'bg-orange-100 text-orange-700',
 };
 
-const AUTO_SCROLL_INTERVAL = 3000; // ms
+const AUTO_SCROLL_INTERVAL = 3000;
 const CARD_WIDTH = 320 + 16; // w-80 + gap-4
 
 export default function FlashDealsCarousel() {
-  const [selectedListing, setSelectedListing] = useState<FlashDeal | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef    = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isPausedRef = useRef(false);
+  const isPausedRef  = useRef(false);
 
   /* ── Scroll helpers ─────────────────────────────────────── */
   const scrollToIndex = useCallback((index: number) => {
     if (!scrollRef.current) return;
-    scrollRef.current.scrollTo({
-      left: index * CARD_WIDTH,
-      behavior: 'smooth',
-    });
+    scrollRef.current.scrollTo({ left: index * CARD_WIDTH, behavior: 'smooth' });
     setActiveIndex(index);
   }, []);
 
@@ -52,46 +46,23 @@ export default function FlashDealsCarousel() {
   const startAutoScroll = useCallback(() => {
     if (autoScrollRef.current) clearInterval(autoScrollRef.current);
     autoScrollRef.current = setInterval(() => {
-      if (!isPausedRef.current) {
-        scrollBy('right');
-      }
+      if (!isPausedRef.current) scrollBy('right');
     }, AUTO_SCROLL_INTERVAL);
   }, [scrollBy]);
 
   useEffect(() => {
     startAutoScroll();
-    return () => {
-      if (autoScrollRef.current) clearInterval(autoScrollRef.current);
-    };
+    return () => { if (autoScrollRef.current) clearInterval(autoScrollRef.current); };
   }, [startAutoScroll]);
 
-  /* ── Sync dot indicator with manual scroll ──────────────── */
+  /* ── Sync dot indicator ──────────────────────────────────── */
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const onScroll = () => {
-      const idx = Math.round(el.scrollLeft / CARD_WIDTH);
-      setActiveIndex(idx);
-    };
+    const onScroll = () => setActiveIndex(Math.round(el.scrollLeft / CARD_WIDTH));
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, []);
-
-  /* ── Modal helpers ──────────────────────────────────────── */
-  const openQuoteModal = (listing: FlashDeal) => {
-    isPausedRef.current = true;
-    setSelectedListing(listing);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    isPausedRef.current = false;
-  };
-
-  const handleSuccess = () => {
-    toast.success('Teklif talebiniz alındı! En kısa sürede sizinle iletişime geçeceğiz.');
-  };
 
   const canScrollLeft  = activeIndex > 0;
   const canScrollRight = activeIndex < FLASH_DEALS.length - 1;
@@ -107,9 +78,7 @@ export default function FlashDealsCarousel() {
               <Flame className="w-6 h-6" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
-                Flaş Fırsatlar
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Flaş Fırsatlar</h2>
               <p className="text-gray-600 text-sm flex items-center gap-1 mt-1">
                 <Clock className="w-4 h-4" aria-hidden="true" /> Sınırlı süreli indirimli ilanlar
               </p>
@@ -161,31 +130,33 @@ export default function FlashDealsCarousel() {
               return (
                 <div
                   key={listing.id}
-                  className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow snap-start"
+                  className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow snap-start flex flex-col"
                 >
                   {/* Image */}
-                  <div className="relative h-48">
-                    <img
-                      src={listing.image}
-                      alt={`${listing.title} — ${listing.location}`}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                    />
-                    {listing.urgent && (
-                      <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                        ACİL
-                      </div>
-                    )}
-                    {listing.discount && (
-                      <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
-                        %{listing.discount} İNDİRİM
-                      </div>
-                    )}
-                  </div>
+                  <Link to={`/ilan/${listing.id}`} className="block">
+                    <div className="relative h-48">
+                      <img
+                        src={listing.image}
+                        alt={`${listing.title} — ${listing.location}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                      {listing.urgent && (
+                        <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                          ACİL
+                        </div>
+                      )}
+                      {listing.discount && (
+                        <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
+                          %{listing.discount} İNDİRİM
+                        </div>
+                      )}
+                    </div>
+                  </Link>
 
                   {/* Content */}
-                  <div className="p-4">
-                    {/* City + Category badges */}
+                  <div className="p-4 flex flex-col flex-1">
+                    {/* Badges */}
                     <div className="flex items-center gap-1.5 mb-2 flex-wrap">
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                         <MapPin className="w-3 h-3" aria-hidden="true" />
@@ -197,29 +168,25 @@ export default function FlashDealsCarousel() {
                       </span>
                     </div>
 
-                    <h3 className="font-semibold text-gray-800 mb-3 line-clamp-2 min-h-[48px]">
+                    <Link to={`/ilan/${listing.id}`} className="font-semibold text-gray-800 mb-3 line-clamp-2 min-h-[48px] hover:text-emerald-600 transition text-sm">
                       {listing.title}
-                    </h3>
+                    </Link>
 
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-4 mt-auto">
                       <div>
-                        <div className="text-lg font-bold text-emerald-600">
-                          {listing.price}
-                        </div>
+                        <div className="text-lg font-bold text-emerald-600">{listing.price}</div>
                         {listing.originalPrice && (
-                          <div className="text-sm text-gray-400 line-through">
-                            {listing.originalPrice}
-                          </div>
+                          <div className="text-sm text-gray-400 line-through">{listing.originalPrice}</div>
                         )}
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => openQuoteModal(listing)}
-                      className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition"
+                    <Link
+                      to={`/ilan/${listing.id}`}
+                      className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition text-center text-sm"
                     >
-                      Hızlı Teklif Al
-                    </button>
+                      Teklif Al
+                    </Link>
                   </div>
                 </div>
               );
@@ -234,25 +201,13 @@ export default function FlashDealsCarousel() {
                 onClick={() => { scrollToIndex(i); startAutoScroll(); }}
                 aria-label={`${i + 1}. ilana git`}
                 className={`rounded-full transition-all duration-300 ${
-                  i === activeIndex
-                    ? 'w-5 h-2 bg-emerald-500'
-                    : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                  i === activeIndex ? 'w-5 h-2 bg-emerald-500' : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
                 }`}
               />
             ))}
           </div>
         </div>
       </div>
-
-      {/* Quick Quote Modal */}
-      {selectedListing && (
-        <QuickQuoteModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          listing={selectedListing}
-          onSuccess={handleSuccess}
-        />
-      )}
     </section>
   );
 }
