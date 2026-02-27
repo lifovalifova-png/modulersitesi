@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, Search, Phone, Map, UserCircle, FileText, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
 import { CATEGORIES } from '../data/categories';
 import { SITE_CONFIG } from '../config/site';
 import { useAuth } from '../context/AuthContext';
@@ -23,7 +24,17 @@ const CITIES = [
 
 export default function Header() {
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
+  const { currentUser, role, logout } = useAuth();
+
+  function handleIlanVer() {
+    if (!currentUser) { navigate('/giris'); return; }
+    if (role === 'seller') { navigate('/satici-formu'); return; }
+    toast('İlan vermek için satıcı hesabı gereklidir.', {
+      description: 'Firma hesabı açarak ücretsiz ilan verebilirsiniz.',
+      action: { label: 'Satıcı Hesabı Aç', onClick: () => navigate('/kayit') },
+      duration: 6000,
+    });
+  }
 
   /* state */
   const [mobileMenuOpen,       setMobileMenuOpen]       = useState(false);
@@ -107,9 +118,9 @@ export default function Header() {
             <Phone className="w-4 h-4" aria-hidden="true" />
             <span className="hidden sm:inline">Destek Hattı:</span> {SITE_CONFIG.phone}
           </span>
-          <Link to="/satici-formu" className="hover:underline">
+          <button onClick={handleIlanVer} className="hover:underline">
             Ücretsiz İlan Ver
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -162,12 +173,12 @@ export default function Header() {
               <Map className="w-5 h-5" aria-hidden="true" />
               <span className="hidden lg:inline">Firmalar Haritası</span>
             </Link>
-            <Link
-              to="/satici-formu"
+            <button
+              onClick={handleIlanVer}
               className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition font-medium text-sm"
             >
               İlan Ver
-            </Link>
+            </button>
             <UserMenu />
           </div>
 
@@ -321,13 +332,12 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 py-4 space-y-2">
-            <Link
-              to="/satici-formu"
+            <button
+              onClick={() => { handleIlanVer(); setMobileMenuOpen(false); }}
               className="block w-full bg-emerald-600 text-white px-4 py-3 rounded-lg text-center font-medium"
-              onClick={() => setMobileMenuOpen(false)}
             >
               Ücretsiz İlan Ver
-            </Link>
+            </button>
             <Link
               to="/firmalar-harita"
               className="flex items-center gap-2 px-2 py-2 text-gray-700 hover:text-emerald-600"

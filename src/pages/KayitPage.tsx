@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, Building2, ShoppingBag } from 'lucide-react';
+import {
+  User, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2,
+  Building2, ShoppingBag, Hash, MapPin, Factory, Store, CheckSquare, Square,
+} from 'lucide-react';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth, authErrorMessage } from '../context/AuthContext';
+import { CATEGORIES } from '../data/categories';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import logoSrc from '../assets/logo.svg';
@@ -18,25 +24,57 @@ function GoogleIcon() {
   );
 }
 
+const CITIES = [
+  'Adana','Adıyaman','Afyonkarahisar','Ağrı','Amasya','Ankara','Antalya','Artvin',
+  'Aydın','Balıkesir','Bilecik','Bingöl','Bitlis','Bolu','Burdur','Bursa','Çanakkale',
+  'Çankırı','Çorum','Denizli','Diyarbakır','Edirne','Elazığ','Erzincan','Erzurum',
+  'Eskişehir','Gaziantep','Giresun','Gümüşhane','Hakkari','Hatay','Isparta','Mersin',
+  'İstanbul','İzmir','Kars','Kastamonu','Kayseri','Kırklareli','Kırşehir','Kocaeli',
+  'Konya','Kütahya','Malatya','Manisa','Kahramanmaraş','Mardin','Muğla','Muş',
+  'Nevşehir','Niğde','Ordu','Rize','Sakarya','Samsun','Siirt','Sinop','Sivas',
+  'Tekirdağ','Tokat','Trabzon','Tunceli','Şanlıurfa','Uşak','Van','Yozgat',
+  'Zonguldak','Aksaray','Bayburt','Karaman','Kırıkkale','Batman','Şırnak',
+  'Bartın','Ardahan','Iğdır','Yalova','Karabük','Kilis','Osmaniye','Düzce',
+];
+
 type UserType = 'alici' | 'satici';
+type SaticiTipi = 'uretici' | 'bayi' | '';
+type UrunDurumu = 'sifir' | 'ikinci_el' | 'her_ikisi' | '';
+
+/* ── Hata satırı yardımcısı ─────────────────────────────── */
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return (
+    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+      <AlertCircle className="w-3 h-3 flex-shrink-0" />{msg}
+    </p>
+  );
+}
 
 export default function KayitPage() {
   const { currentUser, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
-  /* Giriş yapılmışsa yönlendir */
   useEffect(() => {
     if (currentUser) navigate('/', { replace: true });
   }, [currentUser, navigate]);
 
+  /* ── Temel form ─────────────────────────────────────────── */
   const [form, setForm] = useState({
-    displayName: '',
-    email:       '',
-    password:    '',
-    passwordCnf: '',
-    kvkk:        false,
+    displayName: '', email: '', password: '', passwordCnf: '', kvkk: false,
   });
   const [userType, setUserType] = useState<UserType>('alici');
+
+  /* ── Satıcı ek alanları ─────────────────────────────────── */
+  const [seller, setSeller] = useState({
+    firmaAdi:   '',
+    vergiNo:    '',
+    sehir:      '',
+    saticiTipi: '' as SaticiTipi,
+    urunDurumu: '' as UrunDurumu,
+    kategoriler: [] as string[],
+  });
+
   const [showPass, setShowPass] = useState(false);
   const [showCnf,  setShowCnf]  = useState(false);
   const [errors,   setErrors]   = useState<Record<string, string>>({});
@@ -49,28 +87,75 @@ export default function KayitPage() {
     setErrorMsg('');
   }
 
+  function setSel(key: string, val: string) {
+    setSeller((s) => ({ ...s, [key]: val }));
+    if (errors[key]) setErrors((e) => { const n = { ...e }; delete n[key]; return n; });
+  }
+
+  function toggleKategori(name: string) {
+    setSeller((s) => ({
+      ...s,
+      kategoriler: s.kategoriler.includes(name)
+        ? s.kategoriler.filter((k) => k !== name)
+        : [...s.kategoriler, name],
+    }));
+    if (errors.kategoriler) setErrors((e) => { const n = { ...e }; delete n.kategoriler; return n; });
+  }
+
+  /* ── Doğrulama ──────────────────────────────────────────── */
   function validate() {
     const e: Record<string, string> = {};
-    if (!form.displayName.trim())            e.displayName = 'Ad soyad zorunludur.';
-    if (!form.email.trim())                  e.email       = 'E-posta zorunludur.';
-    if (form.password.length < 6)            e.password    = 'Şifre en az 6 karakter olmalıdır.';
-    if (form.password !== form.passwordCnf)  e.passwordCnf = 'Şifreler eşleşmiyor.';
-    if (!form.kvkk)                          e.kvkk        = 'KVKK metnini kabul etmelisiniz.';
+    if (!form.displayName.trim())           e.displayName = 'Ad soyad zorunludur.';
+    if (!form.email.trim())                 e.email       = 'E-posta zorunludur.';
+    if (form.password.length < 6)           e.password    = 'Şifre en az 6 karakter olmalıdır.';
+    if (form.password !== form.passwordCnf) e.passwordCnf = 'Şifreler eşleşmiyor.';
+    if (!form.kvkk)                         e.kvkk        = 'KVKK metnini kabul etmelisiniz.';
+
+    if (userType === 'satici') {
+      if (!seller.firmaAdi.trim())                     e.firmaAdi   = 'Firma adı zorunludur.';
+      if (!/^\d{10}$/.test(seller.vergiNo.replace(/\s/g, '')))
+                                                        e.vergiNo    = 'Vergi numarası 10 haneli olmalıdır.';
+      if (!seller.sehir)                               e.sehir      = 'Şehir seçimi zorunludur.';
+      if (!seller.saticiTipi)                          e.saticiTipi = 'Satış tipi seçimi zorunludur.';
+      if (!seller.urunDurumu)                          e.urunDurumu = 'Ürün durumu seçimi zorunludur.';
+      if (seller.kategoriler.length === 0)             e.kategoriler = 'En az bir kategori seçiniz.';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
+  }
+
+  /* ── Firestore'a kullanıcı profili kaydet ───────────────── */
+  async function saveUserDoc(uid: string) {
+    const base = { olusturmaTarihi: serverTimestamp() };
+    if (userType === 'buyer' as unknown as UserType || userType === 'alici') {
+      await setDoc(doc(db, 'users', uid), { role: 'buyer', ...base });
+    } else {
+      await setDoc(doc(db, 'users', uid), {
+        role:        'seller',
+        firmaAdi:    seller.firmaAdi.trim(),
+        vergiNo:     seller.vergiNo.replace(/\s/g, ''),
+        sehir:       seller.sehir,
+        saticiTipi:  seller.saticiTipi,
+        urunDurumu:  seller.urunDurumu,
+        kategoriler: seller.kategoriler,
+        ...base,
+      });
+    }
   }
 
   function getRedirect() {
     return userType === 'satici' ? '/satici-formu' : '/';
   }
 
+  /* ── E-posta kayıt ──────────────────────────────────────── */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
     setStatus('loading');
     setErrorMsg('');
     try {
-      await register(form.email.trim(), form.password, form.displayName.trim());
+      const user = await register(form.email.trim(), form.password, form.displayName.trim());
+      await saveUserDoc(user.uid);
       navigate(getRedirect(), { replace: true });
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
@@ -79,11 +164,16 @@ export default function KayitPage() {
     }
   }
 
+  /* ── Google kayıt ───────────────────────────────────────── */
   async function handleGoogle() {
     setStatus('google');
     setErrorMsg('');
     try {
-      await loginWithGoogle();
+      const user = await loginWithGoogle();
+      await setDoc(doc(db, 'users', user.uid), {
+        role: userType === 'satici' ? 'seller' : 'buyer',
+        olusturmaTarihi: serverTimestamp(),
+      });
       navigate(getRedirect(), { replace: true });
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
@@ -94,76 +184,63 @@ export default function KayitPage() {
 
   const isLoading = status === 'loading';
   const isGoogle  = status === 'google';
+  const isSatici  = userType === 'satici';
 
   return (
     <>
       <Header />
 
       <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4">
-        <div className="w-full max-w-md">
+        <div className={`w-full transition-all ${isSatici ? 'max-w-lg' : 'max-w-md'}`}>
 
-          {/* Kart */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
 
             {/* Logo */}
             <div className="flex justify-center mb-6">
-              <Link to="/">
-                <img src={logoSrc} alt="ModülerPazar" className="h-9 w-auto" />
-              </Link>
+              <Link to="/"><img src={logoSrc} alt="ModülerPazar" className="h-9 w-auto" /></Link>
             </div>
 
             <h1 className="text-2xl font-bold text-gray-800 text-center mb-1">Kayıt Ol</h1>
-            <p className="text-sm text-gray-500 text-center mb-7">
-              ModülerPazar'a ücretsiz üye olun
-            </p>
+            <p className="text-sm text-gray-500 text-center mb-7">ModülerPazar'a ücretsiz üye olun</p>
 
-            {/* Global hata */}
             {errorMsg && (
               <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-5">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>{errorMsg}</span>
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /><span>{errorMsg}</span>
               </div>
             )}
 
-            {/* Kullanıcı tipi seçimi */}
+            {/* ── Hesap tipi ────────────────────────────── */}
             <div className="mb-5">
               <p className="text-sm font-medium text-gray-700 mb-2">Hesap tipi</p>
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setUserType('alici')}
-                  className={`flex flex-col items-center gap-2 py-3 px-4 rounded-xl border-2 text-sm font-medium transition ${
-                    userType === 'alici'
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  <ShoppingBag className="w-5 h-5" />
-                  Alıcı
-                  <span className="text-[11px] font-normal text-gray-400">Teklif alacağım</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUserType('satici')}
-                  className={`flex flex-col items-center gap-2 py-3 px-4 rounded-xl border-2 text-sm font-medium transition ${
-                    userType === 'satici'
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  <Building2 className="w-5 h-5" />
-                  Satıcı / Firma
-                  <span className="text-[11px] font-normal text-gray-400">İlan vereceğim</span>
-                </button>
+                {([
+                  { key: 'alici',  Icon: ShoppingBag, label: 'Alıcı',         sub: 'Teklif alacağım' },
+                  { key: 'satici', Icon: Building2,   label: 'Satıcı / Firma', sub: 'İlan vereceğim' },
+                ] as const).map(({ key, Icon, label, sub }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => { setUserType(key); setErrors({}); }}
+                    className={`flex flex-col items-center gap-2 py-3 px-4 rounded-xl border-2 text-sm font-medium transition ${
+                      userType === key
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {label}
+                    <span className="text-[11px] font-normal text-gray-400">{sub}</span>
+                  </button>
+                ))}
               </div>
-              {userType === 'satici' && (
+              {isSatici && (
                 <p className="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
-                  Kayıt sonrası firma bilgilerinizi tamamlamak için yönlendirileceksiniz.
+                  Kayıt sonrası ilan vermek için firma sayfasına yönlendirileceksiniz.
                 </p>
               )}
             </div>
 
-            {/* Google */}
+            {/* ── Google ──────────────────────────────────── */}
             <button
               type="button"
               onClick={handleGoogle}
@@ -181,7 +258,7 @@ export default function KayitPage() {
               <div className="flex-1 h-px bg-gray-200" />
             </div>
 
-            {/* Form */}
+            {/* ── Form ────────────────────────────────────── */}
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
 
               {/* Ad Soyad */}
@@ -192,21 +269,13 @@ export default function KayitPage() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
-                    type="text"
-                    autoComplete="name"
-                    value={form.displayName}
-                    onChange={(e) => set('displayName', e.target.value)}
+                    type="text" autoComplete="name"
+                    value={form.displayName} onChange={(e) => set('displayName', e.target.value)}
                     placeholder="Adınız Soyadınız"
-                    className={`w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                      errors.displayName ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.displayName ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                   />
                 </div>
-                {errors.displayName && (
-                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />{errors.displayName}
-                  </p>
-                )}
+                <FieldError msg={errors.displayName} />
               </div>
 
               {/* E-posta */}
@@ -217,21 +286,13 @@ export default function KayitPage() {
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
-                    type="email"
-                    autoComplete="email"
-                    value={form.email}
-                    onChange={(e) => set('email', e.target.value)}
+                    type="email" autoComplete="email"
+                    value={form.email} onChange={(e) => set('email', e.target.value)}
                     placeholder="ornek@email.com"
-                    className={`w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                      errors.email ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.email ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                   />
                 </div>
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />{errors.email}
-                  </p>
-                )}
+                <FieldError msg={errors.email} />
               </div>
 
               {/* Şifre */}
@@ -242,29 +303,16 @@ export default function KayitPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
-                    type={showPass ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    value={form.password}
-                    onChange={(e) => set('password', e.target.value)}
+                    type={showPass ? 'text' : 'password'} autoComplete="new-password"
+                    value={form.password} onChange={(e) => set('password', e.target.value)}
                     placeholder="En az 6 karakter"
-                    className={`w-full pl-9 pr-10 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                      errors.password ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full pl-9 pr-10 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.password ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPass((v) => !v)}
-                    aria-label={showPass ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
+                  <button type="button" onClick={() => setShowPass((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {errors.password && (
-                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />{errors.password}
-                  </p>
-                )}
+                <FieldError msg={errors.password} />
               </div>
 
               {/* Şifre tekrar */}
@@ -275,57 +323,183 @@ export default function KayitPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
-                    type={showCnf ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    value={form.passwordCnf}
-                    onChange={(e) => set('passwordCnf', e.target.value)}
+                    type={showCnf ? 'text' : 'password'} autoComplete="new-password"
+                    value={form.passwordCnf} onChange={(e) => set('passwordCnf', e.target.value)}
                     placeholder="Şifrenizi tekrar girin"
-                    className={`w-full pl-9 pr-10 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                      errors.passwordCnf ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full pl-9 pr-10 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.passwordCnf ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowCnf((v) => !v)}
-                    aria-label={showCnf ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
+                  <button type="button" onClick={() => setShowCnf((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     {showCnf ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {errors.passwordCnf && (
-                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />{errors.passwordCnf}
-                  </p>
-                )}
+                <FieldError msg={errors.passwordCnf} />
               </div>
+
+              {/* ══ SATICI EK ALANLARI ══════════════════════ */}
+              {isSatici && (
+                <div className="space-y-4 pt-2 border-t border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">
+                    Firma Bilgileri
+                  </p>
+
+                  {/* Firma Adı */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Firma Adı <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={seller.firmaAdi} onChange={(e) => setSel('firmaAdi', e.target.value)}
+                        placeholder="Firmanızın tam adı"
+                        className={`w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.firmaAdi ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                      />
+                    </div>
+                    <FieldError msg={errors.firmaAdi} />
+                  </div>
+
+                  {/* Vergi Numarası */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Vergi Numarası <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text" inputMode="numeric" maxLength={10}
+                        value={seller.vergiNo} onChange={(e) => setSel('vergiNo', e.target.value.replace(/\D/g, ''))}
+                        placeholder="10 haneli vergi numarası"
+                        className={`w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.vergiNo ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                      />
+                    </div>
+                    <FieldError msg={errors.vergiNo} />
+                  </div>
+
+                  {/* Şehir */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Şehir <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <select
+                        value={seller.sehir} onChange={(e) => setSel('sehir', e.target.value)}
+                        className={`w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white ${errors.sehir ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                      >
+                        <option value="">Şehir seçiniz</option>
+                        {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <FieldError msg={errors.sehir} />
+                  </div>
+
+                  {/* Satış Tipi */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Satış Tipi <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {([
+                        { key: 'uretici', Icon: Factory, label: 'Üretici',     sub: 'Kendi üretimim' },
+                        { key: 'bayi',    Icon: Store,   label: 'Bayi / Satıcı', sub: 'Satış ve aracılık' },
+                      ] as const).map(({ key, Icon, label, sub }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setSel('saticiTipi', key)}
+                          className={`flex flex-col items-center gap-1.5 py-3 px-3 rounded-xl border-2 text-sm font-medium transition ${
+                            seller.saticiTipi === key
+                              ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                              : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          <Icon className="w-5 h-5" />
+                          {label}
+                          <span className="text-[11px] font-normal text-gray-400">{sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <FieldError msg={errors.saticiTipi} />
+                  </div>
+
+                  {/* Ürün Durumu */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ürün Durumu <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        { key: 'sifir',       label: 'Sıfır' },
+                        { key: 'ikinci_el',   label: '2. El' },
+                        { key: 'her_ikisi',   label: 'Her İkisi' },
+                      ] as const).map(({ key, label }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setSel('urunDurumu', key)}
+                          className={`py-2.5 rounded-xl border-2 text-sm font-medium transition ${
+                            seller.urunDurumu === key
+                              ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                              : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <FieldError msg={errors.urunDurumu} />
+                  </div>
+
+                  {/* Kategoriler (çoklu seçim) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Kategoriler <span className="text-red-500">*</span>
+                      <span className="ml-1 text-xs font-normal text-gray-400">(birden fazla seçebilirsiniz)</span>
+                    </label>
+                    <div className="space-y-1.5">
+                      {CATEGORIES.map((cat) => {
+                        const checked = seller.kategoriler.includes(cat.name);
+                        return (
+                          <button
+                            key={cat.slug}
+                            type="button"
+                            onClick={() => toggleKategori(cat.name)}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg border text-sm transition ${
+                              checked
+                                ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            }`}
+                          >
+                            {checked
+                              ? <CheckSquare className="w-4 h-4 flex-shrink-0 text-emerald-600" />
+                              : <Square className="w-4 h-4 flex-shrink-0 text-gray-300" />
+                            }
+                            {cat.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <FieldError msg={errors.kategoriler} />
+                  </div>
+                </div>
+              )}
 
               {/* KVKK */}
               <div>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
-                    type="checkbox"
-                    checked={form.kvkk}
+                    type="checkbox" checked={form.kvkk}
                     onChange={(e) => set('kvkk', e.target.checked)}
                     className="mt-0.5 w-4 h-4 rounded text-emerald-600 border-gray-300 focus:ring-emerald-500"
                   />
                   <span className="text-xs text-gray-600 leading-relaxed">
-                    <Link to="/kvkk" target="_blank" className="text-emerald-600 hover:underline font-medium">
-                      KVKK Aydınlatma Metni
-                    </Link>{' '}
-                    ve{' '}
-                    <Link to="/kullanim-kosullari" target="_blank" className="text-emerald-600 hover:underline font-medium">
-                      Kullanım Koşulları
-                    </Link>
-                    'nı okudum, kabul ediyorum.{' '}
-                    <span className="text-red-500">*</span>
+                    <Link to="/kvkk" target="_blank" className="text-emerald-600 hover:underline font-medium">KVKK Aydınlatma Metni</Link>{' '}ve{' '}
+                    <Link to="/kullanim-kosullari" target="_blank" className="text-emerald-600 hover:underline font-medium">Kullanım Koşulları</Link>'nı
+                    okudum, kabul ediyorum. <span className="text-red-500">*</span>
                   </span>
                 </label>
-                {errors.kvkk && (
-                  <p className="mt-1 text-xs text-red-600 flex items-center gap-1 ml-7">
-                    <AlertCircle className="w-3 h-3" />{errors.kvkk}
-                  </p>
-                )}
+                <FieldError msg={errors.kvkk} />
               </div>
 
               {/* Submit */}
@@ -342,12 +516,9 @@ export default function KayitPage() {
             </form>
           </div>
 
-          {/* Giriş linki */}
           <p className="text-center text-sm text-gray-500 mt-5">
             Zaten hesabın var mı?{' '}
-            <Link to="/giris" className="text-emerald-600 hover:underline font-semibold">
-              Giriş Yap
-            </Link>
+            <Link to="/giris" className="text-emerald-600 hover:underline font-semibold">Giriş Yap</Link>
           </p>
         </div>
       </main>
