@@ -1,11 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import markerIcon    from 'leaflet/dist/images/marker-icon.png';
-import markerIcon2x  from 'leaflet/dist/images/marker-icon-2x.png';
-import markerShadow  from 'leaflet/dist/images/marker-shadow.png';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { CATEGORIES } from '../data/categories';
@@ -14,15 +8,6 @@ import Footer from '../components/Footer';
 import {
   Factory, Store, Check, CheckCircle, AlertCircle, Loader2,
 } from 'lucide-react';
-
-/* ─── Leaflet icon fix (Vite) ────────────────────────────────── */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl:       markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl:     markerShadow,
-});
 
 /* ─── Veri ───────────────────────────────────────────────────── */
 
@@ -38,37 +23,6 @@ const CITIES = [
   'Zonguldak','Aksaray','Bayburt','Karaman','Kırıkkale','Batman','Şırnak',
   'Bartın','Ardahan','Iğdır','Yalova','Karabük','Kilis','Osmaniye','Düzce',
 ];
-
-/* Yaklaşık şehir merkezi koordinatları */
-const CITY_COORDS: Record<string, [number, number]> = {
-  'Adana':[37.00,35.32],'Adıyaman':[37.76,38.27],'Afyonkarahisar':[38.76,30.54],
-  'Ağrı':[39.72,43.05],'Amasya':[40.65,35.83],'Ankara':[39.93,32.85],
-  'Antalya':[36.90,30.70],'Artvin':[41.18,41.82],'Aydın':[37.84,27.84],
-  'Balıkesir':[39.65,27.88],'Bilecik':[40.15,29.98],'Bingöl':[38.88,40.50],
-  'Bitlis':[38.40,42.11],'Bolu':[40.74,31.61],'Burdur':[37.72,30.29],
-  'Bursa':[40.18,29.06],'Çanakkale':[40.15,26.41],'Çankırı':[40.60,33.61],
-  'Çorum':[40.55,34.96],'Denizli':[37.77,29.09],'Diyarbakır':[37.91,40.22],
-  'Edirne':[41.68,26.56],'Elazığ':[38.68,39.22],'Erzincan':[39.75,39.50],
-  'Erzurum':[39.90,41.27],'Eskişehir':[39.78,30.52],'Gaziantep':[37.06,37.38],
-  'Giresun':[40.91,38.39],'Gümüşhane':[40.46,39.48],'Hakkari':[37.57,43.74],
-  'Hatay':[36.40,36.35],'Isparta':[37.76,30.55],'Mersin':[36.80,34.64],
-  'İstanbul':[41.01,28.96],'İzmir':[38.42,27.14],'Kars':[40.61,43.10],
-  'Kastamonu':[41.38,33.78],'Kayseri':[38.73,35.49],'Kırklareli':[41.73,27.22],
-  'Kırşehir':[39.15,34.17],'Kocaeli':[40.85,29.88],'Konya':[37.87,32.48],
-  'Kütahya':[39.42,29.98],'Malatya':[38.35,38.31],'Manisa':[38.61,27.43],
-  'Kahramanmaraş':[37.57,36.94],'Mardin':[37.31,40.73],'Muğla':[37.22,28.36],
-  'Muş':[38.73,41.49],'Nevşehir':[38.62,34.72],'Niğde':[37.97,34.68],
-  'Ordu':[40.98,37.88],'Rize':[41.02,40.52],'Sakarya':[40.77,30.40],
-  'Samsun':[41.29,36.33],'Siirt':[37.94,41.95],'Sinop':[42.02,35.15],
-  'Sivas':[39.75,37.02],'Tekirdağ':[40.98,27.51],'Tokat':[40.31,36.56],
-  'Trabzon':[41.00,39.72],'Tunceli':[39.10,39.55],'Şanlıurfa':[37.16,38.79],
-  'Uşak':[38.68,29.41],'Van':[38.49,43.38],'Yozgat':[39.82,34.80],
-  'Zonguldak':[41.45,31.79],'Aksaray':[38.37,34.04],'Bayburt':[40.25,40.22],
-  'Karaman':[37.18,33.22],'Kırıkkale':[39.85,33.51],'Batman':[37.88,41.13],
-  'Şırnak':[37.52,42.46],'Bartın':[41.64,32.34],'Ardahan':[41.11,42.70],
-  'Iğdır':[39.92,44.04],'Yalova':[40.65,29.27],'Karabük':[41.20,32.62],
-  'Kilis':[36.72,37.12],'Osmaniye':[37.07,36.25],'Düzce':[40.84,31.16],
-};
 
 const FIRMA_YAPILARI = [
   { value: 'sahis',   label: 'Şahıs Şirketi' },
@@ -148,47 +102,17 @@ function toggle<T>(arr: T[], val: T): T[] {
   return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 }
 
-/* ─── Harita: şehre uç ───────────────────────────────────────── */
-
-function FlyToCity({ city }: { city: string }) {
-  const map = useMap();
-  useEffect(() => {
-    const pos = CITY_COORDS[city];
-    if (pos) map.flyTo(pos, 12, { duration: 1 });
-  }, [city, map]);
-  return null;
-}
-
 /* ─── Sayfa ──────────────────────────────────────────────────── */
 
 export default function SellerFormPage() {
-  const [form,    setForm]    = useState<FormState>(EMPTY);
-  const [coords,  setCoords]  = useState({ lat: 39.0, lng: 35.0 });
-  const [errors,  setErrors]  = useState<Errors>({});
-  const [status,  setStatus]  = useState<'idle' | 'loading' | 'success'>('idle');
-
-  const markerRef = useRef<L.Marker>(null);
+  const [form,   setForm]   = useState<FormState>(EMPTY);
+  const [errors, setErrors] = useState<Errors>({});
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: val }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   };
-
-  /* Şehir seçilince koordinatı da güncelle */
-  const handleSehir = (city: string) => {
-    set('sehir', city);
-    const pos = CITY_COORDS[city];
-    if (pos) setCoords({ lat: pos[0], lng: pos[1] });
-  };
-
-  /* Sürüklenebilir pin */
-  const onDragEnd = useCallback(() => {
-    const m = markerRef.current;
-    if (m) {
-      const { lat, lng } = m.getLatLng();
-      setCoords({ lat, lng });
-    }
-  }, []);
 
   /* ── Doğrulama ─────────────────────────────────────────────── */
 
@@ -213,7 +137,6 @@ export default function SellerFormPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) {
-      // İlk hatalı alana scroll
       setTimeout(() => {
         document.querySelector('[data-error]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 50);
@@ -231,8 +154,6 @@ export default function SellerFormPage() {
         city:            form.sehir,
         ilce:            form.ilce.trim(),
         address:         form.adres.trim(),
-        lat:             coords.lat,
-        lng:             coords.lng,
         category:        form.kategoriler[0] ?? '',
         kategoriler:     form.kategoriler,
         hizmetBolgeleri: form.hizmetBolgeleri,
@@ -413,7 +334,7 @@ export default function SellerFormPage() {
                     <Field label="Şehir" required error={errors.sehir}>
                       <select
                         value={form.sehir}
-                        onChange={(e) => handleSehir(e.target.value)}
+                        onChange={(e) => set('sehir', e.target.value)}
                         className={inp + ' bg-white'}
                         data-error={errors.sehir ? '' : undefined}
                       >
@@ -443,39 +364,24 @@ export default function SellerFormPage() {
                     />
                   </Field>
 
-                  {/* Harita */}
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 mb-1">
-                      Harita Konumu
-                      <span className="text-gray-400 font-normal ml-1 text-xs">
-                        — pini sürükleyerek hassaslaştırın
-                      </span>
-                    </p>
-                    <div className="rounded-xl overflow-hidden border border-gray-200 h-64">
-                      <MapContainer
-                        center={[39.0, 35.0]}
-                        zoom={6}
-                        style={{ height: '100%', width: '100%' }}
-                        scrollWheelZoom={false}
-                      >
-                        <TileLayer
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  {/* Google Maps embed */}
+                  {form.sehir && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-1">Konum Önizlemesi</p>
+                      <div className="rounded-xl overflow-hidden border border-gray-200 h-64">
+                        <iframe
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent(form.sehir + ', Türkiye')}&output=embed`}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          title={`${form.sehir} harita önizlemesi`}
                         />
-                        <FlyToCity city={form.sehir} />
-                        <Marker
-                          position={[coords.lat, coords.lng]}
-                          draggable
-                          ref={markerRef}
-                          eventHandlers={{ dragend: onDragEnd }}
-                        />
-                      </MapContainer>
+                      </div>
                     </div>
-                    {/* Koordinat özeti */}
-                    <p className="text-xs text-gray-400 mt-1">
-                      {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
-                    </p>
-                  </div>
+                  )}
                 </div>
               </section>
 

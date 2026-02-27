@@ -3,604 +3,767 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { SITE_CONFIG, LEGAL_LINKS } from '../config/site';
 
-/* ─── Yeniden kullanılan küçük bileşenler ─────────────────── */
-function SectionTitle({ children }: { children: React.ReactNode }) {
+/* ═══════════════════════════════════════════════════════════
+   Yeniden kullanılan küçük bileşenler
+═══════════════════════════════════════════════════════════ */
+
+function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <h2 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b border-gray-100">
+    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8 ${className}`}>
       {children}
-    </h2>
+    </div>
   );
 }
 
-function BulletList({ items }: { items: string[] }) {
+function SectionTitle({ n, children }: { n: number; children: React.ReactNode }) {
   return (
-    <ul className="space-y-2 text-gray-600">
-      {items.map((item) => (
-        <li key={item} className="flex items-start gap-2">
+    <div className="flex items-center gap-3 mb-5">
+      <span className="w-8 h-8 rounded-full bg-emerald-600 text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
+        {n}
+      </span>
+      <h2 className="text-lg font-bold text-gray-800 leading-snug">{children}</h2>
+    </div>
+  );
+}
+
+function Sub({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="font-semibold text-gray-700 mt-6 mb-3 text-sm border-l-4 border-emerald-400 pl-3">
+      {children}
+    </h3>
+  );
+}
+
+function Tbl({ head, rows }: {
+  head: string[];
+  rows: (string | React.ReactNode)[][];
+}) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-gray-200 mt-3">
+      <table className="w-full text-sm text-gray-600 border-collapse">
+        <thead>
+          <tr className="bg-gray-50">
+            {head.map((h) => (
+              <th key={h} className="text-left px-4 py-3 border-b border-gray-200 font-semibold text-gray-700 whitespace-nowrap">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className={i % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
+              {row.map((cell, j) => (
+                <td key={j} className="px-4 py-3 border-b border-gray-100 align-top leading-relaxed">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Bullets({ items }: { items: (string | React.ReactNode)[] }) {
+  return (
+    <ul className="space-y-2 text-gray-600 text-sm">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 flex-shrink-0" />
-          <span>{item}</span>
+          <span className="leading-relaxed">{item}</span>
         </li>
       ))}
     </ul>
   );
 }
 
-/* ─── Veri tablosu satırları ──────────────────────────────── */
-const DATA_CATEGORIES = [
+function InfoBox({
+  color = 'gray',
+  children,
+}: {
+  color?: 'blue' | 'amber' | 'green' | 'red' | 'gray' | 'purple';
+  children: React.ReactNode;
+}) {
+  const cls: Record<string, string> = {
+    blue:   'bg-blue-50 border-blue-200 text-blue-800',
+    amber:  'bg-amber-50 border-amber-200 text-amber-800',
+    green:  'bg-emerald-50 border-emerald-200 text-emerald-800',
+    red:    'bg-red-50 border-red-200 text-red-800',
+    gray:   'bg-gray-50 border-gray-200 text-gray-700',
+    purple: 'bg-purple-50 border-purple-200 text-purple-800',
+  };
+  return (
+    <div className={`border rounded-xl p-4 text-sm leading-relaxed ${cls[color]}`}>
+      {children}
+    </div>
+  );
+}
+
+function Badge({ color, children }: { color: string; children: React.ReactNode }) {
+  return (
+    <span className={`inline-block text-xs px-2.5 py-0.5 rounded-full font-semibold whitespace-nowrap ${color}`}>
+      {children}
+    </span>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Statik veri
+═══════════════════════════════════════════════════════════ */
+
+/* Bölüm 2 — Kanal bazlı aydınlatma */
+const CHANNELS = [
   {
-    category: 'Kimlik',
-    examples: 'Ad, soyad, T.C. kimlik no (doğrulama için)',
-    source: 'Kayıt formu',
-    legal: 'Sözleşme ifası (m.5/2-c)',
+    form: 'Firma Kayıt / İlan Ver Formu',
+    legal: 'Sözleşmenin kurulması ve ifası — KVKK m. 5/2-c',
+    badgeColor: 'bg-emerald-100 text-emerald-700',
+    rows: [
+      ['Kimlik',    'Ad, soyad (firma yetkilisi)',                              'Hesap ve iletişim yönetimi'],
+      ['Firma',     'Ticaret unvanı, vergi numarası, firma yapısı',             'Firma kimlik doğrulaması (m. 5/2-ç)'],
+      ['İletişim',  'Telefon, e-posta',                                         'Teklif ve platform bildirimleri'],
+      ['Konum',     'Şehir, ilçe, açık adres',                                  'Bölgesel eşleşme ve ilan gösterimi'],
+      ['Hizmet',    'Ürün kategorileri, hizmet bölgeleri, tanıtım metni',       'İlan yayımlama ve alıcı eşleşmesi'],
+    ],
   },
   {
-    category: 'İletişim',
-    examples: 'E-posta, cep telefonu, fatura adresi',
-    source: 'Kayıt formu',
-    legal: 'Sözleşme ifası (m.5/2-c)',
+    form: 'Teklif Al Formu',
+    legal: 'Sözleşme ifası + Açık rıza (firma aktarımı) — KVKK m. 5/2-c & m. 5/1',
+    badgeColor: 'bg-blue-100 text-blue-700',
+    rows: [
+      ['Kimlik',   'Ad, soyad',                           'Firma ile kişisel iletişim'],
+      ['İletişim', 'Telefon, e-posta',                    'Firma tarafından teklif iletimi'],
+      ['İşlem',   'Talep mesajı, talep edilen ürün/hizmet', 'Firma\'nın teklif hazırlaması'],
+    ],
   },
   {
-    category: 'Firma',
-    examples: 'Ticaret unvanı, vergi no, MERSİS no, ticaret sicil no, imza yetkilisi',
-    source: 'Satıcı kayıt formu',
-    legal: 'Kanuni yükümlülük (m.5/2-ç)',
-  },
-  {
-    category: 'İlan & Teklif',
-    examples: 'İlan içeriği, fotoğraflar, fiyat bilgisi, teklif talepleri, mesajlar',
-    source: 'Platform kullanımı',
-    legal: 'Sözleşme ifası (m.5/2-c)',
-  },
-  {
-    category: 'Ödeme',
-    examples: 'Fatura bilgisi, ödeme tipi (kart numarası saklanmaz; ödeme sağlayıcı tarafından işlenir)',
-    source: 'Ödeme akışı',
-    legal: 'Kanuni yükümlülük (m.5/2-ç)',
-  },
-  {
-    category: 'Teknik',
-    examples: 'IP adresi, tarayıcı türü, işletim sistemi, çerez verileri, sayfa gezinme logları',
-    source: 'Otomatik (çerez/log)',
-    legal: 'Meşru menfaat (m.5/2-f)',
-  },
-  {
-    category: 'Pazarlama',
-    examples: 'İletişim tercihleri, kampanya etkileşimleri',
-    source: 'Onay formu',
-    legal: 'Açık rıza (m.5/1)',
+    form: 'İletişim Formu',
+    legal: 'Meşru menfaat — KVKK m. 5/2-f',
+    badgeColor: 'bg-purple-100 text-purple-700',
+    rows: [
+      ['Kimlik',   'Ad, soyad', 'Başvuru sahibini tanımlama'],
+      ['İletişim', 'E-posta',   'Yanıt iletimi'],
+      ['İçerik',  'Mesaj metni','Destek talebini işleme alma'],
+    ],
   },
 ];
 
-/* ─── Amaç & hukuki dayanak tablosu ──────────────────────── */
-const PURPOSES = [
+/* Bölüm 3 — Amaçlar hukuki dayanak gruplu */
+const PURPOSES_GROUPED = [
   {
-    purpose: 'Teklif talebi alma ve işleme süreçleri',
-    legal: 'Sözleşmenin kurulması ve ifası',
+    basis:   'Sözleşmenin Kurulması ve İfası',
     article: 'KVKK m. 5/2-c',
+    color:   'bg-emerald-100 text-emerald-700',
+    note:    null,
+    items: [
+      'Teklif talebi alma, işleme ve ilgili firmaya yönlendirme',
+      'Firma kaydı oluşturma ve ilan yayımlama',
+      'Alıcı–satıcı eşleşmesi ve iletişim kurulması',
+      'Üyelik ve hesap yönetimi',
+    ],
   },
   {
-    purpose: 'Teklif taleplerinin üretici ve satıcı firmalara iletilmesi',
-    legal: 'Açık rıza (form onayı)',
-    article: 'KVKK m. 5/1',
-  },
-  {
-    purpose: 'Üyelik kaydı ve hesap yönetimi',
-    legal: 'Sözleşmenin kurulması ve ifası',
-    article: 'KVKK m. 5/2-c',
-  },
-  {
-    purpose: 'İlan yayımlama ve teklif iletimi',
-    legal: 'Sözleşmenin ifası',
-    article: 'KVKK m. 5/2-c',
-  },
-  {
-    purpose: 'Firma kimlik ve ticaret sicil doğrulaması',
-    legal: 'Hukuki yükümlülük',
+    basis:   'Kanuni Yükümlülük',
     article: 'KVKK m. 5/2-ç',
+    color:   'bg-blue-100 text-blue-700',
+    note:    null,
+    items: [
+      'Firma kimlik ve ticaret sicil doğrulaması (TTK, VUK)',
+      'Fatura kesimi ve muhasebe kayıtları (VUK m. 253)',
+      'Yetkili kurum ve mahkeme taleplerine yanıt verme',
+      'İnternet ortamında bağlantı log kayıtları (5651 sayılı Kanun)',
+    ],
   },
   {
-    purpose: 'Fatura kesimi ve muhasebe kayıtları',
-    legal: 'Hukuki yükümlülük (VUK, TTK)',
-    article: 'KVKK m. 5/2-ç',
-  },
-  {
-    purpose: 'Platform güvenliği ve dolandırıcılık önleme',
-    legal: 'Meşru menfaat',
+    basis:   'Meşru Menfaat',
     article: 'KVKK m. 5/2-f',
+    color:   'bg-purple-100 text-purple-700',
+    note:    '⚖️ Denge Testi: Meşru menfaat kapsamındaki işlemlerde, ilgili kişinin temel hak ve özgürlüklerine zarar vermeyeceği, denge testi yapılarak değerlendirilmektedir. Bu testi yazılı olarak talep etme hakkınız saklıdır.',
+    items: [
+      'Platform güvenliği, dolandırıcılık ve kötüye kullanım önleme',
+      'Sistem performansı analizi ve teknik iyileştirme',
+      'Anlaşmazlık çözümü için belge ve kayıt tutma',
+      'İstatistiksel raporlama (anonim/toplu veri)',
+    ],
   },
   {
-    purpose: 'Anlaşmazlık çözümü ve hukuki süreçler',
-    legal: 'Hakkın tesisi, kullanılması veya korunması',
-    article: 'KVKK m. 5/2-e',
-  },
-  {
-    purpose: 'Platform iyileştirme ve istatistiksel analiz',
-    legal: 'Meşru menfaat',
-    article: 'KVKK m. 5/2-f',
-  },
-  {
-    purpose: 'Yasal bildirimlerin iletilmesi',
-    legal: 'Hukuki yükümlülük',
-    article: 'KVKK m. 5/2-ç',
-  },
-  {
-    purpose: 'Pazarlama ve kampanya bildirimleri',
-    legal: 'Açık rıza',
+    basis:   'Açık Rıza',
     article: 'KVKK m. 5/1',
+    color:   'bg-amber-100 text-amber-700',
+    note:    '📋 Ayrı Onay Kutusu: Bu kapsamdaki işlemler için form gönderim ekranında ayrı bir onay kutusu yer almaktadır. Rızanızı vermemeniz, sözleşme kapsamındaki diğer hizmetleri etkilemez. Rızanızı istediğiniz zaman geri alabilirsiniz.',
+    items: [
+      'Teklif talebinin seçtiğiniz firmaya iletilmesi',
+      'Ticari elektronik ileti gönderimi (kampanya, duyuru)',
+      'Profilleme ve kişiselleştirilmiş içerik sunumu',
+      'Analitik ve pazarlama çerez kullanımı',
+    ],
   },
 ];
 
-/* ─── Saklama süreleri ────────────────────────────────────── */
+/* Bölüm 5 — Veri minimizasyonu */
+const MINIMIZATION = [
+  { data: 'Ad, Soyad',         reason: 'Firma yetkilileriyle kişisel iletişim; anonim talepler kabul edilmemektedir.',               form: 'Tüm formlar' },
+  { data: 'Telefon',           reason: 'Teklif sürecinde hızlı iletişim; yalnızca teklif talep edilen firmaya iletilir.',             form: 'Teklif Al, Kayıt' },
+  { data: 'E-posta',           reason: 'Teklif durumu, hesap ve platform bildirimleri için birincil iletişim kanalı.',                form: 'Tüm formlar' },
+  { data: 'Vergi Numarası',    reason: 'Firma kimlik doğrulaması ve sahte kayıt önleme; kanuni yükümlülük (TTK/VUK).',               form: 'Firma Kayıt' },
+  { data: 'Şehir / İlçe',     reason: 'Alıcıyı yerel firmalarla eşleştirme; kesin GPS koordinatı veya hassas konum talep edilmez.', form: 'Firma Kayıt' },
+  { data: 'IP Adresi',        reason: 'Dolandırıcılık önleme ve 5651 sayılı Kanun kapsamında zorunlu log tutma.',                   form: 'Otomatik' },
+  { data: 'Çerez Verileri',   reason: 'Oturum yönetimi (zorunlu) ve ziyaretçi istatistikleri (analitik — onaya bağlı).',            form: 'Otomatik' },
+];
+
+/* Bölüm 7 — Çerezler */
+const COOKIES_TABLE = [
+  { cat: 'Zorunlu',   color: 'bg-gray-200 text-gray-700',     consent: 'Onay gerekmez',   duration: 'Oturum süresi',    examples: 'session_id, csrf_token',     purpose: 'Oturum ve güvenlik yönetimi',               etk: '—' },
+  { cat: 'Tercih',    color: 'bg-blue-100 text-blue-700',     consent: 'Onay gerekir',    duration: '1 yıl',             examples: 'language, theme',             purpose: 'Dil ve görünüm tercihleri',                  etk: '—' },
+  { cat: 'Analitik',  color: 'bg-purple-100 text-purple-700', consent: 'Onay gerekir',    duration: 'En fazla 13 ay',   examples: '_ga, _gid',                  purpose: 'Ziyaretçi istatistikleri, performans',      etk: 'İYS kapsamı dışı' },
+  { cat: 'Pazarlama', color: 'bg-amber-100 text-amber-700',   consent: 'Açık rıza şart',  duration: '90 gün',           examples: 'fbp, _gcl_au',               purpose: 'Kişiselleştirilmiş reklam / yeniden hedef', etk: 'ETK m.6 / İYS uyumu zorunlu' },
+];
+
+/* Bölüm 9 — Veri Aktarımı */
+const DOMESTIC_TRANSFERS = [
+  {
+    recipient: 'Üretici ve satıcı firmalar',
+    data:      'Ad, telefon, e-posta, talep mesajı',
+    basis:     'Açık rıza (m. 5/1) + Sözleşme ifası (m. 5/2-c)',
+    note:      'Yalnızca teklif talebinde seçilen firmaya, yalnızca ilgili teklif kapsamında iletilir.',
+  },
+  {
+    recipient: 'Yetkili kamu kurum ve kuruluşları',
+    data:      'Yasal zorunluluk kapsamındaki her türlü veri',
+    basis:     'Kanuni yükümlülük (m. 5/2-ç)',
+    note:      'Mahkeme, savcılık, vergi dairesi, BDDK, BTK vb.',
+  },
+  {
+    recipient: 'Hukuki ve mali danışmanlar',
+    data:      'İlgili dava/denetim kapsamındaki veriler',
+    basis:     'Meşru menfaat (m. 5/2-f)',
+    note:      'Gizlilik sözleşmesiyle bağlı profesyoneller.',
+  },
+];
+
+const INTERNATIONAL_TRANSFERS = [
+  ['Firebase (Google LLC)',   'ABD', 'Kimlik, form ve ilan verileri', 'SCCs + Google Cloud DPA'],
+  ['Google Analytics',        'ABD', 'Anonim teknik veriler',          'SCCs / Yeterlilik kararı'],
+  ['Cloudflare Inc.',         'ABD', 'IP adresi, teknik log',          'SCCs'],
+  ['E-posta altyapısı (SMTP)','AB / ABD', 'E-posta adresi',           'SCCs'],
+];
+
+/* Bölüm 10 — Saklama Süreleri */
 const RETENTION = [
-  ['Üyelik ve hesap bilgileri', 'Hesap silme tarihinden itibaren 2 yıl'],
-  ['İlan ve teklif verileri', 'Hesap silme tarihinden itibaren 3 yıl'],
-  ['Mesajlaşma kayıtları', '2 yıl'],
-  ['Fatura ve ticari kayıtlar', '10 yıl (Türk Ticaret Kanunu m. 82 / VUK m. 253)'],
-  ['Teknik log ve erişim kayıtları', '1 yıl (5651 sayılı Kanun)'],
-  ['Pazarlama onay kayıtları', 'Onayın geri alınmasına kadar; akabinde 3 yıl ispat amaçlı'],
-  ['Çerez verileri (analitik)', 'En fazla 13 ay (Google Analytics önerisi)'],
-  ['KVKK başvuru kayıtları', '3 yıl'],
+  ['Üyelik ve hesap bilgileri',       'Hesap silme tarihinden itibaren 2 yıl',              'KVKK m. 7 / TTK m. 82'],
+  ['İlan ve teklif verileri',         'Hesap silme tarihinden itibaren 3 yıl',              'Sözleşme delil süresi'],
+  ['Teklif talep kayıtları',          '3 yıl',                                               'TKHK m. 83'],
+  ['Mesajlaşma kayıtları',            '2 yıl',                                               'KVKK m. 7'],
+  ['Fatura ve ticari kayıtlar',       '10 yıl',                                              'VUK m. 253 / TTK m. 82'],
+  ['Teknik log ve erişim kayıtları',  '1 yıl',                                               '5651 sayılı Kanun m. 5'],
+  ['Pazarlama onay/red kayıtları',    'Rıza geri alınmasından sonra 3 yıl (ispat amaçlı)', 'İYS / ETK m. 12'],
+  ['Çerez verileri (analitik)',       'En fazla 13 ay',                                     'Google Analytics politikası'],
+  ['KVKK başvuru kayıtları',          '3 yıl',                                               'KVKK m. 13'],
+  ['İhlal bildirimi kayıtları',       '5 yıl',                                               'KVKK Kurul kararları'],
 ];
 
-/* ─── KVKK Madde 11 hakları ───────────────────────────────── */
+/* Bölüm 11 — Haklar */
 const RIGHTS = [
-  {
-    title: 'Bilgi edinme',
-    desc: 'Kişisel verilerinizin işlenip işlenmediğini öğrenme hakkına sahipsiniz.',
-  },
-  {
-    title: 'Bilgi talep etme',
-    desc: 'İşlenmiş ise buna ilişkin bilgi talep edebilirsiniz; hangi verilerin, hangi amaçla işlendiğini öğrenebilirsiniz.',
-  },
-  {
-    title: 'Amaç ve uygunluk sorgulama',
-    desc: 'İşlenme amacını ve verilerin amaca uygun kullanılıp kullanılmadığını sorgulayabilirsiniz.',
-  },
-  {
-    title: 'Yurt içi/yurt dışı aktarım bilgisi',
-    desc: 'Verilerinizin aktarıldığı üçüncü kişileri ve aktarım gerekçelerini öğrenebilirsiniz.',
-  },
-  {
-    title: 'Düzeltme talep etme',
-    desc: 'Eksik veya yanlış işlenmiş kişisel verilerinizin düzeltilmesini ve bu düzeltmenin aktarılan üçüncü kişilere bildirilmesini isteyebilirsiniz.',
-  },
-  {
-    title: 'Silme veya yok etme',
-    desc: 'İşlenmesini gerektiren sebeplerin ortadan kalkması halinde verilerinizin silinmesini veya yok edilmesini talep edebilirsiniz.',
-  },
-  {
-    title: 'Otomatik işleme itiraz',
-    desc: 'İşlenen verilerin yalnızca otomatik sistemler aracılığıyla analiz edilmesi nedeniyle aleyhinize doğan bir sonuca itiraz etme hakkına sahipsiniz.',
-  },
-  {
-    title: 'Zarar tazminatı',
-    desc: 'Mevzuata aykırı veri işleme nedeniyle zarara uğramanız halinde tazminat talep edebilirsiniz.',
-  },
+  { title: 'Bilgi Edinme',              desc: 'Kişisel verilerinizin işlenip işlenmediğini ve işlenmişse buna ilişkin bilgileri öğrenme hakkına sahipsiniz.' },
+  { title: 'Amaç ve Uygunluk Sorgulama', desc: 'Verilerinizin işlenme amacını ve amaca uygun kullanılıp kullanılmadığını sorgulayabilirsiniz.' },
+  { title: 'Aktarım Bilgisi',           desc: 'Verilerinizin aktarıldığı yurt içi ve yurt dışı üçüncü kişileri ve aktarım gerekçelerini öğrenebilirsiniz.' },
+  { title: 'Düzeltme Talep Etme',       desc: 'Eksik veya yanlış işlenmiş verilerinizin düzeltilmesini ve bu düzeltmenin üçüncü kişilere bildirilmesini talep edebilirsiniz.' },
+  { title: 'Silme veya Yok Etme',       desc: 'İşlenmesini gerektiren sebeplerin ortadan kalkması hâlinde verilerinizin silinmesini veya yok edilmesini talep edebilirsiniz.' },
+  { title: 'Aktarılan Taraflara Bildirim', desc: 'Düzeltme ve silme işlemlerinin verilerinizi alan üçüncü kişilere bildirilmesini talep edebilirsiniz.' },
+  { title: 'Otomatik İşleme İtiraz',    desc: 'Yalnızca otomatik sistemler aracılığıyla yapılan analizler sonucunda aleyhinize doğan kararlara itiraz edebilirsiniz.' },
+  { title: 'Zararın Tazmini',           desc: 'Mevzuata aykırı veri işleme nedeniyle zarara uğramanız hâlinde tazminat talep edebilirsiniz.' },
 ];
 
-/* ─── Güvenlik tedbirleri ─────────────────────────────────── */
-const SECURITY_TECHNICAL = [
-  'TLS 1.2/1.3 protokolüyle şifreli veri iletimi',
-  'Veritabanı şifrelemesi (AES-256)',
-  'Rol tabanlı erişim kontrolü (RBAC)',
-  'İki faktörlü kimlik doğrulama (2FA) desteği',
-  'Düzenli sızma testi ve güvenlik açığı taraması',
-  'Otomatik oturum zaman aşımı',
-  'Güvenlik duvarı (WAF) ve DDoS koruma',
-];
+/* ═══════════════════════════════════════════════════════════
+   Sayfa bileşeni
+═══════════════════════════════════════════════════════════ */
 
-const SECURITY_ADMINISTRATIVE = [
-  'Çalışanlar için periyodik KVKK ve veri güvenliği eğitimi',
-  'Veri erişimi "bilinmesi gereken" prensibiyle sınırlandırılmıştır',
-  'Veri işleme sözleşmeleri (DPA) tüm iş ortaklarıyla imzalanmaktadır',
-  'Veri ihlali müdahale planı (Incident Response Plan) mevcuttur',
-  'İhlal durumunda KVKK Kurulu\'na 72 saat içinde bildirim yapılmaktadır',
-  'Etkilenen veri sahiplerine makul sürede bildirim gönderilmektedir',
-];
-
-/* ─── Bileşen ─────────────────────────────────────────────── */
 export default function KvkkPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
 
       <main className="flex-1 bg-gray-50 py-12">
-        <div className="max-w-3xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-4 space-y-5">
 
           {/* Breadcrumb */}
-          <nav className="text-sm text-gray-500 mb-6 flex items-center gap-2">
+          <nav className="text-sm text-gray-500 flex items-center gap-2">
             <Link to="/" className="hover:text-emerald-600 transition">Ana Sayfa</Link>
             <span>/</span>
             <span className="text-gray-800">KVKK Aydınlatma Metni</span>
           </nav>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12">
-
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Kişisel Verilerin Korunması Kanunu (KVKK)<br />Aydınlatma Metni
+          {/* Hero header */}
+          <Card>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 leading-snug">
+              Kişisel Verilerin Korunması Kanunu<br />
+              <span className="text-emerald-600">Aydınlatma Metni</span>
             </h1>
-            <p className="text-sm text-gray-500 mb-2">Son güncelleme: Ocak 2025 — Versiyon 1.0</p>
-            <p className="text-sm text-gray-500 mb-8">
-              Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu'nun 10. maddesi ve
-              Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında
-              Tebliğ uyarınca hazırlanmıştır.
+            <div className="flex flex-wrap gap-3 mt-3 text-xs text-gray-500">
+              <span className="bg-gray-100 rounded-full px-3 py-1">Son güncelleme: Şubat 2025</span>
+              <span className="bg-gray-100 rounded-full px-3 py-1">Versiyon 2.0</span>
+              <span className="bg-emerald-100 text-emerald-700 rounded-full px-3 py-1 font-medium">12 Mart 2024 Değişikliklerine Uyumlu</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-4 leading-relaxed">
+              Bu metin; 6698 sayılı Kişisel Verilerin Korunması Kanunu'nun 10. maddesi,
+              Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar
+              Hakkında Tebliğ ve 12 Mart 2024 tarihli KVKK değişiklikleri uyarınca hazırlanmıştır.
             </p>
+          </Card>
 
-            {/* 1 — Veri Sorumlusu */}
-            <section className="mb-10">
-              <SectionTitle>1. Veri Sorumlusu</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                6698 sayılı Kanun kapsamında <strong>veri sorumlusu</strong> sıfatıyla kişisel
-                verilerinizi işleyen platform aşağıda tanımlanmıştır:
+          {/* ── 1. Veri Sorumlusu ───────────────────────── */}
+          <Card>
+            <SectionTitle n={1}>Veri Sorumlusu</SectionTitle>
+            <p className="text-sm text-gray-600 mb-4">
+              6698 sayılı Kanun kapsamında <strong>veri sorumlusu</strong> sıfatıyla
+              kişisel verilerinizi işleyen platform aşağıda tanımlanmıştır:
+            </p>
+            <div className="bg-gray-50 rounded-xl p-5 text-sm text-gray-600 grid sm:grid-cols-2 gap-x-8 gap-y-2.5">
+              <p><span className="font-semibold text-gray-700">Ticaret Unvanı:</span>{' '}{SITE_CONFIG.name}</p>
+              <p><span className="font-semibold text-gray-700">Adres:</span>{' '}{SITE_CONFIG.address}</p>
+              <p>
+                <span className="font-semibold text-gray-700">E-posta:</span>{' '}
+                <a href={`mailto:${SITE_CONFIG.email}`} className="text-emerald-600 hover:underline">
+                  {SITE_CONFIG.email}
+                </a>
               </p>
-              <div className="bg-gray-50 rounded-xl p-5 text-sm text-gray-600 space-y-2">
-                <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
-                  <p><span className="font-semibold text-gray-700">Ticaret Unvanı:</span> {SITE_CONFIG.name}</p>
-                  <p><span className="font-semibold text-gray-700">Adres:</span> {SITE_CONFIG.address}</p>
-                  <p><span className="font-semibold text-gray-700">E-posta:</span>{' '}
-                    <a href={`mailto:${SITE_CONFIG.email}`} className="text-emerald-600 hover:underline">{SITE_CONFIG.email}</a>
-                  </p>
-                  <p><span className="font-semibold text-gray-700">Telefon:</span>{' '}
-                    <a href={`tel:${SITE_CONFIG.phone.replace(/\s/g, '')}`} className="text-emerald-600 hover:underline">{SITE_CONFIG.phone}</a>
-                  </p>
-                  <p><span className="font-semibold text-gray-700">KEP Adresi:</span> modulerpazar@hs01.kep.tr</p>
-                  <p><span className="font-semibold text-gray-700">KVKK Başvuru Birimi:</span> Veri Koruma Sorumlusu (DPO)</p>
+              <p>
+                <span className="font-semibold text-gray-700">Telefon:</span>{' '}
+                <a href={`tel:${SITE_CONFIG.phone.replace(/\s/g, '')}`} className="text-emerald-600 hover:underline">
+                  {SITE_CONFIG.phone}
+                </a>
+              </p>
+              <p><span className="font-semibold text-gray-700">KEP Adresi:</span>{' '}modulerpazar@hs01.kep.tr</p>
+              <p><span className="font-semibold text-gray-700">Veri Koruma Sorumlusu:</span>{' '}kvkk@modulerpazar.com</p>
+            </div>
+            <div className="mt-4">
+              <InfoBox color="blue">
+                <strong>VERBİS Kaydı:</strong> Platformumuz, KVKK Kurulu'nun belirlediği yükümlülükler
+                kapsamında Veri Sorumluları Sicil Bilgi Sistemi'ne (VERBİS) kayıtlıdır.
+              </InfoBox>
+            </div>
+          </Card>
+
+          {/* ── 2. Aydınlatma Yükümlülüğü ───────────────── */}
+          <Card>
+            <SectionTitle n={2}>Aydınlatma Yükümlülüğü (KVKK m. 10) — Kanal Bazlı</SectionTitle>
+            <p className="text-sm text-gray-600 mb-5">
+              Kişisel verileriniz platformdaki aşağıdaki kanallar aracılığıyla doğrudan
+              sizden toplanmaktadır. Her kanal için toplanan veriler ve hukuki dayanak
+              ayrı ayrı belirtilmiştir.
+            </p>
+            <div className="space-y-6">
+              {CHANNELS.map((ch) => (
+                <div key={ch.form}>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <p className="font-semibold text-gray-800 text-sm">{ch.form}</p>
+                    <Badge color={ch.badgeColor}>{ch.legal}</Badge>
+                  </div>
+                  <Tbl
+                    head={['Veri Kategorisi', 'Toplanan Veriler', 'İşlenme Amacı']}
+                    rows={ch.rows}
+                  />
                 </div>
-              </div>
-              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
-                <strong>KVKK Veri Sorumluları Sicil Bilgi Sistemi (VERBİS):</strong> Platformumuz,
-                KVKK Kurulu'nun belirlediği yükümlülükler kapsamında VERBİS'e kayıt yükümlülüğüne
-                tabidir ve kaydımız aktif durumdadır.
-              </div>
-            </section>
+              ))}
+            </div>
+          </Card>
 
-            {/* 2 — Toplanan Veriler */}
-            <section className="mb-10">
-              <SectionTitle>2. Toplanan Kişisel Veriler, Kaynakları ve Hukuki Dayanakları</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Platformumuz aşağıdaki kişisel veri kategorilerini otomatik ve otomatik olmayan
-                yollarla toplamaktadır:
-              </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-gray-600 border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Kategori</th>
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Veri Örnekleri</th>
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Kaynak</th>
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Hukuki Dayanak</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {DATA_CATEGORIES.map((row, i) => (
-                      <tr key={row.category} className={i % 2 === 1 ? 'bg-gray-50' : ''}>
-                        <td className="px-3 py-2 border border-gray-200 font-medium whitespace-nowrap">{row.category}</td>
-                        <td className="px-3 py-2 border border-gray-200">{row.examples}</td>
-                        <td className="px-3 py-2 border border-gray-200 whitespace-nowrap">{row.source}</td>
-                        <td className="px-3 py-2 border border-gray-200 whitespace-nowrap text-xs text-gray-500">{row.legal}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="mt-3 text-xs text-gray-400">
-                * Özel nitelikli kişisel veri (KVKK m. 6) yalnızca açık rızanız alınarak işlenir.
-                Ödeme kartı verileri platformumuzda saklanmaz; PCI-DSS uyumlu ödeme sağlayıcı tarafından işlenir.
-              </p>
-            </section>
-
-            {/* 3 — Amaçlar ve Hukuki Dayanaklar */}
-            <section className="mb-10">
-              <SectionTitle>3. Kişisel Verilerin İşlenme Amaçları ve Hukuki Dayanakları</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Kişisel verileriniz aşağıdaki amaçlarla ve belirtilen KVKK hükümlerine dayalı olarak işlenmektedir:
-              </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-gray-600 border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">İşleme Amacı</th>
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Hukuki Dayanak</th>
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">KVKK Maddesi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {PURPOSES.map((row, i) => (
-                      <tr key={row.purpose} className={i % 2 === 1 ? 'bg-gray-50' : ''}>
-                        <td className="px-3 py-2 border border-gray-200">{row.purpose}</td>
-                        <td className="px-3 py-2 border border-gray-200">{row.legal}</td>
-                        <td className="px-3 py-2 border border-gray-200 text-xs font-mono text-emerald-700">{row.article}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="mt-4 bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
-                <p><strong>m. 5/1:</strong> Açık rıza — Pazarlama gibi zorunlu olmayan işlemler için ayrıca onayınız alınır.</p>
-                <p><strong>m. 5/2-c:</strong> Sözleşmenin kurulması veya ifası</p>
-                <p><strong>m. 5/2-ç:</strong> Kanunlarda açıkça öngörülmesi (VUK, TTK, 5651 sayılı Kanun vb.)</p>
-                <p><strong>m. 5/2-e:</strong> Bir hakkın tesisi, kullanılması veya korunması</p>
-                <p><strong>m. 5/2-f:</strong> İlgili kişinin temel hak ve özgürlüklerine zarar vermemek kaydıyla meşru menfaat</p>
-              </div>
-            </section>
-
-            {/* 4 — Veri Toplama Yöntemi ve Hukuki Sebep */}
-            <section className="mb-10">
-              <SectionTitle>4. Veri Toplama Yöntemi ve Hukuki Sebep</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Kişisel verileriniz, platformdaki aşağıdaki formlar aracılığıyla doğrudan
-                sizden toplanmaktadır. Her form için KVKK 5. maddesi kapsamındaki hukuki
-                dayanak aşağıda belirtilmiştir:
-              </p>
-              <div className="space-y-3 mb-4">
-                {([
-                  {
-                    form: 'Teklif Al Formu',
-                    desc: 'Ad, soyad, telefon ve e-posta bilgileriniz alınır; teklif talep ettiğiniz üretici veya satıcı firmaya iletilir.',
-                    legal: 'Sözleşme ifası (m. 5/2-c) + Açık rıza — firma aktarımı için (m. 5/1)',
-                  },
-                  {
-                    form: 'İletişim Formu',
-                    desc: 'Ad, soyad, e-posta ve mesaj içeriği toplanır; platform desteği amacıyla işlenir.',
-                    legal: 'Meşru menfaat (m. 5/2-f)',
-                  },
-                  {
-                    form: 'İlan Ver / Firma Kayıt Formu',
-                    desc: 'Firma adı, vergi numarası, iletişim ve konum bilgileri toplanır; platform üzerinde ilan olarak yayımlanır.',
-                    legal: 'Sözleşmenin kurulması ve ifası (m. 5/2-c)',
-                  },
-                ] as const).map((item) => (
-                  <div key={item.form} className="bg-gray-50 rounded-xl p-4 text-sm">
-                    <p className="font-semibold text-gray-800 mb-1">{item.form}</p>
-                    <p className="text-gray-600 mb-2">{item.desc}</p>
-                    <p className="text-xs font-medium text-emerald-700">KVKK {item.legal}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500">
-                Açık rıza gerektiren işlemlerde (teklif talebinin firmaya iletilmesi) formun
-                altında ayrıca onay kutusu yer almaktadır. Onayınızı istediğiniz zaman geri
-                alabilirsiniz; bu durum diğer veri işleme faaliyetlerini etkilemez.
-              </p>
-            </section>
-
-            {/* 5 — Veri Aktarımı */}
-            <section className="mb-10">
-              <SectionTitle>5. Kişisel Verilerin Aktarıldığı Taraflar ve Aktarım Koşulları</SectionTitle>
-
-              <h3 className="font-semibold text-gray-700 mb-2 mt-4">4.1 Yurt İçi Aktarım</h3>
-              <p className="text-gray-600 leading-relaxed mb-3">
-                Kişisel verileriniz KVKK'nın 8. maddesi uyarınca aşağıdaki taraflarla paylaşılabilir:
-              </p>
-              <ul className="space-y-3 text-gray-600 mb-4">
-                {[
-                  { bold: 'Üretici ve satıcı firmalar:', text: 'Teklif talebinizde yer alan ad, telefon ve e-posta bilgileriniz yalnızca talebi karşılayacak firmaya iletilir. Bu aktarım KVKK m. 8 uyarınca açık rızanıza ve sözleşme ifasına dayanır.' },
-                  { bold: 'Firebase (Google LLC) — Bulut Altyapı:', text: 'Platformun veritabanı ve kimlik doğrulama hizmetleri Firebase üzerinde çalışmaktadır. Form verileri Google Cloud sunucularında saklanır. Aktarım KVKK m. 9 uyarınca SCCs güvencesiyle gerçekleştirilmektedir.' },
-                  { bold: 'Ödeme hizmet sağlayıcıları:', text: 'Fatura bilgileri ödeme altyapısı sağlayıcılarıyla sözleşmesel güvence altında paylaşılır.' },
-                  { bold: 'Yetkili kurum ve kuruluşlar:', text: 'Mahkemeler, savcılıklar, vergi daireleri ve düzenleyici kurumlar yasal zorunluluk kapsamında.' },
-                  { bold: 'Denetçi ve danışmanlar:', text: 'Hukuki veya mali denetim süreçlerinde gizlilik sözleşmesiyle bağlı profesyoneller.' },
-                ].map((item) => (
-                  <li key={item.bold} className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 flex-shrink-0" />
-                    <span><strong>{item.bold}</strong> {item.text}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <h3 className="font-semibold text-gray-700 mb-2">4.2 Yurt Dışı Aktarım</h3>
-              <p className="text-gray-600 leading-relaxed mb-3">
-                Kişisel verileriniz KVKK'nın 9. maddesi çerçevesinde aşağıdaki teknik altyapı
-                sağlayıcılarına yurt dışında aktarılabilir:
-              </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-gray-600 border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Sağlayıcı</th>
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Konum</th>
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Aktarılan Veri</th>
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Güvence</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      ['Firebase (Google Cloud)', 'ABD', 'Üyelik, form ve ilan verileri', 'SCCs / Google DPA'],
-                      ['Google Analytics', 'ABD', 'Anonim teknik veriler', 'SCCs / Yeterlilik kararı'],
-                      ['Cloudflare', 'ABD', 'IP, teknik log', 'SCCs'],
-                      ['SMTP / E-posta altyapısı', 'AB/ABD', 'E-posta adresi', 'SCCs'],
-                      ['Bulut depolama', 'AB', 'Yüklenen görseller', 'AB Yeterlilik kararı'],
-                    ].map(([provider, loc, data, guarantee], i) => (
-                      <tr key={provider} className={i % 2 === 1 ? 'bg-gray-50' : ''}>
-                        <td className="px-3 py-2 border border-gray-200 font-medium">{provider}</td>
-                        <td className="px-3 py-2 border border-gray-200">{loc}</td>
-                        <td className="px-3 py-2 border border-gray-200">{data}</td>
-                        <td className="px-3 py-2 border border-gray-200 text-xs text-gray-500">{guarantee}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="mt-3 text-xs text-gray-400">
-                SCCs: Standart Sözleşme Maddeleri (Standard Contractual Clauses). Aktarımların tamamı
-                KVKK m. 9 ve Kurul kararlarıyla uyumlu güvencelerle gerçekleştirilmektedir.
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Verileriniz hiçbir koşulda ticari amaçla üçüncü taraflara satılmaz.
-              </p>
-            </section>
-
-            {/* 5 — Saklama Süreleri */}
-            <section className="mb-10">
-              <SectionTitle>6. Kişisel Veri Saklama Süreleri</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Verileriniz yalnızca işlenme amacının gerektirdiği süre boyunca saklanır. Amaç ortadan
-                kalktığında veya yasal saklama süresi dolduğunda veriler silinir, yok edilir veya
-                anonim hale getirilir. Belirlenen süreler aşağıdaki tabloda listelenmiştir:
-              </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-gray-600 border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Veri Türü</th>
-                      <th className="text-left px-3 py-2 border border-gray-200 font-semibold">Saklama Süresi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {RETENTION.map(([type, duration], i) => (
-                      <tr key={type} className={i % 2 === 1 ? 'bg-gray-50' : ''}>
-                        <td className="px-3 py-2 border border-gray-200">{type}</td>
-                        <td className="px-3 py-2 border border-gray-200">{duration}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            {/* 6 — Haklar */}
-            <section className="mb-10">
-              <SectionTitle>7. Veri Sahibinin Hakları (KVKK Madde 11)</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                KVKK'nın 11. maddesi uyarınca kişisel verilerinize ilişkin aşağıdaki haklara sahipsiniz.
-                Bu haklarınızı kullanmak için 8. bölümdeki başvuru yöntemini izleyiniz.
-              </p>
-              <div className="space-y-3">
-                {RIGHTS.map((right, i) => (
-                  <div key={right.title} className="flex gap-4 bg-gray-50 rounded-xl p-4">
-                    <span className="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                      {i + 1}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-gray-800 text-sm">{right.title}</p>
-                      <p className="text-sm text-gray-500 mt-0.5">{right.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-                Haklarınızı kullanmak için kimliğinizi doğrulayan belgeyi (T.C. kimlik fotokopisi vb.)
-                başvurunuza eklemeniz gerekmektedir. Kimliği doğrulanamayan başvurular yanıtsız bırakılabilir.
-              </div>
-            </section>
-
-            {/* 7 — Başvuru Yöntemi */}
-            <section className="mb-10">
-              <SectionTitle>8. Başvuru Yöntemi ve Yanıt Süresi</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                KVKK kapsamındaki haklarınızı kullanmak için aşağıdaki kanallardan herhangi birini
-                tercih edebilirsiniz:
-              </p>
-              <div className="space-y-3">
-                {[
-                  {
-                    channel: 'E-posta',
-                    detail: SITE_CONFIG.email,
-                    note: 'Kayıtlı e-posta adresinizden gönderilmelidir. Güvenli e-imza veya mobil imza ile imzalanmış başvurular da kabul edilir.',
-                    href: `mailto:${SITE_CONFIG.email}`,
-                    color: 'bg-emerald-50 border-emerald-200',
-                  },
-                  {
-                    channel: 'KEP (Kayıtlı Elektronik Posta)',
-                    detail: 'modulerpazar@hs01.kep.tr',
-                    note: 'Hukuki geçerliliği olan resmi kanalımızdır.',
-                    href: undefined,
-                    color: 'bg-blue-50 border-blue-200',
-                  },
-                  {
-                    channel: 'Yazılı / Posta',
-                    detail: SITE_CONFIG.address,
-                    note: '"Kişisel Veri Sahibi Başvurusu" ibaresiyle ıslak imzalı dilekçe ile. Kimlik fotokopisi eklenmelidir.',
-                    href: undefined,
-                    color: 'bg-gray-50 border-gray-200',
-                  },
-                ].map((item) => (
-                  <div key={item.channel} className={`border rounded-xl p-4 text-sm ${item.color}`}>
-                    <p className="font-semibold text-gray-800 mb-1">{item.channel}</p>
-                    {item.href
-                      ? <a href={item.href} className="text-emerald-600 hover:underline">{item.detail}</a>
-                      : <p className="text-gray-700">{item.detail}</p>
-                    }
-                    <p className="text-gray-500 text-xs mt-1">{item.note}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
-                <p className="font-semibold mb-1">Yanıt Süresi</p>
-                <p>Başvurunuz en geç <strong>30 (otuz) gün</strong> içinde sonuçlandırılır. Talebin karmaşıklığına
-                göre bu süre bir defaya mahsus 30 gün uzatılabilir; uzatma gerekçesiyle birlikte tarafınıza
-                bildirilir.</p>
-                <p className="mt-2 text-xs text-gray-400">
-                  Başvurunun sonuçlandırılması kural olarak ücretsizdir. Yanıtın 10 sayfayı aşan çıktı
-                  gerektirmesi halinde KVKK Kurulu tarifesiyle ücret alınabilir.
-                </p>
-              </div>
-            </section>
-
-            {/* 8 — Çerez Politikası */}
-            <section className="mb-10">
-              <SectionTitle>9. Çerez (Cookie) Politikası Özeti</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Platformumuz zorunlu, analitik ve pazarlama çerezleri kullanmaktadır. Zorunlu çerezler
-                hizmetin işleyişi için gereklidir; diğerleri yalnızca onayınız dahilinde etkinleştirilir.
-              </p>
-              <div className="grid sm:grid-cols-3 gap-3 mb-4">
-                {[
-                  { name: 'Zorunlu', color: 'bg-gray-100 text-gray-700', desc: 'Her zaman aktif. Oturum ve güvenlik yönetimi.' },
-                  { name: 'Analitik', color: 'bg-blue-100 text-blue-700', desc: 'Onayınıza bağlı. Ziyaretçi istatistikleri.' },
-                  { name: 'Pazarlama', color: 'bg-amber-100 text-amber-700', desc: 'Onayınıza bağlı. Kişiselleştirilmiş reklamlar.' },
-                ].map((c) => (
-                  <div key={c.name} className="bg-gray-50 rounded-xl p-3 text-sm">
-                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium mb-2 ${c.color}`}>{c.name}</span>
-                    <p className="text-gray-600">{c.desc}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm text-gray-500">
-                Çerez tercihlerinizi istediğiniz zaman tarayıcı ayarlarınızdan veya platformumuzdaki tercih
-                panelinden değiştirebilirsiniz. Detaylı bilgi için{' '}
-                <Link to={LEGAL_LINKS.cerez} className="text-emerald-600 hover:underline">Çerez Politikası</Link>'mızı
-                inceleyiniz.
-              </p>
-            </section>
-
-            {/* 9 — Güvenlik Tedbirleri */}
-            <section className="mb-10">
-              <SectionTitle>10. Güvenlik Tedbirleri</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                KVKK'nın 12. maddesi uyarınca kişisel verilerinizin hukuka aykırı işlenmesini ve
-                yetkisiz erişimi önlemek amacıyla aşağıdaki teknik ve idari tedbirler alınmaktadır:
-              </p>
-
-              <h3 className="font-semibold text-gray-700 mb-2">Teknik Tedbirler</h3>
-              <BulletList items={SECURITY_TECHNICAL} />
-
-              <h3 className="font-semibold text-gray-700 mb-2 mt-5">İdari Tedbirler</h3>
-              <BulletList items={SECURITY_ADMINISTRATIVE} />
-            </section>
-
-            {/* 10 — Değişiklik Bildirimi */}
-            <section className="mb-8">
-              <SectionTitle>11. Aydınlatma Metnindeki Değişiklikler</SectionTitle>
-              <p className="text-gray-600 leading-relaxed mb-3">
-                Bu Aydınlatma Metni, yasal değişiklikler, yeni hizmetler veya Kurul kararları
-                doğrultusunda güncellenebilir. Değişiklikler şu şekilde duyurulur:
-              </p>
-              <BulletList items={[
-                'Platform anasayfasında "Son Güncelleme" tarihi revize edilir.',
-                'Önemli değişiklikler kayıtlı e-posta adresinize bildirilir.',
-                'Değişiklik sonrası platforma girişiniz, güncel metni kabul ettiğiniz anlamına gelir.',
-              ]} />
-              <p className="mt-3 text-sm text-gray-500">
-                Arşivlenmiş önceki versiyonlara e-posta aracılığıyla talep edebilirsiniz.
-              </p>
-            </section>
-
-            <p className="text-xs text-gray-400 border-t border-gray-100 pt-6">
-              Bu metin 6698 sayılı Kişisel Verilerin Korunması Kanunu, Aydınlatma Yükümlülüğünün
-              Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ ile AB Genel Veri Koruma
-              Tüzüğü (GDPR) ilkeleri gözetilerek hazırlanmıştır.
+          {/* ── 3. İşlenme Amaçları ve Hukuki Dayanaklar ── */}
+          <Card>
+            <SectionTitle n={3}>Kişisel Verilerin İşlenme Amaçları ve Hukuki Dayanakları (KVKK m. 5)</SectionTitle>
+            <p className="text-sm text-gray-600 mb-5">
+              Kişisel verileriniz, aşağıda hukuki dayanak gruplarına göre sıralanmış
+              amaçlarla işlenmektedir:
             </p>
+            <div className="space-y-5">
+              {PURPOSES_GROUPED.map((grp) => (
+                <div key={grp.basis} className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <Badge color={grp.color}>{grp.basis}</Badge>
+                    <span className="text-xs font-mono text-emerald-700 font-semibold">{grp.article}</span>
+                  </div>
+                  <div className="p-4">
+                    <Bullets items={grp.items} />
+                    {grp.note && (
+                      <div className="mt-3">
+                        <InfoBox color="amber">
+                          <p className="text-xs">{grp.note}</p>
+                        </InfoBox>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* ── 4. Pazaryeri Vurgusu ─────────────────────── */}
+          <Card>
+            <SectionTitle n={4}>Pazaryeri Modeli ve Veri Kullanımı</SectionTitle>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-4">
+              <p className="font-semibold text-emerald-800 text-sm mb-2">Temel İlkemiz</p>
+              <p className="text-emerald-700 text-sm leading-relaxed">
+                <strong>Verileriniz yalnızca teklif hazırlanması amacıyla, sizin seçtiğiniz
+                firmalara iletilir. Kişisel verileriniz hiçbir koşulda ticari amaçla üçüncü
+                taraflara satılmaz, kiralanmaz veya kullandırılmaz.</strong>
+              </p>
+            </div>
+            <Bullets items={[
+              <span><strong>Veri minimizasyonu:</strong> Teklif Al formunda yalnızca firmanın teklif hazırlamak için ihtiyaç duyduğu veriler (ad, telefon, e-posta, talep mesajı) toplanır.</span>,
+              <span><strong>Amaçla sınırlılık:</strong> Teklif amacıyla toplanan veriler başka amaçlarla (örn. pazarlama) kullanılmaz; ayrı açık rıza gerektirir.</span>,
+              <span><strong>Firma aktarımı şeffaflığı:</strong> Teklif formunun altındaki onay kutusunda hangi tür firma/lara iletileceği açıkça belirtilir.</span>,
+              <span><strong>Geri alma hakkı:</strong> Form onayınızı vermemeniz hâlinde teklif süreci başlamaz; vermiş olduğunuz rızayı istediğiniz zaman geri alabilirsiniz.</span>,
+            ]} />
+          </Card>
+
+          {/* ── 5. Veri Minimizasyonu ve Ölçülülük ──────── */}
+          <Card>
+            <SectionTitle n={5}>Veri Minimizasyonu ve Ölçülülük İlkesi (KVKK m. 4/2-ç)</SectionTitle>
+            <p className="text-sm text-gray-600 mb-3">
+              Platformumuzda toplanan her veri türü için işleme gerekliliği aşağıda açıklanmıştır.
+              Amacı aşan veya gereksiz veri toplanmamaktadır.
+            </p>
+            <Tbl
+              head={['Veri Türü', 'Neden Toplandığı', 'Kaynak Form']}
+              rows={MINIMIZATION.map((r) => [
+                <span className="font-medium text-gray-700">{r.data}</span>,
+                r.reason,
+                <span className="text-xs text-gray-500 whitespace-nowrap">{r.form}</span>,
+              ])}
+            />
+          </Card>
+
+          {/* ── 6. Konum Verisi ──────────────────────────── */}
+          <Card>
+            <SectionTitle n={6}>Konum Verisi</SectionTitle>
+            <InfoBox color="amber">
+              <strong>Hassas Veri Uyarısı:</strong> Konum verisi, kişinin bulunduğu yere dair
+              fikir verebileceğinden özenle işlenmektedir.
+            </InfoBox>
+            <div className="mt-4 space-y-4 text-sm text-gray-600">
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <p className="font-semibold text-gray-700">Ne Toplanır?</p>
+                <Bullets items={[
+                  'Firma kayıt formunda: Şehir ve ilçe bilgisi (açık adres isteğe bağlı)',
+                  'GPS koordinatı veya hassas lokasyon bilgisi toplanmamaktadır',
+                  'Tarayıcı konum izni istenmemektedir',
+                ]} />
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <p className="font-semibold text-gray-700">Ne İçin Kullanılır?</p>
+                <Bullets items={[
+                  'Alıcıları şehir/bölge bazında yerel firmalarla eşleştirme',
+                  'Ürün/hizmet kapsamının coğrafi gösterimi',
+                  'Hiçbir koşulda reklam hedefleme veya profilleme amacıyla kullanılmaz',
+                ]} />
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="font-semibold text-gray-700 mb-2">Hukuki Dayanak</p>
+                <p>Sözleşmenin ifası (KVKK m. 5/2-c) — ilan eşleşmesi hizmetinin sunulabilmesi için zorunludur.</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* ── 7. Çerez Politikası ──────────────────────── */}
+          <Card>
+            <SectionTitle n={7}>Çerez (Cookie) Politikası</SectionTitle>
+            <p className="text-sm text-gray-600 mb-4">
+              Platformumuz dört kategoride çerez kullanmaktadır. Zorunlu çerezler
+              hizmetin işleyişi için gerekli olup onay gerektirmez; diğerleri yalnızca
+              tercihinize bağlı olarak etkinleştirilir.
+            </p>
+            <Tbl
+              head={['Kategori', 'Onay', 'Süre', 'Örnekler', 'Amaç', 'ETK / İYS']}
+              rows={COOKIES_TABLE.map((c) => [
+                <Badge color={c.color}>{c.cat}</Badge>,
+                c.consent,
+                c.duration,
+                <span className="font-mono text-xs text-gray-500">{c.examples}</span>,
+                c.purpose,
+                <span className="text-xs text-gray-500">{c.etk}</span>,
+              ])}
+            />
+            <div className="mt-4 space-y-3">
+              <InfoBox color="blue">
+                <strong>İYS Uyumu:</strong> Ticari elektronik ileti göndermek için İleti Yönetim
+                Sistemi'ne (iys.org.tr) kayıt yapılmakta ve onay/ret tercihleri buraya bildirilerek
+                Elektronik Ticaret Kanunu (ETK) m. 6 yükümlülükleri yerine getirilmektedir.
+              </InfoBox>
+              <p className="text-xs text-gray-500">
+                Çerez tercihlerinizi tarayıcı ayarlarınızdan veya platform tercih panelinden
+                istediğiniz zaman değiştirebilirsiniz. Detay için{' '}
+                <Link to={LEGAL_LINKS.cerez} className="text-emerald-600 hover:underline">
+                  Çerez Politikası
+                </Link>'mızı inceleyiniz.
+              </p>
+            </div>
+          </Card>
+
+          {/* ── 8. Özel Nitelikli Kişisel Veriler ────────── */}
+          <Card>
+            <SectionTitle n={8}>Özel Nitelikli Kişisel Veriler (KVKK m. 6)</SectionTitle>
+            <InfoBox color="green">
+              <strong>Bu Platformda Özel Nitelikli Kişisel Veri İşlenmemektedir.</strong>
+            </InfoBox>
+            <div className="mt-4 text-sm text-gray-600 space-y-3">
+              <p>
+                KVKK'nın 6. maddesi kapsamındaki <em>özel nitelikli kişisel veriler</em> (ırk, etnik köken,
+                siyasi düşünce, felsefi inanç, din, mezhep, kılık-kıyafet, dernek/vakıf/sendika üyeliği,
+                sağlık, cinsel hayat, ceza mahkûmiyeti, biyometrik ve genetik veri) bu platform
+                aracılığıyla hiçbir koşulda işlenmemektedir.
+              </p>
+              <p>
+                Kullanıcı tarafından gönüllü olarak paylaşılan içeriklerde özel nitelikli veri
+                tespit edilmesi hâlinde ilgili içerik derhal kaldırılır ve veri sahibi bilgilendirilir.
+              </p>
+            </div>
+          </Card>
+
+          {/* ── 9. Veri Aktarımı ─────────────────────────── */}
+          <Card>
+            <SectionTitle n={9}>Veri Aktarımı (KVKK m. 8–9)</SectionTitle>
+
+            <Sub>9.1 Yurt İçi Aktarım (KVKK m. 8)</Sub>
+            <p className="text-sm text-gray-600 mb-3">
+              Kişisel verileriniz KVKK'nın 8. maddesi uyarınca aşağıdaki taraflarla paylaşılabilir:
+            </p>
+            <Tbl
+              head={['Alıcı', 'Aktarılan Veri', 'Hukuki Dayanak', 'Kapsam']}
+              rows={DOMESTIC_TRANSFERS.map((r) => [
+                <span className="font-medium text-gray-700">{r.recipient}</span>,
+                r.data,
+                <span className="text-xs text-emerald-700 font-medium">{r.basis}</span>,
+                <span className="text-xs text-gray-500">{r.note}</span>,
+              ])}
+            />
+
+            <Sub>9.2 Yurt Dışı Aktarım (KVKK m. 9)</Sub>
+            <p className="text-sm text-gray-600 mb-3">
+              Aşağıdaki teknik altyapı sağlayıcılarına veri aktarımı, KVKK m. 9 kapsamında
+              Standart Sözleşme Maddeleri (SCCs) ve ilgili veri işleme anlaşmaları (DPA)
+              güvencesiyle gerçekleştirilmektedir:
+            </p>
+            <Tbl
+              head={['Sağlayıcı', 'Konum', 'Aktarılan Veri', 'Güvence']}
+              rows={INTERNATIONAL_TRANSFERS.map((r) => [
+                <span className="font-medium text-gray-700">{r[0]}</span>,
+                r[1],
+                r[2],
+                <span className="text-xs text-gray-500">{r[3]}</span>,
+              ])}
+            />
+            <p className="mt-3 text-xs text-gray-400">
+              SCCs: AB Komisyonu onaylı Standart Sözleşme Maddeleri. Tüm aktarımlar Kurul kararlarıyla
+              uyumludur. Aktarım yapılan sağlayıcı listesi değiştiğinde bu metin güncellenir.
+            </p>
+          </Card>
+
+          {/* ── 10. Saklama Süreleri ─────────────────────── */}
+          <Card>
+            <SectionTitle n={10}>Veri Saklama Süreleri (KVKK m. 7)</SectionTitle>
+            <p className="text-sm text-gray-600 mb-3">
+              Verileriniz yalnızca işlenme amacının gerektirdiği süre boyunca saklanır.
+              Süre dolduğunda veya işleme amacı ortadan kalktığında veriler silinir,
+              yok edilir veya anonim hâle getirilir (Kişisel Veri Saklama ve İmha Politikası).
+            </p>
+            <Tbl
+              head={['Veri Türü', 'Saklama Süresi', 'Hukuki Dayanak']}
+              rows={RETENTION.map(([type, dur, legal]) => [
+                <span className="font-medium text-gray-700">{type}</span>,
+                dur,
+                <span className="text-xs text-gray-500">{legal}</span>,
+              ])}
+            />
+          </Card>
+
+          {/* ── 11. Veri Sahibinin Hakları ───────────────── */}
+          <Card>
+            <SectionTitle n={11}>Veri Sahibinin Hakları (KVKK m. 11)</SectionTitle>
+            <p className="text-sm text-gray-600 mb-4">
+              KVKK'nın 11. maddesi uyarınca kişisel verilerinize ilişkin aşağıdaki
+              sekiz hakka sahipsiniz:
+            </p>
+            <div className="grid sm:grid-cols-2 gap-3 mb-5">
+              {RIGHTS.map((right, i) => (
+                <div key={right.title} className="flex gap-3 bg-gray-50 rounded-xl p-4">
+                  <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">{right.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{right.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Sub>Başvuru Kanalları ve Yanıt Süresi</Sub>
+            <div className="space-y-3">
+              {[
+                {
+                  ch:    'E-posta',
+                  val:   SITE_CONFIG.email,
+                  href:  `mailto:${SITE_CONFIG.email}`,
+                  note:  'Kayıtlı e-posta adresinizden gönderilmeli; güvenli e-imza veya mobil imzalı başvurular da kabul edilir.',
+                  color: 'bg-emerald-50 border-emerald-200',
+                },
+                {
+                  ch:    'KEP (Kayıtlı Elektronik Posta)',
+                  val:   'modulerpazar@hs01.kep.tr',
+                  href:  undefined,
+                  note:  'Hukuki geçerliliği olan resmi kanalımızdır.',
+                  color: 'bg-blue-50 border-blue-200',
+                },
+                {
+                  ch:    'Yazılı / Posta',
+                  val:   SITE_CONFIG.address,
+                  href:  undefined,
+                  note:  '"Kişisel Veri Sahibi Başvurusu" ibaresiyle ıslak imzalı dilekçe; T.C. kimlik fotokopisi eklenmelidir.',
+                  color: 'bg-gray-50 border-gray-200',
+                },
+              ].map((item) => (
+                <div key={item.ch} className={`border rounded-xl p-4 text-sm ${item.color}`}>
+                  <p className="font-semibold text-gray-800 mb-1">{item.ch}</p>
+                  {item.href
+                    ? <a href={item.href} className="text-emerald-600 hover:underline">{item.val}</a>
+                    : <p className="text-gray-700">{item.val}</p>
+                  }
+                  <p className="text-gray-500 text-xs mt-1">{item.note}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4">
+              <InfoBox color="gray">
+                <p className="font-semibold mb-1">30 Günlük Yanıt Süresi</p>
+                <p>
+                  Başvurunuz en geç <strong>30 (otuz) gün</strong> içinde sonuçlandırılır.
+                  Talebin niteliğine göre bu süre bir kez daha 30 gün uzatılabilir;
+                  uzatma gerekçesiyle birlikte tarafınıza bildirilir. Yanıtlama kural
+                  olarak ücretsizdir; 10 sayfayı aşan çıktı gerektiren talepler
+                  için KVKK Kurulu tarifesiyle ücret alınabilir.
+                </p>
+              </InfoBox>
+            </div>
+            <div className="mt-3">
+              <InfoBox color="amber">
+                Kimliğinizi doğrulayan belge (T.C. kimlik fotokopisi veya pasaport)
+                başvurunuza eklenmelidir. Kimliği doğrulanamayan başvurular işleme
+                alınmayabilir. Kişisel Veri Sahibi Başvuru Formu'na{' '}
+                <a href={`mailto:${SITE_CONFIG.email}`} className="underline font-medium">
+                  e-posta ile talep ederek
+                </a>{' '}
+                ulaşabilirsiniz.
+              </InfoBox>
+            </div>
+          </Card>
+
+          {/* ── 12. 12 Mart 2024 KVKK Değişiklikleri ────── */}
+          <Card>
+            <SectionTitle n={12}>12 Mart 2024 KVKK Değişikliklerine Uyum</SectionTitle>
+            <p className="text-sm text-gray-600 mb-4">
+              7499 sayılı Kanun ile 6698 sayılı KVKK'da yapılan ve 12 Mart 2024 tarihinde
+              yürürlüğe giren değişiklikler kapsamında platformumuzda gerçekleştirilen
+              uyum çalışmaları aşağıda özetlenmiştir:
+            </p>
+            <div className="space-y-3">
+              {[
+                {
+                  title: 'Yurt Dışı Veri Aktarımı (m. 9)',
+                  desc:  'Yurt dışı aktarım hükümleri güncellenerek Firebase ve diğer sağlayıcılarla yeni SCCs/DPA anlaşmaları imzalanmıştır. Aktarımlar Kurul\'un güvenli ülke listesi ve yeterlilik kararları doğrultusunda yürütülmektedir.',
+                  color: 'border-blue-400',
+                },
+                {
+                  title: 'Veri İhlali Bildirimi (m. 12)',
+                  desc:  'Kişisel veri ihlali tespit edilmesi hâlinde KVKK Kurulu\'na 72 saat, etkilenen veri sahiplerine ise makul sürede bildirim yapılmasını sağlayan ihlal müdahale prosedürümüz güncellenmiştir.',
+                  color: 'border-red-400',
+                },
+                {
+                  title: 'İdari Para Cezası Güncellemesi (m. 18)',
+                  desc:  'Güncellenmiş ceza tarifesiyle uyumlu risk değerlendirmesi yapılmış; ihlal önleme öncelikleri bu doğrultuda gözden geçirilmiştir.',
+                  color: 'border-amber-400',
+                },
+                {
+                  title: 'Açık Rıza Mekanizması',
+                  desc:  'Açık rıza talep edilen tüm formlarda (Teklif Al, pazarlama bildirimleri) ayrı ve bağımsız onay kutuları ile geri alma mekanizmaları hayata geçirilmiştir.',
+                  color: 'border-emerald-400',
+                },
+                {
+                  title: 'VERBİS Güncelleme',
+                  desc:  'Değişiklikler kapsamında VERBİS kayıt bilgileri ve işleme envanteri revize edilmiş; yeni veri akışları kayıt altına alınmıştır.',
+                  color: 'border-purple-400',
+                },
+              ].map((item) => (
+                <div key={item.title} className={`border-l-4 ${item.color} bg-gray-50 rounded-r-xl p-4`}>
+                  <p className="font-semibold text-gray-800 text-sm mb-1">{item.title}</p>
+                  <p className="text-xs text-gray-600 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* ── 13. İletişim ve Başvuru ─────────────────── */}
+          <Card>
+            <SectionTitle n={13}>İletişim ve Başvuru</SectionTitle>
+            <p className="text-sm text-gray-600 mb-4">
+              Bu Aydınlatma Metni'ne ilişkin sorularınız, KVKK kapsamındaki hak başvurularınız
+              ve veri koruma konularındaki talepleriniz için aşağıdaki kanalları kullanabilirsiniz:
+            </p>
+            <div className="grid sm:grid-cols-2 gap-4 mb-4">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm">
+                <p className="font-semibold text-emerald-800 mb-1">Veri Koruma Sorumlusu</p>
+                <a href="mailto:kvkk@modulerpazar.com" className="text-emerald-600 hover:underline">
+                  kvkk@modulerpazar.com
+                </a>
+                <p className="text-xs text-gray-500 mt-1">KVKK başvuruları ve gizlilik soruları</p>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm">
+                <p className="font-semibold text-blue-800 mb-1">KEP Adresi</p>
+                <p className="text-blue-700 font-mono text-xs">modulerpazar@hs01.kep.tr</p>
+                <p className="text-xs text-gray-500 mt-1">Hukuki geçerliliği olan resmi kanal</p>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm">
+                <p className="font-semibold text-gray-700 mb-1">Genel İletişim</p>
+                <a href={`mailto:${SITE_CONFIG.email}`} className="text-emerald-600 hover:underline">
+                  {SITE_CONFIG.email}
+                </a>
+                <p className="text-xs text-gray-500 mt-1">{SITE_CONFIG.phone}</p>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm">
+                <p className="font-semibold text-gray-700 mb-1">Yazılı Başvuru Adresi</p>
+                <p className="text-gray-600 text-xs leading-relaxed">{SITE_CONFIG.address}</p>
+              </div>
+            </div>
+
+            <InfoBox color="blue">
+              <strong>KVKK Kurulu'na Şikâyet:</strong> Başvurunuzun tarafımızca reddedilmesi,
+              verilen yanıtı yetersiz bulmanız veya süresinde yanıt verilmemesi hâlinde{' '}
+              <a
+                href="https://www.kvkk.gov.tr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-medium"
+              >
+                Kişisel Verileri Koruma Kurulu
+              </a>'na başvurma hakkınız saklıdır.
+            </InfoBox>
+          </Card>
+
+          {/* Alt not */}
+          <div className="text-xs text-gray-400 text-center pb-4 leading-relaxed">
+            Bu metin; 6698 sayılı KVKK, 7499 sayılı Değişiklik Kanunu (12 Mart 2024),
+            Aydınlatma Yükümlülüğü Tebliği, AB GDPR ilkeleri ve KVKK Kurul kararları
+            gözetilerek hazırlanmıştır.{' '}
+            <Link to={LEGAL_LINKS.gizlilik} className="text-emerald-600 hover:underline">
+              Gizlilik Politikası
+            </Link>
+            {' '}·{' '}
+            <Link to={LEGAL_LINKS.kullanim} className="text-emerald-600 hover:underline">
+              Kullanım Koşulları
+            </Link>
           </div>
+
         </div>
       </main>
 
