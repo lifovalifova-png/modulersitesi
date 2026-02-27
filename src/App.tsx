@@ -13,36 +13,45 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminRoute from './components/AdminRoute';
 import LogoKitPage from './pages/LogoKitPage';
 import IlanDetayPage from './pages/IlanDetayPage';
+import GirisPage from './pages/GirisPage';
+import KayitPage from './pages/KayitPage';
+import SifreSifirlaPage from './pages/SifreSifirlaPage';
+import { AuthProvider } from './context/AuthContext';
 import { TeklifSepetProvider } from './context/TeklifSepetContext';
 import TeklifSepeti from './components/TeklifSepeti';
 import './App.css';
 
 function App() {
   return (
-    <TeklifSepetProvider>
-      <Router>
-        <Toaster position="top-right" richColors />
-        <TeklifSepeti />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/satici-formu" element={<SellerFormPage />} />
-          <Route path="/kategori/:slug" element={<CategoryPage />} />
-          <Route path="/kvkk" element={<KvkkPage />} />
-          <Route path="/gizlilik" element={<GizlilikPage />} />
-          <Route path="/kullanim-kosullari" element={<KullanimKosullariPage />} />
-          <Route path="/firmalar-harita" element={<FirmalarHaritaPage />} />
-          <Route path="/yasal/:slug" element={<LegalPage />} />
-          <Route path="/admin" element={<AdminLoginPage />} />
-          <Route path="/admin/dashboard" element={
-            <AdminRoute>
-              <AdminDashboardPage />
-            </AdminRoute>
-          } />
-          <Route path="/logo-kit" element={<LogoKitPage />} />
-          <Route path="/ilan/:id" element={<IlanDetayPage />} />
-        </Routes>
-      </Router>
-    </TeklifSepetProvider>
+    <AuthProvider>
+      <TeklifSepetProvider>
+        <Router>
+          <Toaster position="top-right" richColors />
+          <TeklifSepeti />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/satici-formu" element={<SellerFormPage />} />
+            <Route path="/kategori/:slug" element={<CategoryPage />} />
+            <Route path="/kvkk" element={<KvkkPage />} />
+            <Route path="/gizlilik" element={<GizlilikPage />} />
+            <Route path="/kullanim-kosullari" element={<KullanimKosullariPage />} />
+            <Route path="/firmalar-harita" element={<FirmalarHaritaPage />} />
+            <Route path="/yasal/:slug" element={<LegalPage />} />
+            <Route path="/admin" element={<AdminLoginPage />} />
+            <Route path="/admin/dashboard" element={
+              <AdminRoute>
+                <AdminDashboardPage />
+              </AdminRoute>
+            } />
+            <Route path="/logo-kit" element={<LogoKitPage />} />
+            <Route path="/ilan/:id" element={<IlanDetayPage />} />
+            <Route path="/giris" element={<GirisPage />} />
+            <Route path="/kayit" element={<KayitPage />} />
+            <Route path="/sifre-sifirla" element={<SifreSifirlaPage />} />
+          </Routes>
+        </Router>
+      </TeklifSepetProvider>
+    </AuthProvider>
   );
 }
 

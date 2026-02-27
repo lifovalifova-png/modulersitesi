@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, User, Phone, Map } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, Phone, Map, UserCircle, FileText, LogOut } from 'lucide-react';
 import { CATEGORIES } from '../data/categories';
 import { SITE_CONFIG } from '../config/site';
+import { useAuth } from '../context/AuthContext';
+import UserMenu from './UserMenu';
 import logoSrc from '../assets/logo.svg';
 
 /* ─── 81 il listesi ───────────────────────────────────────── */
@@ -21,6 +23,7 @@ const CITIES = [
 
 export default function Header() {
   const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
 
   /* state */
   const [mobileMenuOpen,       setMobileMenuOpen]       = useState(false);
@@ -165,9 +168,7 @@ export default function Header() {
             >
               İlan Ver
             </Link>
-            <button className="p-2 text-gray-600 hover:text-emerald-600 transition" aria-label="Hesabım">
-              <User className="w-6 h-6" />
-            </button>
+            <UserMenu />
           </div>
 
           {/* Mobile: Search toggle + Hamburger */}
@@ -347,6 +348,68 @@ export default function Header() {
                   {cat.name}
                 </Link>
               ))}
+            </div>
+
+            {/* Kullanıcı bölümü */}
+            <div className="pt-3 border-t border-gray-200">
+              {currentUser ? (
+                <>
+                  <div className="flex items-center gap-3 px-2 py-2 mb-1">
+                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {currentUser.photoURL ? (
+                        <img src={currentUser.photoURL} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-emerald-700 font-bold text-sm">
+                          {(currentUser.displayName || currentUser.email || 'K').charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">
+                        {currentUser.displayName || 'Kullanıcı'}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">{currentUser.email}</p>
+                    </div>
+                  </div>
+                  <Link
+                    to="/profilim"
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 hover:text-emerald-600"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <UserCircle className="w-4 h-4" /> Profilim
+                  </Link>
+                  <Link
+                    to="/ilanlarim"
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 hover:text-emerald-600"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <FileText className="w-4 h-4" /> İlanlarım
+                  </Link>
+                  <button
+                    onClick={async () => { await logout(); setMobileMenuOpen(false); }}
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-red-600 w-full"
+                  >
+                    <LogOut className="w-4 h-4" /> Çıkış Yap
+                  </button>
+                </>
+              ) : (
+                <div className="flex gap-2">
+                  <Link
+                    to="/giris"
+                    className="flex-1 border border-emerald-600 text-emerald-600 text-center px-4 py-2.5 rounded-lg font-medium text-sm hover:bg-emerald-50 transition"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Giriş Yap
+                  </Link>
+                  <Link
+                    to="/kayit"
+                    className="flex-1 bg-emerald-600 text-white text-center px-4 py-2.5 rounded-lg font-medium text-sm hover:bg-emerald-700 transition"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Kayıt Ol
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
