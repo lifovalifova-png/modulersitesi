@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, Building, Container, Home, Hammer, TreePine, Recycle, Star,
   Zap, Search, CheckSquare, FileText, BarChart2,
   UserPlus, ClipboardList, Handshake,
   ShieldCheck, Tag, MapPin, Lock,
+  Sparkles, SendHorizontal, MessageSquare,
   type LucideIcon,
 } from 'lucide-react';
 import Header from '../components/Header';
@@ -73,9 +74,82 @@ const TRUST_ITEMS = [
   },
 ];
 
+/* ─── AI sistem promptu ──────────────────────────────────── */
+const AI_SYSTEM = `Sen ModülerPazar'ın yapı danışmanısın. Türkiye'deki modüler yapı sektörünü çok iyi biliyorsun. Kullanıcının kısa isteğine göre:
+- En uygun modüler yapı tipini öner (prefabrik, çelik yapı, yaşam konteyneri, tiny house vb.)
+- Varsa bölgeye özgü iklim, kar yükü ve deprem riski bilgisi ekle
+- Tahmini maliyet aralığı ver (m² başına ₺)
+- Türkçe, samimi ve özlü yaz — 5-8 cümle yeterli`;
+
+function extractSlug(text: string): string {
+  const t = text.toLowerCase();
+  if (t.includes('konteyner'))                              return 'yasam-konteynerleri';
+  if (t.includes('tiny house') || t.includes('tiny-house')) return 'tiny-house';
+  if (t.includes('çelik') || t.includes('celik'))          return 'celik-yapilar';
+  if (t.includes('ahşap') || t.includes('ahsap'))          return 'ahsap-yapilar';
+  if (t.includes('özel proje') || t.includes('ozel'))      return 'ozel-projeler';
+  return 'prefabrik';
+}
+
 /* ─── Bileşen ────────────────────────────────────────────── */
 export default function HomePage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'customer' | 'producer'>('customer');
+
+  /* AI widget state */
+  const [aiQuery,    setAiQuery]    = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [aiLoading,  setAiLoading]  = useState(false);
+  const [aiError,    setAiError]    = useState('');
+  const [aiSlug,     setAiSlug]     = useState('prefabrik');
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  const handleAsk = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const q = aiQuery.trim();
+    if (!q) return;
+    setAiLoading(true);
+    setAiResponse('');
+    setAiError('');
+
+    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      setAiError('API anahtarı eksik (VITE_ANTHROPIC_API_KEY).');
+      setAiLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type':                              'application/json',
+          'x-api-key':                                 apiKey,
+          'anthropic-version':                         '2023-06-01',
+          'anthropic-dangerous-direct-browser-calls':  'true',
+        },
+        body: JSON.stringify({
+          model:    'claude-sonnet-4-6',
+          max_tokens: 512,
+          system:   AI_SYSTEM,
+          messages: [{ role: 'user', content: q }],
+        }),
+      });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error((e as { error?: { message?: string } }).error?.message ?? `HTTP ${res.status}`);
+      }
+      const data = await res.json() as { content?: Array<{ text: string }> };
+      const text = data.content?.[0]?.text ?? '';
+      setAiResponse(text);
+      setAiSlug(extractSlug(text));
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Bir hata oluştu.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -270,6 +344,102 @@ export default function HomePage() {
                 </Link>
               )}
             </div>
+          </div>
+        </section>
+
+        {/* ── Yapı Asistanı Widget ─────────────────────────── */}
+        <section className="py-12 md:py-16 bg-gradient-to-br from-emerald-600 to-emerald-800">
+          <div className="max-w-3xl mx-auto px-4">
+
+            {/* Başlık */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+                <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                Claude AI Destekli
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                Size Uygun Yapıyı Bulalım
+              </h2>
+              <p className="text-emerald-100 text-sm md:text-base">
+                Şehrinizi ve ihtiyacınızı yazın, size özel öneri alalım
+              </p>
+            </div>
+
+            {/* Input + Buton */}
+            <form onSubmit={handleAsk} className="flex gap-2">
+              <input
+                type="text"
+                value={aiQuery}
+                onChange={(e) => setAiQuery(e.target.value)}
+                placeholder='örn. "Ankara\'da 80 m² yazlık prefabrik" veya "İzmir\'de ucuz depo"'
+                className="flex-1 bg-white rounded-xl px-4 py-3.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-sm"
+              />
+              <button
+                type="submit"
+                disabled={!aiQuery.trim() || aiLoading}
+                className="flex-shrink-0 flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold px-5 py-3.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm"
+              >
+                {aiLoading
+                  ? <span className="w-4 h-4 border-2 border-amber-700/30 border-t-amber-900 rounded-full animate-spin" />
+                  : <SendHorizontal className="w-4 h-4" aria-hidden="true" />
+                }
+                <span className="hidden sm:inline">Öneri Al</span>
+              </button>
+            </form>
+
+            {/* Sonuç kutusu */}
+            {(aiResponse || aiLoading || aiError) && (
+              <div ref={resultRef} className="mt-4">
+
+                {/* Loading */}
+                {aiLoading && (
+                  <div className="bg-white/10 backdrop-blur rounded-2xl px-6 py-8 text-center text-white">
+                    <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block mb-3" />
+                    <p className="text-sm font-medium">Analiz ediliyor…</p>
+                  </div>
+                )}
+
+                {/* Hata */}
+                {aiError && !aiLoading && (
+                  <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 text-sm text-red-700">
+                    {aiError}
+                  </div>
+                )}
+
+                {/* Yanıt */}
+                {aiResponse && !aiLoading && (
+                  <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-5 py-3.5 bg-emerald-50 border-b border-emerald-100">
+                      <Sparkles className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+                      <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+                        Yapı Asistanı Önerisi
+                      </span>
+                    </div>
+                    <div className="px-5 py-5">
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                        {aiResponse}
+                      </p>
+                    </div>
+                    <div className="px-5 pb-5 flex flex-col sm:flex-row gap-2.5">
+                      <button
+                        onClick={() => navigate('/talep-olustur')}
+                        className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition"
+                      >
+                        <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                        Teklif İste
+                      </button>
+                      <button
+                        onClick={() => navigate(`/kategori/${aiSlug}`)}
+                        className="flex-1 flex items-center justify-center gap-2 border border-emerald-600 text-emerald-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-50 transition"
+                      >
+                        <Search className="w-4 h-4" aria-hidden="true" />
+                        İlanları Gör
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
