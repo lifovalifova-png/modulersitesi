@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, Phone, Map, UserCircle, FileText, LogOut } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, Phone, Map, UserCircle, FileText, LogOut, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { CATEGORIES } from '../data/categories';
 import { SITE_CONFIG } from '../config/site';
@@ -340,6 +340,18 @@ export default function Header() {
               <Map className="w-4 h-4" aria-hidden="true" />
               Firmalar Haritası
             </Link>
+
+            {/* Separator */}
+            <div className="flex-shrink-0 w-px h-5 bg-gray-300 mx-1" aria-hidden="true" />
+
+            {/* Yapı Asistanı */}
+            <Link
+              to="/yapi-asistani"
+              className="flex items-center gap-1.5 px-3 py-2 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0 font-medium"
+            >
+              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+              Yapı Asistanı ✨
+            </Link>
           </div>
         </div>
       </nav>
@@ -369,6 +381,14 @@ export default function Header() {
             >
               <Map className="w-5 h-5" aria-hidden="true" />
               Firmalar Haritası
+            </Link>
+            <Link
+              to="/yapi-asistani"
+              className="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg font-medium hover:bg-emerald-100 transition"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Sparkles className="w-4 h-4" aria-hidden="true" />
+              Yapı Asistanı ✨
             </Link>
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-400 mb-2 px-2">Kategoriler</p>
