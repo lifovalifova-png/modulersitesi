@@ -13,12 +13,17 @@ import {
   updateDoc,
   deleteDoc,
   setDoc,
+  arrayUnion,
+  serverTimestamp,
 } from 'firebase/firestore';
+import { CATEGORIES } from '../data/categories';
 import { toast } from 'sonner';
 import {
   LayoutDashboard, Settings, Zap, Building2 as BuildingIcon,
   LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle,
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
+  Send, Eye, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
+  Inbox,
 } from 'lucide-react';
 import logoSrc from '../assets/logo.svg';
 import { auth, db } from '../lib/firebase';
@@ -47,18 +52,54 @@ interface AdminFlashDeal {
 }
 
 interface AdminFirm {
-  id?:      string;
-  name:     string;
-  category: string;
-  city:     string;
-  address:  string;
-  phone:    string;
-  verified: boolean;
-  status:   'pending' | 'approved' | 'rejected';
+  id?:         string;
+  name:        string;
+  category:    string;
+  city:        string;
+  address:     string;
+  phone:       string;
+  verified:    boolean;
+  status:      'pending' | 'approved' | 'rejected';
+  /* SellerFormPage alanları */
+  userId?:     string;
+  sehir?:      string;
+  kategoriler?: string[];
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'firms';
-type FirmStatus = 'all' | 'pending' | 'approved' | 'rejected';
+interface AdminTalep {
+  id?:                  string;
+  kategori:             string;
+  sehir:                string;
+  ilce:                 string;
+  butce:                string;
+  metrekare:            string;
+  aciklama:             string;
+  teslimTarihi:         string;
+  fotograflar:          string[];
+  ad:                   string;
+  telefon:              string;
+  email:                string;
+  status:               'beklemede' | 'iletildi' | 'tamamlandi';
+  firmaGonderilenler:   string[];
+  firmaKabulEdenler:    string[];
+  tarih:                { seconds: number } | null;
+}
+
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'firms' | 'talepler';
+type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
+type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
+
+/* ═══════════════════════════════════════════════════════════
+   SHARED LOOKUP MAPS
+════════════════════════════════════════════════════════════ */
+const CAT_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.name]));
+
+const BUDGET_LABELS: Record<string, string> = {
+  '50k_alti':  '50K ₺ altı',
+  '50k_100k':  '50K – 100K ₺',
+  '100k_250k': '100K – 250K ₺',
+  '250k_ustu': '250K+ ₺',
+};
 
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS
@@ -111,7 +152,7 @@ function Badge({ status }: { status: AdminFirm['status'] }) {
    TAB 1 — OVERVIEW
 ════════════════════════════════════════════════════════════ */
 function OverviewTab() {
-  const [counts, setCounts] = useState({ deals: 0, approved: 0, pending: 0, rejected: 0 });
+  const [counts, setCounts] = useState({ deals: 0, approved: 0, pending: 0, rejected: 0, talepler: 0 });
 
   useEffect(() => {
     const u1 = onSnapshot(collection(db, 'flashDeals'), (s) =>
@@ -125,7 +166,9 @@ function OverviewTab() {
         rejected: docs.filter((f) => f.status === 'rejected').length,
       }));
     });
-    return () => { u1(); u2(); };
+    const u3 = onSnapshot(collection(db, 'taleplar'), (s) =>
+      setCounts((p) => ({ ...p, talepler: s.size })));
+    return () => { u1(); u2(); u3(); };
   }, []);
 
   return (
@@ -135,7 +178,7 @@ function OverviewTab() {
         <StatCard label="Flash İlanlar"     value={counts.deals}    color="text-emerald-600" sub="Firestore kayıtları" />
         <StatCard label="Onaylı Firmalar"   value={counts.approved} color="text-blue-600"    sub="Aktif firmalar" />
         <StatCard label="Onay Bekleyen"     value={counts.pending}  color="text-amber-500"   sub="İnceleme gerekiyor" />
-        <StatCard label="Reddedilen"        value={counts.rejected} color="text-red-500"     sub="Onaylanmadı" />
+        <StatCard label="Gelen Talepler"    value={counts.talepler} color="text-purple-600"  sub="Müşteri talepleri" />
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -632,6 +675,248 @@ function FirmsTab() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   TAB 5 — TALEPLER
+════════════════════════════════════════════════════════════ */
+function TaleplerTab() {
+  const [talepler,  setTalepler]  = useState<AdminTalep[]>([]);
+  const [firms,     setFirms]     = useState<AdminFirm[]>([]);
+  const [filter,    setFilter]    = useState<TalepStatus>('all');
+  const [expanded,  setExpanded]  = useState<string | null>(null);
+  const [sending,   setSending]   = useState<string | null>(null);
+
+  useEffect(() => {
+    const u1 = onSnapshot(collection(db, 'taleplar'), (snap) =>
+      setTalepler(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminTalep))));
+    const u2 = onSnapshot(collection(db, 'firms'), (snap) =>
+      setFirms(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminFirm))));
+    return () => { u1(); u2(); };
+  }, []);
+
+  /* Firmalara İlet */
+  const handleIlet = async (talep: AdminTalep) => {
+    if (!talep.id) return;
+    setSending(talep.id);
+    try {
+      const matching = firms.filter((f) => {
+        const catMatch =
+          (Array.isArray(f.kategoriler) && f.kategoriler.includes(talep.kategori)) ||
+          f.category === talep.kategori;
+        const cityMatch = f.sehir === talep.sehir || f.city === talep.sehir;
+        return catMatch && cityMatch && f.status === 'approved' && f.userId;
+      });
+
+      if (matching.length === 0) {
+        toast.warning('Bu kriterlere uygun onaylı firma bulunamadı.');
+        return;
+      }
+
+      const newIds = matching
+        .map((f) => f.userId as string)
+        .filter((uid) => !talep.firmaGonderilenler.includes(uid));
+
+      if (newIds.length === 0) {
+        toast.info('Uygun firmalar zaten bilgilendirilmiş.');
+        return;
+      }
+
+      await Promise.all(
+        newIds.map((firmaId) =>
+          addDoc(collection(db, 'bildirimler'), {
+            firmaId,
+            talepId: talep.id,
+            status: 'beklemede',
+            tarih: serverTimestamp(),
+          }),
+        ),
+      );
+
+      await updateDoc(doc(db, 'taleplar', talep.id!), {
+        status: 'iletildi',
+        firmaGonderilenler: arrayUnion(...newIds),
+      });
+
+      toast.success(`${newIds.length} firmaya bildirim gönderildi.`);
+    } catch {
+      toast.error('Bildirim gönderilirken hata oluştu.');
+    } finally {
+      setSending(null);
+    }
+  };
+
+  /* Durum badge */
+  const StatusBadge = ({ status }: { status: AdminTalep['status'] }) => {
+    const map = {
+      beklemede:   'bg-amber-100 text-amber-700',
+      iletildi:    'bg-blue-100 text-blue-700',
+      tamamlandi:  'bg-emerald-100 text-emerald-700',
+    };
+    const label = { beklemede: 'Beklemede', iletildi: 'İletildi', tamamlandi: 'Tamamlandı' };
+    return (
+      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${map[status]}`}>
+        {label[status]}
+      </span>
+    );
+  };
+
+  const tabCls = (t: TalepStatus) =>
+    `px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+      filter === t ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+    }`;
+
+  const formatDate = (tarih: AdminTalep['tarih']) => {
+    if (!tarih) return '—';
+    return new Date(tarih.seconds * 1000).toLocaleDateString('tr-TR');
+  };
+
+  const filtered = filter === 'all' ? talepler : talepler.filter((t) => t.status === filter);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-gray-800">Müşteri Talepleri</h2>
+        <div className="flex flex-wrap gap-2">
+          {(['all', 'beklemede', 'iletildi', 'tamamlandi'] as TalepStatus[]).map((t) => (
+            <button key={t} onClick={() => setFilter(t)} className={tabCls(t)}>
+              { t === 'all' ? 'Tümü' : t === 'beklemede' ? 'Beklemede' : t === 'iletildi' ? 'İletildi' : 'Tamamlandı' }
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center text-gray-400 text-sm">
+            <Inbox className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            {filter === 'all' ? 'Henüz müşteri talebi yok.' : 'Bu filtrede talep bulunamadı.'}
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {filtered.map((talep) => {
+              const isExpanded = expanded === talep.id;
+              const isSending  = sending === talep.id;
+
+              return (
+                <div key={talep.id}>
+                  {/* Satır */}
+                  <div className="px-4 py-3 hover:bg-gray-50 transition">
+                    <div className="flex flex-wrap items-center gap-3 justify-between">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                          <Tag className="w-3 h-3" />
+                          {CAT_MAP[talep.kategori] ?? talep.kategori}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                          <MapPin className="w-3 h-3" />
+                          {talep.sehir}{talep.ilce ? ` / ${talep.ilce}` : ''}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          <Banknote className="w-3 h-3" />
+                          {BUDGET_LABELS[talep.butce] ?? talep.butce}
+                        </span>
+                        <StatusBadge status={talep.status} />
+                        <span className="text-xs text-gray-400">{formatDate(talep.tarih)}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* Firmalara İlet */}
+                        {talep.status === 'beklemede' && (
+                          <button
+                            onClick={() => handleIlet(talep)}
+                            disabled={isSending}
+                            className="flex items-center gap-1.5 bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition disabled:opacity-60"
+                          >
+                            {isSending
+                              ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              : <Send className="w-3 h-3" />
+                            }
+                            Firmalara İlet
+                          </button>
+                        )}
+                        {/* Detay */}
+                        <button
+                          onClick={() => setExpanded(isExpanded ? null : talep.id!)}
+                          className="flex items-center gap-1 text-gray-500 hover:text-gray-700 border border-gray-200 text-xs px-2.5 py-1.5 rounded-lg hover:bg-gray-50 transition"
+                        >
+                          <Eye className="w-3 h-3" />
+                          {isExpanded ? 'Kapat' : 'Detay'}
+                          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Açıklama özeti */}
+                    {!isExpanded && talep.aciklama && (
+                      <p className="text-xs text-gray-400 mt-1.5 line-clamp-1 pl-1">{talep.aciklama}</p>
+                    )}
+                  </div>
+
+                  {/* Genişletilmiş detay */}
+                  {isExpanded && (
+                    <div className="px-4 pb-4 bg-blue-50 border-t border-blue-100">
+                      <div className="grid sm:grid-cols-2 gap-4 pt-4">
+                        {/* Sol: proje detayları */}
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <p className="font-semibold text-gray-800 text-xs uppercase tracking-wide flex items-center gap-1.5">
+                            <FileText className="w-3.5 h-3.5" /> Proje Detayları
+                          </p>
+                          <p><strong>Kategori:</strong> {CAT_MAP[talep.kategori] ?? talep.kategori}</p>
+                          <p><strong>Şehir / İlçe:</strong> {talep.sehir}{talep.ilce ? ` — ${talep.ilce}` : ''}</p>
+                          <p><strong>Bütçe:</strong> {BUDGET_LABELS[talep.butce] ?? talep.butce}</p>
+                          {talep.metrekare    && <p><strong>Boyut:</strong> {talep.metrekare}</p>}
+                          {talep.teslimTarihi && <p><strong>Teslim:</strong> {talep.teslimTarihi}</p>}
+                          <p><strong>Açıklama:</strong> {talep.aciklama}</p>
+                          {talep.fotograflar?.length > 0 && (
+                            <div>
+                              <strong>Görseller:</strong>
+                              <ul className="mt-1 space-y-1">
+                                {talep.fotograflar.map((url, i) => (
+                                  <li key={i}>
+                                    <a href={url} target="_blank" rel="noopener noreferrer"
+                                      className="text-emerald-600 hover:underline text-xs truncate block max-w-xs">
+                                      {url}
+                                    </a>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Sağ: iletişim (sadece admin) */}
+                        <div className="space-y-2 text-sm">
+                          <p className="font-semibold text-gray-800 text-xs uppercase tracking-wide flex items-center gap-1.5">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Müşteri Bilgileri (Admin)
+                          </p>
+                          <div className="bg-white border border-blue-200 rounded-xl p-3 space-y-1.5 text-gray-700">
+                            <p><strong>Ad Soyad:</strong> {talep.ad}</p>
+                            <p>
+                              <strong>Telefon:</strong>{' '}
+                              <a href={`tel:${talep.telefon}`} className="text-emerald-600 hover:underline">{talep.telefon}</a>
+                            </p>
+                            <p>
+                              <strong>E-posta:</strong>{' '}
+                              <a href={`mailto:${talep.email}`} className="text-emerald-600 hover:underline">{talep.email}</a>
+                            </p>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-2 space-y-1">
+                            <p><strong>İletildi:</strong> {talep.firmaGonderilenler.length} firmaya</p>
+                            <p><strong>Kabul:</strong> {talep.firmaKabulEdenler.length} firma</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    MAIN — ADMIN DASHBOARD
 ════════════════════════════════════════════════════════════ */
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
@@ -639,6 +924,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'settings',   label: 'Site Ayarları', icon: <Settings className="w-4 h-4" /> },
   { key: 'flashDeals', label: 'Flash İlanlar', icon: <Zap className="w-4 h-4" /> },
   { key: 'firms',      label: 'Firmalar',      icon: <BuildingIcon className="w-4 h-4" /> },
+  { key: 'talepler',   label: 'Talepler',      icon: <Inbox className="w-4 h-4" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -754,6 +1040,7 @@ export default function AdminDashboardPage() {
           {tab === 'settings'   && <SettingsTab />}
           {tab === 'flashDeals' && <FlashDealsTab />}
           {tab === 'firms'      && <FirmsTab />}
+          {tab === 'talepler'   && <TaleplerTab />}
         </main>
       </div>
     </div>

@@ -16,6 +16,8 @@ import IlanDetayPage from './pages/IlanDetayPage';
 import GirisPage from './pages/GirisPage';
 import KayitPage from './pages/KayitPage';
 import SifreSifirlaPage from './pages/SifreSifirlaPage';
+import TalepOlusturPage from './pages/TalepOlusturPage';
+import FirmaPaneliPage from './pages/FirmaPaneliPage';
 import { AuthProvider } from './context/AuthContext';
 import { TeklifSepetProvider } from './context/TeklifSepetContext';
 import TeklifSepeti from './components/TeklifSepeti';
@@ -48,6 +50,8 @@ function App() {
             <Route path="/giris" element={<GirisPage />} />
             <Route path="/kayit" element={<KayitPage />} />
             <Route path="/sifre-sifirla" element={<SifreSifirlaPage />} />
+            <Route path="/talep-olustur" element={<TalepOlusturPage />} />
+            <Route path="/firma-paneli" element={<FirmaPaneliPage />} />
           </Routes>
         </Router>
       </TeklifSepetProvider>

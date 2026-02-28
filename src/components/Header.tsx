@@ -26,6 +26,14 @@ export default function Header() {
   const navigate = useNavigate();
   const { currentUser, role, logout } = useAuth();
 
+  function handleTeklifIste() {
+    if (!currentUser) {
+      navigate('/giris', { state: { from: { pathname: '/talep-olustur' } } });
+      return;
+    }
+    navigate('/talep-olustur');
+  }
+
   function handleIlanVer() {
     if (!currentUser) { navigate('/giris'); return; }
     if (role === 'seller') { navigate('/satici-formu'); return; }
@@ -173,6 +181,14 @@ export default function Header() {
               <Map className="w-5 h-5" aria-hidden="true" />
               <span className="hidden lg:inline">Firmalar Haritası</span>
             </Link>
+            {role !== 'seller' && (
+              <button
+                onClick={handleTeklifIste}
+                className="border border-emerald-600 text-emerald-600 px-4 py-2 rounded-lg hover:bg-emerald-50 transition font-medium text-sm"
+              >
+                Teklif İste
+              </button>
+            )}
             <button
               onClick={handleIlanVer}
               className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition font-medium text-sm"
@@ -332,6 +348,14 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 py-4 space-y-2">
+            {role !== 'seller' && (
+              <button
+                onClick={() => { handleTeklifIste(); setMobileMenuOpen(false); }}
+                className="block w-full border border-emerald-600 text-emerald-600 px-4 py-3 rounded-lg text-center font-medium hover:bg-emerald-50 transition"
+              >
+                Teklif İste
+              </button>
+            )}
             <button
               onClick={() => { handleIlanVer(); setMobileMenuOpen(false); }}
               className="block w-full bg-emerald-600 text-white px-4 py-3 rounded-lg text-center font-medium"
