@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+export const config = { runtime: 'edge' };
 
 const SYSTEM_PROMPT = `Sen ModülerPazar'ın yapı danışmanısın. Türkiye'deki tüm illerin iklim özelliklerini, kar yağışı, deprem riski, zemin yapısı ve sıcaklık ortalamalarını biliyorsun. Örneğin:
 - Doğu illeri (Erzurum, Kars, Ağrı): Çok sert kış, kar yükü fazla → dik çatı zorunlu
@@ -15,35 +15,40 @@ Kullanıcının belirttiği şehir ve ihtiyaca göre:
 
 Kısa, net, Türkçe yanıt ver. 3-4 paragraf yeterli.`;
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export default async function handler(req: Request) {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    });
+  }
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST')    return res.status(405).json({ error: 'Method not allowed' });
-
-  const { message } = req.body as { message?: string };
-  if (!message?.trim()) return res.status(400).json({ error: 'message is required' });
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+  const { message } = await req.json();
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'Content-Type':      'application/json',
-      'x-api-key':         apiKey,
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY!,
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model:      'claude-haiku-4-5-20251001',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
-      system:     SYSTEM_PROMPT,
-      messages:   [{ role: 'user', content: message }],
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: message }],
     }),
   });
 
   const data = await response.json();
-  return res.status(response.ok ? 200 : response.status).json(data);
+
+  return new Response(JSON.stringify(data), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
 }

@@ -354,7 +354,7 @@ export default function HomePage() {
                 type="text"
                 value={aiQuery}
                 onChange={(e) => setAiQuery(e.target.value)}
-                placeholder='örn. "Ankara\'da 80 m² yazlık prefabrik" veya "İzmir\'de ucuz depo"'
+                placeholder={`örn. "Ankara'da 80 m² yazlık prefabrik" veya "İzmir'de ucuz depo"`}
                 className="flex-1 bg-white rounded-xl px-4 py-3.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-sm"
               />
               <button
