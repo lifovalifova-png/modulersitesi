@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { CATEGORIES } from '../data/categories';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import {
-  Factory, Store, Check, CheckCircle, AlertCircle, Loader2,
+  Factory, Store, Check, CheckCircle, AlertCircle, Loader2, Globe, MessageCircle,
 } from 'lucide-react';
 
 /* ─── Veri ───────────────────────────────────────────────────── */
@@ -40,9 +41,14 @@ interface FormState {
   firmaYapisi:     string;
   telefon:         string;
   eposta:          string;
+  website:         string;
+  whatsapp:        string;
   sehir:           string;
   ilce:            string;
-  adres:           string;
+  mahalle:         string;
+  caddeSokak:      string;
+  binaNo:          string;
+  postaKodu:       string;
   kategoriler:     string[];
   hizmetBolgeleri: string[];
   tanitimMetni:    string;
@@ -54,7 +60,8 @@ type Errors = Partial<Record<keyof FormState | 'submit', string>>;
 
 const EMPTY: FormState = {
   firmaType: '', firmaAdi: '', vergiNo: '', firmaYapisi: '',
-  telefon: '', eposta: '', sehir: '', ilce: '', adres: '',
+  telefon: '', eposta: '', website: '', whatsapp: '',
+  sehir: '', ilce: '', mahalle: '', caddeSokak: '', binaNo: '', postaKodu: '',
   kategoriler: [], hizmetBolgeleri: [],
   tanitimMetni: '', kvkkOnay: false, kullanimOnay: false,
 };
@@ -105,29 +112,71 @@ function toggle<T>(arr: T[], val: T): T[] {
 /* ─── Sayfa ──────────────────────────────────────────────────── */
 
 export default function SellerFormPage() {
+  const { currentUser } = useAuth();
+
   const [form,   setForm]   = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  /* Debounced map URL */
+  const [mapUrl,   setMapUrl]  = useState('');
+  const mapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: val }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
+  /* ── Firestore'dan kayıt bilgilerini ön-doldur ────────────── */
+  useEffect(() => {
+    if (!currentUser) return;
+    getDoc(doc(db, 'users', currentUser.uid)).then((snap) => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      setForm((f) => ({
+        ...f,
+        ...(d.firmaAdi  ? { firmaAdi: d.firmaAdi }  : {}),
+        ...(d.vergiNo   ? { vergiNo:  d.vergiNo  }  : {}),
+        ...(d.sehir     ? { sehir:    d.sehir    }  : {}),
+        ...(d.saticiTipi === 'uretici' ? { firmaType: 'uretici' } :
+            d.saticiTipi === 'bayi'    ? { firmaType: 'satici'  } : {}),
+        ...(Array.isArray(d.kategoriler) && d.kategoriler.length > 0 ? {
+          kategoriler: CATEGORIES
+            .filter((c) => d.kategoriler.includes(c.name))
+            .map((c) => c.slug),
+        } : {}),
+      }));
+    }).catch(() => {/* sessizce geç */});
+  }, [currentUser]);
+
+  /* ── Debounced harita URL'si ───────────────────────────────── */
+  useEffect(() => {
+    if (!form.sehir) { setMapUrl(''); return; }
+    if (mapTimer.current) clearTimeout(mapTimer.current);
+    mapTimer.current = setTimeout(() => {
+      const parts = [form.mahalle, form.caddeSokak, form.ilce, form.sehir]
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const q = parts.join(', ') + ', Türkiye';
+      setMapUrl(`https://maps.google.com/maps?q=${encodeURIComponent(q)}&output=embed`);
+    }, 800);
+    return () => { if (mapTimer.current) clearTimeout(mapTimer.current); };
+  }, [form.sehir, form.ilce, form.mahalle, form.caddeSokak]);
+
   /* ── Doğrulama ─────────────────────────────────────────────── */
 
   function validate(): boolean {
     const e: Errors = {};
-    if (!form.firmaType)                           e.firmaType   = 'Firma türü seçiniz.';
-    if (!form.firmaAdi.trim())                     e.firmaAdi    = 'Firma adı zorunludur.';
-    if (!/^\d{10}$/.test(form.vergiNo))            e.vergiNo     = 'Tam olarak 10 rakam giriniz.';
-    if (!form.firmaYapisi)                         e.firmaYapisi = 'Firma yapısı seçiniz.';
-    if (!/^[0-9+\s()\-]{10,}$/.test(form.telefon)) e.telefon     = 'Geçerli bir telefon giriniz.';
+    if (!form.firmaType)                            e.firmaType    = 'Firma türü seçiniz.';
+    if (!form.firmaAdi.trim())                      e.firmaAdi     = 'Firma adı zorunludur.';
+    if (!/^\d{10}$/.test(form.vergiNo))             e.vergiNo      = 'Tam olarak 10 rakam giriniz.';
+    if (!form.firmaYapisi)                          e.firmaYapisi  = 'Firma yapısı seçiniz.';
+    if (!/^[0-9+\s()\-]{10,}$/.test(form.telefon)) e.telefon      = 'Geçerli bir telefon giriniz.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.eposta)) e.eposta = 'Geçerli bir e-posta giriniz.';
-    if (!form.sehir)                               e.sehir       = 'Şehir seçimi zorunludur.';
-    if (form.kategoriler.length === 0)             e.kategoriler = 'En az bir kategori seçiniz.';
-    if (!form.kvkkOnay)                            e.kvkkOnay    = 'KVKK metnini kabul etmelisiniz.';
-    if (!form.kullanimOnay)                        e.kullanimOnay = 'Kullanım koşullarını kabul etmelisiniz.';
+    if (!form.sehir)                                e.sehir        = 'Şehir seçimi zorunludur.';
+    if (form.kategoriler.length === 0)              e.kategoriler  = 'En az bir kategori seçiniz.';
+    if (!form.kvkkOnay)                             e.kvkkOnay     = 'KVKK metnini kabul etmelisiniz.';
+    if (!form.kullanimOnay)                         e.kullanimOnay = 'Kullanım koşullarını kabul etmelisiniz.';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -145,15 +194,21 @@ export default function SellerFormPage() {
     setStatus('loading');
     try {
       await addDoc(collection(db, 'firms'), {
+        userId:          currentUser?.uid ?? null,
         firmaType:       form.firmaType,
         name:            form.firmaAdi.trim(),
         vergiNo:         form.vergiNo,
         firmaYapisi:     form.firmaYapisi,
         phone:           form.telefon.trim(),
         eposta:          form.eposta.trim(),
+        website:         form.website.trim(),
+        whatsapp:        form.whatsapp.trim(),
         city:            form.sehir,
         ilce:            form.ilce.trim(),
-        address:         form.adres.trim(),
+        mahalle:         form.mahalle.trim(),
+        caddeSokak:      form.caddeSokak.trim(),
+        binaNo:          form.binaNo.trim(),
+        postaKodu:       form.postaKodu.trim(),
         category:        form.kategoriler[0] ?? '',
         kategoriler:     form.kategoriler,
         hizmetBolgeleri: form.hizmetBolgeleri,
@@ -207,7 +262,6 @@ export default function SellerFormPage() {
       <main className="bg-gray-50 min-h-screen py-10">
         <div className="max-w-2xl mx-auto px-4">
 
-          {/* Sayfa başlığı */}
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">
               Ücretsiz Kayıt Ol
@@ -220,7 +274,7 @@ export default function SellerFormPage() {
           <form onSubmit={handleSubmit} noValidate>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 space-y-7">
 
-              {/* ══ 1. FİRMA TÜRÜ ══════════════════════════════════ */}
+              {/* ══ 1. FİRMA TÜRÜ ═════════════════════════════════ */}
               <section data-error={errors.firmaType ? '' : undefined}>
                 <SectionHead n={1} title="Firma Türü" />
                 <div className="grid grid-cols-2 gap-3 mt-4">
@@ -253,10 +307,11 @@ export default function SellerFormPage() {
 
               <Divider />
 
-              {/* ══ 2. FİRMA BİLGİLERİ ═════════════════════════════ */}
+              {/* ══ 2. FİRMA BİLGİLERİ ════════════════════════════ */}
               <section>
                 <SectionHead n={2} title="Firma Bilgileri" />
                 <div className="mt-4 space-y-4">
+
                   <Field label="Firma Adı" required error={errors.firmaAdi}>
                     <input
                       type="text"
@@ -320,16 +375,45 @@ export default function SellerFormPage() {
                       />
                     </Field>
                   </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Field label="Website" hint="opsiyonel">
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <input
+                          type="url"
+                          value={form.website}
+                          onChange={(e) => set('website', e.target.value)}
+                          placeholder="https://firmaniz.com"
+                          className={inp + ' pl-9'}
+                        />
+                      </div>
+                    </Field>
+
+                    <Field label="WhatsApp" hint="opsiyonel">
+                      <div className="relative">
+                        <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <input
+                          type="tel"
+                          value={form.whatsapp}
+                          onChange={(e) => set('whatsapp', e.target.value)}
+                          placeholder="05XX XXX XX XX"
+                          className={inp + ' pl-9'}
+                        />
+                      </div>
+                    </Field>
+                  </div>
                 </div>
               </section>
 
               <Divider />
 
-              {/* ══ 3. KONUM ════════════════════════════════════════ */}
+              {/* ══ 3. KONUM ══════════════════════════════════════ */}
               <section>
                 <SectionHead n={3} title="Konum" />
                 <div className="mt-4 space-y-4">
 
+                  {/* Şehir + İlçe */}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <Field label="Şehir" required error={errors.sehir}>
                       <select
@@ -354,30 +438,69 @@ export default function SellerFormPage() {
                     </Field>
                   </div>
 
-                  <Field label="Açık Adres">
-                    <textarea
-                      value={form.adres}
-                      onChange={(e) => set('adres', e.target.value)}
-                      rows={2}
-                      placeholder="Mahalle, cadde, sokak, bina no…"
-                      className={inp + ' resize-none'}
-                    />
-                  </Field>
+                  {/* Mahalle + Cadde/Sokak */}
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Field label="Mahalle">
+                      <input
+                        type="text"
+                        value={form.mahalle}
+                        onChange={(e) => set('mahalle', e.target.value)}
+                        placeholder="Mahalle adı"
+                        className={inp}
+                      />
+                    </Field>
 
-                  {/* Google Maps embed */}
-                  {form.sehir && (
+                    <Field label="Cadde / Sokak">
+                      <input
+                        type="text"
+                        value={form.caddeSokak}
+                        onChange={(e) => set('caddeSokak', e.target.value)}
+                        placeholder="Cadde veya sokak adı"
+                        className={inp}
+                      />
+                    </Field>
+                  </div>
+
+                  {/* Bina No/Daire + Posta Kodu */}
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Field label="Bina No / Daire">
+                      <input
+                        type="text"
+                        value={form.binaNo}
+                        onChange={(e) => set('binaNo', e.target.value)}
+                        placeholder="No: 12, Daire: 3"
+                        className={inp}
+                      />
+                    </Field>
+
+                    <Field label="Posta Kodu">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={5}
+                        value={form.postaKodu}
+                        onChange={(e) => set('postaKodu', e.target.value.replace(/\D/g, '').slice(0, 5))}
+                        placeholder="34000"
+                        className={inp}
+                      />
+                    </Field>
+                  </div>
+
+                  {/* Google Maps önizleme — debounced */}
+                  {mapUrl && (
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-1">Konum Önizlemesi</p>
                       <div className="rounded-xl overflow-hidden border border-gray-200 h-64">
                         <iframe
-                          src={`https://maps.google.com/maps?q=${encodeURIComponent(form.sehir + ', Türkiye')}&output=embed`}
+                          key={mapUrl}
+                          src={mapUrl}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
                           allowFullScreen
                           loading="lazy"
                           referrerPolicy="no-referrer-when-downgrade"
-                          title={`${form.sehir} harita önizlemesi`}
+                          title="Konum harita önizlemesi"
                         />
                       </div>
                     </div>
@@ -387,7 +510,7 @@ export default function SellerFormPage() {
 
               <Divider />
 
-              {/* ══ 4. ÜRÜN VE HİZMETLER ═══════════════════════════ */}
+              {/* ══ 4. ÜRÜN VE HİZMETLER ══════════════════════════ */}
               <section>
                 <SectionHead n={4} title="Ürün ve Hizmetler" />
                 <div className="mt-4 space-y-5">
@@ -460,7 +583,7 @@ export default function SellerFormPage() {
 
               <Divider />
 
-              {/* ══ 5. ONAYLAR ══════════════════════════════════════ */}
+              {/* ══ 5. ONAYLAR ════════════════════════════════════ */}
               <section>
                 <SectionHead n={5} title="Onaylar" />
                 <div className="mt-4 space-y-3">
@@ -511,7 +634,6 @@ export default function SellerFormPage() {
                     )}
                   </div>
 
-                  {/* Firestore hatası */}
                   {errors.submit && (
                     <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-3 rounded-lg">
                       <AlertCircle className="w-4 h-4 flex-shrink-0" />{errors.submit}
@@ -522,7 +644,6 @@ export default function SellerFormPage() {
 
             </div>{/* /card */}
 
-            {/* Gönder */}
             <button
               type="submit"
               disabled={status === 'loading'}
