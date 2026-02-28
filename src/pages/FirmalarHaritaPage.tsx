@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { FIRMS } from '../data/firms';
 import { CATEGORIES } from '../data/categories';
-import { ShieldCheck, MapPin, Phone, Tag, ChevronDown, ExternalLink } from 'lucide-react';
+import { ShieldCheck, MapPin, Tag, ChevronDown } from 'lucide-react';
 
 /* ── Category badge colors ──────────────────────────────────── */
 const CAT_COLORS: Record<string, string> = {
@@ -130,36 +130,14 @@ export default function FirmalarHaritaPage() {
                     </span>
                   </div>
 
-                  {/* Address */}
-                  <p className="text-xs text-gray-500 leading-relaxed">{firm.address}</p>
-
-                  {/* Phone */}
-                  <a
-                    href={`tel:${firm.phone.replace(/\s/g, '')}`}
-                    className="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:underline font-medium"
-                  >
-                    <Phone className="w-3 h-3" aria-hidden="true" />
-                    {firm.phone}
-                  </a>
-
                   {/* Actions */}
-                  <div className="flex gap-2 mt-auto pt-1">
+                  <div className="mt-auto pt-1">
                     <Link
-                      to="/satici-formu"
-                      className="flex-1 text-center bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-emerald-700 transition"
+                      to={`/talep-olustur?firma=${firm.id}`}
+                      className="block w-full text-center bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-emerald-700 transition"
                     >
-                      Teklif Al
+                      Teklif İste
                     </Link>
-                    <a
-                      href={`https://maps.google.com/maps?q=${encodeURIComponent(firm.name + ' ' + firm.city)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 hover:border-gray-300 transition"
-                      aria-label="Haritada göster"
-                    >
-                      <ExternalLink className="w-3 h-3" aria-hidden="true" />
-                      Harita
-                    </a>
                   </div>
                 </div>
               ))}
