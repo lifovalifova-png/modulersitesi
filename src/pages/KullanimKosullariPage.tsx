@@ -79,6 +79,8 @@ const PRICING = [
 
 /* ─── Sorumluluk sınırları ────────────────────────────────── */
 const LIABILITY_LIMITS = [
+  'Platform, yalnızca teknik altyapı sağlayıcısıdır; ürün veya hizmetin satıcısı ya da sağlayıcısı sıfatıyla hareket etmez.',
+  '6502 sayılı TKHK kapsamında "satıcı" veya "sağlayıcı" sayılmaz; ayıplı mal/hizmet sorumluluğu doğrudan ilgili firmaya aittir.',
   'Firma tarafından verilen yanlış veya yanıltıcı ilan bilgilerinden doğan zararlar',
   'Teslimat gecikmeleri, ürün kusurları veya monte hataları',
   'Alıcı–satıcı arasındaki ödeme anlaşmazlıkları ve cezai şartlar',
@@ -110,13 +112,28 @@ export default function KullanimKosullariPage() {
             </h1>
             <p className="text-sm text-gray-500 mb-2">Son güncelleme: Ocak 2025 — Versiyon 1.0</p>
 
-            <p className="text-gray-600 leading-relaxed mb-8">
+            <p className="text-gray-600 leading-relaxed mb-6">
               Bu Kullanım Koşulları, <strong>{SITE_CONFIG.name}</strong> platformunun
               (bundan böyle "Platform") kullanımına ilişkin hak ve yükümlülükleri düzenlemektedir.
               Platforma erişerek veya hesap oluşturarak bu koşulları okuduğunuzu, anladığınızı ve
               kabul ettiğinizi beyan edersiniz. Koşulları kabul etmiyorsanız lütfen platformu
               kullanmayınız.
             </p>
+
+            {/* ── Platformun Aracı Rolü — Vurgulu Kutu ── */}
+            <div className="mb-8 bg-amber-50 border-l-4 border-amber-400 rounded-xl p-5">
+              <p className="text-sm font-bold text-amber-800 mb-2 uppercase tracking-wide">
+                Önemli Bilgi: Platformun Aracı Rolü
+              </p>
+              <p className="text-sm text-amber-900 leading-relaxed">
+                <strong>{SITE_CONFIG.name}</strong>, alıcı ve satıcıları bir araya getiren elektronik
+                bir <strong>aracı hizmet sağlayıcıdır</strong>. Platform, taraflar arasındaki satım
+                veya hizmet sözleşmesinin tarafı <strong>değildir</strong>; yalnızca tarafları
+                buluşturan bir ortam sağlar. Fiyat, kalite, teslim ve satış sonrası hizmet gibi tüm
+                ticari yükümlülükler, alıcı ile ilgili satıcı firma arasında doğrudan kalır.
+                Platform bu yükümlülüklerin hiçbirini üstlenmez.
+              </p>
+            </div>
 
             {/* 1 — Taraflar ve Platform Rolü */}
             <section className="mb-10">
@@ -190,15 +207,15 @@ export default function KullanimKosullariPage() {
               </div>
             </section>
 
-            {/* 3 — İlan Kuralları */}
+            {/* 3 — İlan Kuralları ve Firma Yükümlülükleri */}
             <section className="mb-10">
-              <SectionTitle>3. İlan Verme Kuralları ve Yükümlülükleri</SectionTitle>
+              <SectionTitle>3. İlan Verme Kuralları ve Firma Yükümlülükleri</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-4">
                 Platform üzerinden ilan veren her kullanıcı ve firma aşağıdaki kurallara uymakla
                 yükümlüdür. Aykırılık tespit edildiğinde ilan uyarı yapılmaksızın kaldırılabilir,
                 hesap askıya alınabilir:
               </p>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto mb-6">
                 <table className="w-full text-sm text-gray-600 border-collapse">
                   <thead>
                     <tr className="bg-gray-50">
@@ -216,10 +233,43 @@ export default function KullanimKosullariPage() {
                   </tbody>
                 </table>
               </div>
-              <p className="mt-3 text-sm text-gray-500">
+              <p className="mb-5 text-sm text-gray-500">
                 Kurallara uymayan ilanlar için önce uyarı e-postası gönderilir. Tekrarlı ihlallerde
                 hesap geçici olarak askıya alınır; üçüncü ihlalde hesap kalıcı olarak kapatılır.
               </p>
+
+              {/* Firma Yükümlülükleri — Güçlendirilmiş */}
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
+                <h3 className="font-semibold text-blue-900 mb-3 text-sm uppercase tracking-wide">
+                  3.1 Firma Yükümlülükleri
+                </h3>
+                <div className="space-y-3 text-sm text-blue-900">
+                  <div className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                    <p><strong>Hizmetin Arkasında Durma:</strong> Firmalar, ilan verdikleri ürün ve hizmetlerin
+                    kalitesinden, kurulumdan, teslimattan ve satış sonrası hizmetlerden alıcıya karşı
+                    doğrudan ve münhasıran sorumludur. Platform bu sorumlulukların hiçbirini üstlenmez.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                    <p><strong>Şikayet Muhataplığı:</strong> Alıcı şikayetleri öncelikle ilgili firmaya
+                    yöneltilir. Firmalar platforma iletilen şikayetlere <strong>10 iş günü</strong> içinde
+                    yanıt vermekle yükümlüdür; yanıt verilmemesi hesap askıya alma gerekçesidir.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                    <p><strong>Gerçek Bilgi Zorunluluğu:</strong> Sahte firma kimliği, gerçeğe aykırı vergi/sicil
+                    belgesi veya yanıltıcı ilan içeriği kesinlikle yasaktır. Bu durum hesabın derhal
+                    kapatılması ve gerektiğinde ilgili kamu kurumlarına bildirim gerekçesidir.</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                    <p><strong>Kayıt ile Kabul:</strong> Platforma firma kaydı yapan her kullanıcı, işbu
+                    Kullanım Koşulları'nı ve Firma Yükümlülükleri'ni tümüyle okuduğunu ve kabul ettiğini
+                    beyan eder. Sonradan "bilmiyordum" savunması geçerli kabul edilmez.</p>
+                  </div>
+                </div>
+              </div>
             </section>
 
             {/* 4 — Yasak İçerik */}
@@ -252,9 +302,51 @@ export default function KullanimKosullariPage() {
               ]} />
             </section>
 
-            {/* 6 — Ücretlendirme */}
+            {/* 6 — Talep Havuzu Sistemi (YENİ) */}
             <section className="mb-10">
-              <SectionTitle>6. Ücretlendirme ve Abonelik</SectionTitle>
+              <SectionTitle>6. Talep Havuzu Sistemi</SectionTitle>
+              <p className="text-gray-600 leading-relaxed mb-4">
+                Platform, alıcıların proje gereksinimlerini sisteme girerek birden fazla firmadan
+                teklif alabildiği bir <strong>talep havuzu</strong> işletmektedir. Bu sistem
+                hakkında bilinmesi gerekenler:
+              </p>
+              <div className="space-y-3">
+                {[
+                  {
+                    icon: '📋',
+                    title: 'Talep Akışı',
+                    desc: 'Alıcı, proje detaylarını (boyut, bütçe, konum, özellikler) platforma girer. Sistem bu talebi uygun kategorideki firmalarla eşleştirir ve bildirim gönderir.',
+                  },
+                  {
+                    icon: '🔒',
+                    title: 'Gizlilik',
+                    desc: 'Taleple birlikte paylaşılan iletişim bilgileri (ad, telefon, e-posta) yalnızca alıcının seçtiği veya eşleşen firmalarla paylaşılır; diğer kullanıcılara kapalıdır.',
+                  },
+                  {
+                    icon: '⚠️',
+                    title: 'Garanti Yoktur',
+                    desc: 'Platform, firmaların talebi yanıtlayacağını, uygun fiyat teklif edeceğini veya bir anlaşmanın gerçekleşeceğini garanti etmez. Yanıt vermek firmanın takdirine bırakılmıştır.',
+                  },
+                  {
+                    icon: '🔄',
+                    title: 'Alternatif Arayışı',
+                    desc: 'Seçilen firmalardan yanıt alınamadığı durumlarda alıcı, platforma yeni bir talep göndererek farklı firmalarla iletişime geçmekte tamamen serbesttir.',
+                  },
+                ].map((item) => (
+                  <div key={item.title} className="flex gap-4 bg-gray-50 rounded-xl p-4">
+                    <span className="text-xl flex-shrink-0 mt-0.5">{item.icon}</span>
+                    <div>
+                      <p className="font-semibold text-gray-800 text-sm">{item.title}</p>
+                      <p className="text-sm text-gray-500 mt-0.5">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 7 — Ücretlendirme */}
+            <section className="mb-10">
+              <SectionTitle>7. Ücretlendirme ve Abonelik</SectionTitle>
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
                 {PRICING.map((plan) => (
                   <div key={plan.title} className="bg-gray-50 rounded-xl p-4">
@@ -276,9 +368,17 @@ export default function KullanimKosullariPage() {
               ]} />
             </section>
 
-            {/* 7 — Sorumluluk Reddi */}
+            {/* 8 — Sorumluluk Reddi (GÜNCELLENDİ) */}
             <section className="mb-10">
-              <SectionTitle>7. Sorumluluk Reddi ve Sınırlandırması</SectionTitle>
+              <SectionTitle>8. Sorumluluk Reddi ve Sınırlandırması</SectionTitle>
+
+              <div className="mb-4 bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-orange-900">
+                <strong>Altyapı Sağlayıcısı Beyanı:</strong> Platform, yalnızca teknik bir buluşma
+                ortamı sağlar. 6502 sayılı Tüketicinin Korunması Hakkında Kanun (TKHK) kapsamında
+                "satıcı" veya "sağlayıcı" sıfatıyla hareket etmez; bu nedenle ürün ve hizmetten
+                kaynaklanan tüketici talepleri doğrudan ilgili firmaya yöneltilmelidir.
+              </div>
+
               <p className="text-gray-600 leading-relaxed mb-3">
                 Platform, aracı hizmet sağlayıcı konumunda olup aşağıdaki durumlardan kaynaklanan
                 zararlardan sorumlu tutulamaz:
@@ -289,15 +389,16 @@ export default function KullanimKosullariPage() {
                 kullanıcının son 12 ay içinde platforma ödediği abonelik bedeli ile sınırlıdır.
               </p>
               <div className="mt-4 bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
-                <strong>Anlaşmazlık Çözümü:</strong> Taraflar arasındaki ticari anlaşmazlıklarda
-                platform arabuluculuk hizmeti sunmamaktadır. Anlaşmazlık halinde tarafların önce
-                doğrudan çözüm araması önerilir; bu sonuç vermezse yetkili merciler devreye girer.
+                <strong>Arabuluculuk Yükümlülüğü Yok:</strong> Platform, alıcı ve satıcı arasında
+                çıkan uyuşmazlıklarda arabuluculuk, tahkim veya uzlaştırma hizmeti sunmakla yükümlü
+                değildir. Tarafların anlaşmazlıklarını öncelikle birbiriyle çözmeleri; çözüm
+                sağlanamaması halinde yasal mercilere başvurmaları beklenir.
               </div>
             </section>
 
-            {/* 8 — Fikri Mülkiyet */}
+            {/* 9 — Fikri Mülkiyet */}
             <section className="mb-10">
-              <SectionTitle>8. Fikri Mülkiyet Hakları</SectionTitle>
+              <SectionTitle>9. Fikri Mülkiyet Hakları</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-3">
                 Platform tasarımı, yazılımı, logosu, veritabanı yapısı ve özgün içerikleri
                 <strong> {SITE_CONFIG.name}</strong>'a aittir ve fikri mülkiyet hukukuyla
@@ -312,9 +413,9 @@ export default function KullanimKosullariPage() {
               ]} />
             </section>
 
-            {/* 9 — Gizlilik */}
+            {/* 10 — Gizlilik */}
             <section className="mb-10">
-              <SectionTitle>9. Gizlilik ve Kişisel Veriler</SectionTitle>
+              <SectionTitle>10. Gizlilik ve Kişisel Veriler</SectionTitle>
               <p className="text-gray-600 leading-relaxed">
                 Kişisel verilerinizin işlenmesi, platformun{' '}
                 <Link to={LEGAL_LINKS.kvkk} className="text-emerald-600 hover:underline">KVKK Aydınlatma Metni</Link> ve{' '}
@@ -325,9 +426,9 @@ export default function KullanimKosullariPage() {
               </p>
             </section>
 
-            {/* 10 — Hizmet Değişiklikleri */}
+            {/* 11 — Hizmet Değişiklikleri */}
             <section className="mb-10">
-              <SectionTitle>10. Hizmetin Değiştirilmesi ve Askıya Alınması</SectionTitle>
+              <SectionTitle>11. Hizmetin Değiştirilmesi ve Askıya Alınması</SectionTitle>
               <BulletList items={[
                 'Platform, hizmetlerin kapsamını, arayüzünü veya özelliklerini önceden bildirim yapmaksızın değiştirme hakkını saklı tutar.',
                 'Bakım, güvenlik veya teknik zorunluluklar nedeniyle hizmet geçici olarak kesintiye uğrayabilir; planlı kesintiler önceden duyurulur.',
@@ -336,9 +437,9 @@ export default function KullanimKosullariPage() {
               ]} />
             </section>
 
-            {/* 11 — Koşul Değişiklikleri */}
+            {/* 12 — Koşul Değişiklikleri */}
             <section className="mb-10">
-              <SectionTitle>11. Koşullardaki Değişiklikler</SectionTitle>
+              <SectionTitle>12. Koşullardaki Değişiklikler</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-3">
                 Bu koşullar zaman zaman güncellenebilir. Değişiklikler şu şekilde duyurulur:
               </p>
@@ -350,21 +451,36 @@ export default function KullanimKosullariPage() {
               ]} />
             </section>
 
-            {/* 12 — Uygulanacak Hukuk */}
+            {/* 13 — Uyuşmazlık Çözümü (GÜNCELLENDİ) */}
             <section className="mb-10">
-              <SectionTitle>12. Uygulanacak Hukuk ve Yetki</SectionTitle>
+              <SectionTitle>13. Uygulanacak Hukuk ve Uyuşmazlık Çözümü</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-3">
-                Bu Kullanım Koşulları Türk hukukuna tabidir. Uyuşmazlıklarda aşağıdaki yollar sırasıyla
-                değerlendirilir:
+                Bu Kullanım Koşulları Türk hukukuna tabidir. Uyuşmazlıklarda aşağıdaki yollar
+                sırasıyla değerlendirilir:
               </p>
               <div className="space-y-3">
                 {[
-                  { step: '1', title: 'Doğrudan İletişim', desc: 'Şikayetinizi öncelikle support kanallarına (e-posta/telefon) iletiniz; 30 gün içinde yanıt alınmaya çalışılır.' },
-                  { step: '2', title: 'Tüketici Hakem Heyeti', desc: 'Tüketici niteliğindeki bireysel kullanıcılar için yasal limitler dahilinde Tüketici Hakem Heyeti başvurusu geçerlidir.' },
-                  { step: '3', title: 'Adli Yol', desc: 'Diğer anlaşmazlıklarda İstanbul (Çağlayan) Mahkemeleri ve İcra Müdürlükleri münhasıran yetkilidir.' },
+                  {
+                    step: '1',
+                    color: 'bg-emerald-100 text-emerald-800',
+                    title: 'Platform Şikayet Kanalı',
+                    desc: 'Şikayetinizi önce platform destek kanalları aracılığıyla (e-posta / iletişim formu) iletiniz. Platform, ilgili firmayı bilgilendirerek çözüm arayışında aracı olabilir; ancak sonucun garantisi yoktur. 30 gün içinde yanıt alınmaya çalışılır.',
+                  },
+                  {
+                    step: '2',
+                    color: 'bg-blue-100 text-blue-800',
+                    title: 'İstanbul Tüketici Hakem Heyeti',
+                    desc: 'Tüketici niteliğindeki bireysel kullanıcılar, yasal para sınırları dahilinde İstanbul Tüketici Hakem Heyeti\'ne başvurabilir. Bu başvuru yalnızca firma ile alıcı arasındaki ticari uyuşmazlıklar için geçerlidir; platforma yönelik iddialar için aynı yol uygulanmaz.',
+                  },
+                  {
+                    step: '3',
+                    color: 'bg-gray-200 text-gray-800',
+                    title: 'İstanbul Mahkemeleri',
+                    desc: 'Diğer tüm anlaşmazlıklarda ve ticari nitelikteki davalarda İstanbul (Çağlayan) Mahkemeleri ve İcra Müdürlükleri münhasıran yetkilidir. Firmalar ile alıcılar arasındaki anlaşmazlıkta platform taraf tutmaz.',
+                  },
                 ].map((item) => (
                   <div key={item.step} className="flex gap-4 bg-gray-50 rounded-xl p-4">
-                    <span className="w-7 h-7 rounded-full bg-gray-300 text-gray-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                    <span className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0 ${item.color}`}>
                       {item.step}
                     </span>
                     <div>
@@ -376,9 +492,9 @@ export default function KullanimKosullariPage() {
               </div>
             </section>
 
-            {/* 13 — İletişim */}
+            {/* 14 — İletişim */}
             <section className="mb-8">
-              <SectionTitle>13. İletişim</SectionTitle>
+              <SectionTitle>14. İletişim</SectionTitle>
               <p className="text-gray-600 leading-relaxed mb-3">
                 Kullanım Koşulları'na ilişkin soru ve başvurularınız için:
               </p>
