@@ -74,12 +74,7 @@ const TRUST_ITEMS = [
   },
 ];
 
-/* ─── AI sistem promptu ──────────────────────────────────── */
-const AI_SYSTEM = `Sen ModülerPazar'ın yapı danışmanısın. Türkiye'deki modüler yapı sektörünü çok iyi biliyorsun. Kullanıcının kısa isteğine göre:
-- En uygun modüler yapı tipini öner (prefabrik, çelik yapı, yaşam konteyneri, tiny house vb.)
-- Varsa bölgeye özgü iklim, kar yükü ve deprem riski bilgisi ekle
-- Tahmini maliyet aralığı ver (m² başına ₺)
-- Türkçe, samimi ve özlü yaz — 5-8 cümle yeterli`;
+/* ─── Kategori çıkarımı ──────────────────────────────────── */
 
 function extractSlug(text: string): string {
   const t = text.toLowerCase();
@@ -112,34 +107,22 @@ export default function HomePage() {
     setAiResponse('');
     setAiError('');
 
-    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      setAiError('API anahtarı eksik (VITE_ANTHROPIC_API_KEY).');
-      setAiLoading(false);
-      return;
-    }
-
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type':                              'application/json',
-          'x-api-key':                                 apiKey,
-          'anthropic-version':                         '2023-06-01',
-          'anthropic-dangerous-direct-browser-calls':  'true',
-        },
-        body: JSON.stringify({
-          model:    'claude-sonnet-4-6',
-          max_tokens: 512,
-          system:   AI_SYSTEM,
-          messages: [{ role: 'user', content: q }],
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: q }),
       });
+      const data = await res.json() as {
+        content?: Array<{ text: string }>;
+        error?:   { message?: string } | string;
+      };
       if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
-        throw new Error((e as { error?: { message?: string } }).error?.message ?? `HTTP ${res.status}`);
+        const msg = typeof data.error === 'string'
+          ? data.error
+          : (data.error as { message?: string })?.message ?? `HTTP ${res.status}`;
+        throw new Error(msg);
       }
-      const data = await res.json() as { content?: Array<{ text: string }> };
       const text = data.content?.[0]?.text ?? '';
       setAiResponse(text);
       setAiSlug(extractSlug(text));
