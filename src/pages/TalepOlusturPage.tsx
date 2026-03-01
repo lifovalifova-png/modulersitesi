@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { CheckCircle, Lock, ImageIcon, CalendarDays, MapPin } from 'lucide-react';
 import { CATEGORIES } from '../data/categories';
 import { db } from '../lib/firebase';
+import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -92,19 +93,21 @@ export default function TalepOlusturPage() {
     }
     setSubmitting(true);
     try {
-      const fotograflar = [form.foto1, form.foto2, form.foto3].filter(Boolean);
+      const fotograflar = [form.foto1, form.foto2, form.foto3]
+        .map(sanitizeUrl)
+        .filter(Boolean);
       await addDoc(collection(db, 'taleplar'), {
         kategori:           form.kategori,
         sehir:              form.sehir,
-        ilce:               form.ilce,
+        ilce:               sanitizeText(form.ilce, 100),
         butce:              form.butce,
         metrekare:          form.metrekare,
-        aciklama:           form.aciklama,
+        aciklama:           sanitizeText(form.aciklama, 1000),
         teslimTarihi:       form.teslimTarihi,
         fotograflar,
-        ad:                 form.ad,
-        telefon:            form.telefon,
-        email:              form.email,
+        ad:                 sanitizeText(form.ad, 100),
+        telefon:            form.telefon.trim(),
+        email:              form.email.trim().toLowerCase(),
         status:             'beklemede',
         firmaGonderilenler: [],
         firmaKabulEdenler:  [],

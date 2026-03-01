@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { CATEGORIES } from '../data/categories';
+import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -196,23 +197,23 @@ export default function SellerFormPage() {
       await addDoc(collection(db, 'firms'), {
         userId:          currentUser?.uid ?? null,
         firmaType:       form.firmaType,
-        name:            form.firmaAdi.trim(),
-        vergiNo:         form.vergiNo,
+        name:            sanitizeText(form.firmaAdi, 150),
+        vergiNo:         form.vergiNo.trim(),
         firmaYapisi:     form.firmaYapisi,
         phone:           form.telefon.trim(),
-        eposta:          form.eposta.trim(),
-        website:         form.website.trim(),
+        eposta:          form.eposta.trim().toLowerCase(),
+        website:         sanitizeUrl(form.website),
         whatsapp:        form.whatsapp.trim(),
         city:            form.sehir,
-        ilce:            form.ilce.trim(),
-        mahalle:         form.mahalle.trim(),
-        caddeSokak:      form.caddeSokak.trim(),
-        binaNo:          form.binaNo.trim(),
+        ilce:            sanitizeText(form.ilce, 100),
+        mahalle:         sanitizeText(form.mahalle, 100),
+        caddeSokak:      sanitizeText(form.caddeSokak, 150),
+        binaNo:          sanitizeText(form.binaNo, 20),
         postaKodu:       form.postaKodu.trim(),
         category:        form.kategoriler[0] ?? '',
         kategoriler:     form.kategoriler,
         hizmetBolgeleri: form.hizmetBolgeleri,
-        tanitimMetni:    form.tanitimMetni.trim(),
+        tanitimMetni:    sanitizeText(form.tanitimMetni, 2000),
         status:          'pending',
         verified:        false,
         olusturmaTarihi: serverTimestamp(),

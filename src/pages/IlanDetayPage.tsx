@@ -9,6 +9,7 @@ import { FLASH_DEALS } from '../data/flashDeals';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { sanitizeText } from '../utils/sanitize';
 import {
   MapPin, Tag, Calendar, ShieldCheck, Phone, ChevronLeft, ChevronRight,
   Send, CheckCircle, AlertCircle, Loader2, X, Eye, EyeOff, Star,
@@ -92,10 +93,10 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
         ilanBaslik:      ilan.baslik,
         ilanFiyat:       ilan.fiyat,
         ilanKategori:    ilan.kategori,
-        musteriAd:       form.name.trim(),
+        musteriAd:       sanitizeText(form.name, 100),
         musteriTelefon:  form.phone.trim(),
-        musteriEmail:    form.email.trim(),
-        mesaj:           form.message.trim(),
+        musteriEmail:    form.email.trim().toLowerCase(),
+        mesaj:           sanitizeText(form.message, 500),
         teklifTipi:      type,
         firmaAdi:        ilan.firmaAdi,
         status:          'new',
