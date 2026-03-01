@@ -341,6 +341,20 @@ export default function Header() {
               Firmalar Haritası
             </Link>
 
+            <Link
+              to="/blog"
+              className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+            >
+              Blog
+            </Link>
+
+            <Link
+              to="/sss"
+              className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+            >
+              SSS
+            </Link>
+
           </div>
         </div>
       </nav>
@@ -370,6 +384,20 @@ export default function Header() {
             >
               <Map className="w-5 h-5" aria-hidden="true" />
               Firmalar Haritası
+            </Link>
+            <Link
+              to="/blog"
+              className="block px-2 py-2 text-gray-700 hover:text-emerald-600"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Blog
+            </Link>
+            <Link
+              to="/sss"
+              className="block px-2 py-2 text-gray-700 hover:text-emerald-600"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              SSS
             </Link>
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-400 mb-2 px-2">Kategoriler</p>

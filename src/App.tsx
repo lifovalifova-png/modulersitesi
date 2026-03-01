@@ -18,6 +18,9 @@ import KayitPage from './pages/KayitPage';
 import SifreSifirlaPage from './pages/SifreSifirlaPage';
 import TalepOlusturPage from './pages/TalepOlusturPage';
 import FirmaPaneliPage from './pages/FirmaPaneliPage';
+import BlogPage from './pages/BlogPage';
+import BlogDetayPage from './pages/BlogDetayPage';
+import SSSPage from './pages/SSSPage';
 import { AuthProvider } from './context/AuthContext';
 import { TeklifSepetProvider } from './context/TeklifSepetContext';
 import TeklifSepeti from './components/TeklifSepeti';
@@ -52,6 +55,9 @@ function App() {
             <Route path="/sifre-sifirla" element={<SifreSifirlaPage />} />
             <Route path="/talep-olustur" element={<TalepOlusturPage />} />
             <Route path="/firma-paneli" element={<FirmaPaneliPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<BlogDetayPage />} />
+            <Route path="/sss" element={<SSSPage />} />
           </Routes>
         </Router>
       </TeklifSepetProvider>

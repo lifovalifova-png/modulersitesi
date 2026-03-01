@@ -47,6 +47,8 @@ export default function Footer() {
               <li><Link to="/kategori/tiny-house" className="hover:text-emerald-400 transition">Tiny House</Link></li>
               <li><Link to="/kategori/ikinci-el" className="hover:text-emerald-400 transition">2. El İlanlar</Link></li>
               <li><Link to="/satici-formu" className="hover:text-emerald-400 transition">İlan Ver</Link></li>
+              <li><Link to="/blog" className="hover:text-emerald-400 transition">Blog</Link></li>
+              <li><Link to="/sss" className="hover:text-emerald-400 transition">SSS</Link></li>
             </ul>
           </div>
 
