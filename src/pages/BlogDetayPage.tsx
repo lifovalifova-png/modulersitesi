@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { BLOG_POSTS, type BlogKategori } from '../data/blogPosts';
 import { toast } from 'sonner';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 /* ── Kategori renkleri ──────────────────────────────────────── */
 const KAT_COLORS: Record<BlogKategori, string> = {
@@ -63,6 +64,8 @@ export default function BlogDetayPage() {
 
   const post    = BLOG_POSTS.find((p) => p.slug === slug);
   const related = BLOG_POSTS.filter((p) => p.id !== post?.id && p.kategori === post?.kategori).slice(0, 3);
+
+  usePageTitle(post ? `${post.baslik} | ModülerPazar` : 'Blog | ModülerPazar');
 
   if (!post) {
     return (

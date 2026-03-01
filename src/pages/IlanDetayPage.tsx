@@ -8,6 +8,7 @@ import { CATEGORIES } from '../data/categories';
 import { FLASH_DEALS } from '../data/flashDeals';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
+import { usePageTitle } from '../hooks/usePageTitle';
 import {
   MapPin, Tag, Calendar, ShieldCheck, Phone, ChevronLeft, ChevronRight,
   Send, CheckCircle, AlertCircle, Loader2, X, Eye, EyeOff, Star,
@@ -280,6 +281,8 @@ export default function IlanDetayPage() {
   const [ilan,    setIlan]    = useState<Ilan | null>(null);
   const [fetching, setFetching] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  usePageTitle(ilan ? `${ilan.baslik} | ModülerPazar` : 'ModülerPazar');
 
   /* Firestore'dan çek; bulunamazsa statik fallback */
   useEffect(() => {

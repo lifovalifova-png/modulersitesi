@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { CATEGORIES } from '../data/categories';
 import { formatFiyat, type Ilan } from '../hooks/useIlanlar';
+import { usePageTitle } from '../hooks/usePageTitle';
 import {
   ShieldCheck, MapPin, Tag, Star, Send, Building2, Globe,
   MessageCircle, Clock, Factory, Store, Package, Calendar,
@@ -108,6 +109,8 @@ export default function FirmaProfilPage() {
   const [ilanlar,  setIlanlar]  = useState<Ilan[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  usePageTitle(firma ? `${firma.name} | ModülerPazar` : 'ModülerPazar');
 
   /* Firma verisini çek */
   useEffect(() => {

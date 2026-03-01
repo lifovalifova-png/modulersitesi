@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { CATEGORIES } from '../data/categories';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
+import { usePageTitle } from '../hooks/usePageTitle';
 import {
   MapPin, Tag, Calendar, ShieldCheck, Grid, List, Filter, X,
   ChevronLeft, ChevronRight, ChevronDown, SlidersHorizontal, Zap, Loader2,
@@ -416,6 +417,8 @@ export default function CategoryPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
   const pageTitle  = category?.fullName ?? 'Tüm İlanlar';
+
+  usePageTitle(`${pageTitle} İlanları | ModülerPazar`);
 
   return (
     <div className="flex flex-col min-h-screen">
