@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Building2, Mail, Phone, MapPin, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { SITE_CONFIG, LEGAL_LINKS } from '../config/site';
+import { useLanguage } from '../context/LanguageContext';
 
 const currentYear = new Date().getFullYear();
 
 export default function Footer() {
+  const { t } = useLanguage();
   return (
     <footer className="bg-gray-900 text-gray-300">
       {/* Main Footer */}
@@ -20,7 +22,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-sm mb-4">
-              Türkiye'nin en büyük modüler yapı pazarı. Prefabrik evler, konteynerler, tiny house ve daha fazlası.
+              {t('footer.desc')}
             </p>
             <div className="flex gap-3">
               <a href="#" aria-label="Facebook" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
@@ -40,33 +42,33 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Hızlı Bağlantılar</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.quickLinks')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/" className="hover:text-emerald-400 transition">Ana Sayfa</Link></li>
-              <li><Link to="/kategori/prefabrik" className="hover:text-emerald-400 transition">Prefabrik Evler</Link></li>
-              <li><Link to="/kategori/tiny-house" className="hover:text-emerald-400 transition">Tiny House</Link></li>
-              <li><Link to="/kategori/ikinci-el" className="hover:text-emerald-400 transition">2. El İlanlar</Link></li>
-              <li><Link to="/satici-formu" className="hover:text-emerald-400 transition">İlan Ver</Link></li>
-              <li><Link to="/blog" className="hover:text-emerald-400 transition">Blog</Link></li>
-              <li><Link to="/sss" className="hover:text-emerald-400 transition">SSS</Link></li>
+              <li><Link to="/" className="hover:text-emerald-400 transition">{t('footer.home')}</Link></li>
+              <li><Link to="/kategori/prefabrik" className="hover:text-emerald-400 transition">{t('footer.prefabrik')}</Link></li>
+              <li><Link to="/kategori/tiny-house" className="hover:text-emerald-400 transition">{t('footer.tinyHouse')}</Link></li>
+              <li><Link to="/kategori/ikinci-el" className="hover:text-emerald-400 transition">{t('footer.secondHand')}</Link></li>
+              <li><Link to="/satici-formu" className="hover:text-emerald-400 transition">{t('footer.postAd')}</Link></li>
+              <li><Link to="/blog" className="hover:text-emerald-400 transition">{t('footer.blog')}</Link></li>
+              <li><Link to="/sss" className="hover:text-emerald-400 transition">{t('footer.faq')}</Link></li>
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Yasal</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.legal')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link to={LEGAL_LINKS.kvkk} className="hover:text-emerald-400 transition">KVKK Aydınlatma Metni</Link></li>
-              <li><Link to={LEGAL_LINKS.gizlilik} className="hover:text-emerald-400 transition">Gizlilik Politikası</Link></li>
-              <li><Link to={LEGAL_LINKS.kullanim} className="hover:text-emerald-400 transition">Kullanım Koşulları</Link></li>
-              <li><Link to={LEGAL_LINKS.cerez} className="hover:text-emerald-400 transition">Çerez Politikası</Link></li>
-              <li><Link to={LEGAL_LINKS.mesafeli} className="hover:text-emerald-400 transition">Mesafeli Satış Sözleşmesi</Link></li>
+              <li><Link to={LEGAL_LINKS.kvkk} className="hover:text-emerald-400 transition">{t('footer.kvkk')}</Link></li>
+              <li><Link to={LEGAL_LINKS.gizlilik} className="hover:text-emerald-400 transition">{t('footer.privacy')}</Link></li>
+              <li><Link to={LEGAL_LINKS.kullanim} className="hover:text-emerald-400 transition">{t('footer.terms')}</Link></li>
+              <li><Link to={LEGAL_LINKS.cerez} className="hover:text-emerald-400 transition">{t('footer.cookies')}</Link></li>
+              <li><Link to={LEGAL_LINKS.mesafeli} className="hover:text-emerald-400 transition">{t('footer.distance')}</Link></li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h3 className="text-white font-semibold mb-4">İletişim</h3>
+            <h3 className="text-white font-semibold mb-4">{t('footer.contact')}</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <MapPin className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -92,7 +94,7 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center text-sm gap-2">
-          <p>&copy; {currentYear} {SITE_CONFIG.name}. Tüm hakları saklıdır.</p>
+          <p>&copy; {currentYear} {SITE_CONFIG.name}. {t('footer.rights')}</p>
           <p className="flex items-center gap-3">
             <Link to={LEGAL_LINKS.kvkk} className="hover:text-emerald-400 transition">KVKK</Link>
             <span aria-hidden="true">•</span>

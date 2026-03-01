@@ -23,11 +23,13 @@ import BlogDetayPage from './pages/BlogDetayPage';
 import SSSPage from './pages/SSSPage';
 import { AuthProvider } from './context/AuthContext';
 import { TeklifSepetProvider } from './context/TeklifSepetContext';
+import { LanguageProvider } from './context/LanguageContext';
 import TeklifSepeti from './components/TeklifSepeti';
 import './App.css';
 
 function App() {
   return (
+    <LanguageProvider>
     <AuthProvider>
       <TeklifSepetProvider>
         <Router>
@@ -62,6 +64,7 @@ function App() {
         </Router>
       </TeklifSepetProvider>
     </AuthProvider>
+    </LanguageProvider>
   );
 }
 

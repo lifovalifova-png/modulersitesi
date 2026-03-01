@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { CATEGORIES } from '../data/categories';
 import { SITE_CONFIG } from '../config/site';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import UserMenu from './UserMenu';
 import logoSrc from '../assets/logo.svg';
 
@@ -25,6 +26,7 @@ const CITIES = [
 export default function Header() {
   const navigate = useNavigate();
   const { currentUser, role, logout } = useAuth();
+  const { lang, setLang, t } = useLanguage();
 
   function handleTeklifIste() {
     if (!currentUser) {
@@ -88,7 +90,7 @@ export default function Header() {
             compact ? 'w-full px-3 py-2' : 'px-3 py-2 w-44'
           }`}
         >
-          <option value="">Tüm Kategoriler</option>
+          <option value="">{t('header.allCategoriesOpt')}</option>
           {CATEGORIES.map((cat) => (
             <option key={cat.slug} value={cat.slug}>{cat.name}</option>
           ))}
@@ -106,7 +108,7 @@ export default function Header() {
             compact ? 'w-full px-3 py-2' : 'px-3 py-2 w-36'
           }`}
         >
-          <option value="">Tüm Şehirler</option>
+          <option value="">{t('header.allCities')}</option>
           {CITIES.map((city) => (
             <option key={city} value={city}>{city}</option>
           ))}
@@ -124,11 +126,21 @@ export default function Header() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <span className="flex items-center gap-2">
             <Phone className="w-4 h-4" aria-hidden="true" />
-            <span className="hidden sm:inline">Destek Hattı:</span> {SITE_CONFIG.phone}
+            <span className="hidden sm:inline">{t('header.support')}:</span> {SITE_CONFIG.phone}
           </span>
-          <button onClick={handleIlanVer} className="hover:underline">
-            Ücretsiz İlan Ver
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={handleIlanVer} className="hover:underline">
+              {t('header.freePostAd')}
+            </button>
+            {/* Dil değiştirici */}
+            <button
+              onClick={() => setLang(lang === 'tr' ? 'en' : 'tr')}
+              aria-label="Change language"
+              className="text-xs font-bold bg-white/20 hover:bg-white/30 rounded px-2 py-0.5 transition"
+            >
+              {lang === 'tr' ? 'EN' : 'TR'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -153,7 +165,7 @@ export default function Header() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Prefabrik ev, konteyner, tiny house..."
+                placeholder={t('header.searchPlaceholder')}
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
@@ -168,7 +180,7 @@ export default function Header() {
               type="submit"
               className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition text-sm font-medium flex-shrink-0"
             >
-              Ara
+              {t('header.searchBtn')}
             </button>
           </form>
 
@@ -179,21 +191,21 @@ export default function Header() {
               className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-emerald-600 transition"
             >
               <Map className="w-5 h-5" aria-hidden="true" />
-              <span className="hidden lg:inline">Firmalar Haritası</span>
+              <span className="hidden lg:inline">{t('header.firmMap')}</span>
             </Link>
             {role !== 'seller' && (
               <button
                 onClick={handleTeklifIste}
                 className="border border-emerald-600 text-emerald-600 px-4 py-2 rounded-lg hover:bg-emerald-50 transition font-medium text-sm"
               >
-                Teklif İste
+                {t('header.getQuoteCta')}
               </button>
             )}
             <button
               onClick={handleIlanVer}
               className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition font-medium text-sm"
             >
-              İlan Ver
+              {t('header.postAdBtn')}
             </button>
             <UserMenu />
           </div>
@@ -233,7 +245,7 @@ export default function Header() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Prefabrik ev, konteyner..."
+                placeholder={t('header.searchPlaceholderMobile')}
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
@@ -247,7 +259,7 @@ export default function Header() {
                   aria-label="Kategori seç"
                   className="w-full appearance-none border border-gray-300 rounded-lg bg-white text-gray-700 text-sm px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="">Tüm Kategoriler</option>
+                  <option value="">{t('header.allCategories')}</option>
                   {CATEGORIES.map((cat) => (
                     <option key={cat.slug} value={cat.slug}>{cat.name}</option>
                   ))}
@@ -261,7 +273,7 @@ export default function Header() {
                   aria-label="Şehir seç"
                   className="w-full appearance-none border border-gray-300 rounded-lg bg-white text-gray-700 text-sm px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="">Tüm Şehirler</option>
+                  <option value="">{t('header.allCities')}</option>
                   {CITIES.map((city) => (
                     <option key={city} value={city}>{city}</option>
                   ))}
@@ -274,7 +286,7 @@ export default function Header() {
               type="submit"
               className="w-full bg-emerald-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-emerald-700 transition"
             >
-              Ara
+              {t('header.searchBtn')}
             </button>
           </form>
         )}
@@ -294,7 +306,7 @@ export default function Header() {
                 aria-haspopup="true"
                 aria-expanded={categoryDropdownOpen}
               >
-                Tüm Kategoriler
+                {t('header.allCategories')}
                 <ChevronDown className="w-4 h-4" aria-hidden="true" />
               </button>
               {categoryDropdownOpen && (
@@ -338,21 +350,21 @@ export default function Header() {
               className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
             >
               <Map className="w-4 h-4" aria-hidden="true" />
-              Firmalar Haritası
+              {t('header.firmMap')}
             </Link>
 
             <Link
               to="/blog"
               className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
             >
-              Blog
+              {t('nav.blog')}
             </Link>
 
             <Link
               to="/sss"
               className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
             >
-              SSS
+              {t('nav.faq')}
             </Link>
 
           </div>
@@ -368,14 +380,14 @@ export default function Header() {
                 onClick={() => { handleTeklifIste(); setMobileMenuOpen(false); }}
                 className="block w-full border border-emerald-600 text-emerald-600 px-4 py-3 rounded-lg text-center font-medium hover:bg-emerald-50 transition"
               >
-                Teklif İste
+                {t('header.getQuoteCta')}
               </button>
             )}
             <button
               onClick={() => { handleIlanVer(); setMobileMenuOpen(false); }}
               className="block w-full bg-emerald-600 text-white px-4 py-3 rounded-lg text-center font-medium"
             >
-              Ücretsiz İlan Ver
+              {t('header.freePostAd')}
             </button>
             <Link
               to="/firmalar-harita"
@@ -383,24 +395,24 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               <Map className="w-5 h-5" aria-hidden="true" />
-              Firmalar Haritası
+              {t('header.firmMap')}
             </Link>
             <Link
               to="/blog"
               className="block px-2 py-2 text-gray-700 hover:text-emerald-600"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Blog
+              {t('nav.blog')}
             </Link>
             <Link
               to="/sss"
               className="block px-2 py-2 text-gray-700 hover:text-emerald-600"
               onClick={() => setMobileMenuOpen(false)}
             >
-              SSS
+              {t('nav.faq')}
             </Link>
             <div className="pt-2 border-t border-gray-200">
-              <p className="text-xs text-gray-400 mb-2 px-2">Kategoriler</p>
+              <p className="text-xs text-gray-400 mb-2 px-2">{t('header.categoriesLabel')}</p>
               {CATEGORIES.map((cat) => (
                 <Link
                   key={cat.slug}
@@ -439,20 +451,20 @@ export default function Header() {
                     className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 hover:text-emerald-600"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <UserCircle className="w-4 h-4" /> Profilim
+                    <UserCircle className="w-4 h-4" /> {t('auth.profile')}
                   </Link>
                   <Link
                     to="/ilanlarim"
                     className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 hover:text-emerald-600"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <FileText className="w-4 h-4" /> İlanlarım
+                    <FileText className="w-4 h-4" /> {t('auth.myAds')}
                   </Link>
                   <button
                     onClick={async () => { await logout(); setMobileMenuOpen(false); }}
                     className="flex items-center gap-2 px-2 py-2 text-sm text-red-600 w-full"
                   >
-                    <LogOut className="w-4 h-4" /> Çıkış Yap
+                    <LogOut className="w-4 h-4" /> {t('auth.logout')}
                   </button>
                 </>
               ) : (
@@ -462,14 +474,14 @@ export default function Header() {
                     className="flex-1 border border-emerald-600 text-emerald-600 text-center px-4 py-2.5 rounded-lg font-medium text-sm hover:bg-emerald-50 transition"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Giriş Yap
+                    {t('auth.login')}
                   </Link>
                   <Link
                     to="/kayit"
                     className="flex-1 bg-emerald-600 text-white text-center px-4 py-2.5 rounded-lg font-medium text-sm hover:bg-emerald-700 transition"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Kayıt Ol
+                    {t('auth.register')}
                   </Link>
                 </div>
               )}

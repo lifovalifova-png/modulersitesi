@@ -12,6 +12,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
 import { CATEGORIES } from '../data/categories';
+import { useLanguage } from '../context/LanguageContext';
 
 /* ─── Kategori ikon eşlemesi ─────────────────────────────── */
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -24,55 +25,6 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'tiny-house':          Home,
 };
 
-/* ─── İstatistikler ──────────────────────────────────────── */
-const STATS = [
-  { label: 'Aktif İlan',    value: '2.500+' },
-  { label: 'Kayıtlı Firma', value: '850+'   },
-  { label: 'Mutlu Müşteri', value: '12.000+'},
-  { label: 'Şehir',         value: '81'     },
-];
-
-/* ─── Nasıl Çalışır adımları ─────────────────────────────── */
-const CUSTOMER_STEPS = [
-  { icon: Search,      title: 'İlan Ara',      desc: 'Kategori, konum ve fiyat aralığına göre ilanları filtrele.' },
-  { icon: CheckSquare, title: '2 Firma Seç',   desc: 'Beğendiğin ilanlardan en fazla 2 firma seç.' },
-  { icon: FileText,    title: 'Teklif Al',     desc: 'Tek tıkla her iki firmaya teklif talebi gönder.' },
-  { icon: BarChart2,   title: 'Karşılaştır',  desc: 'Gelen teklifleri yan yana karşılaştır, en iyisini seç.' },
-];
-
-const PRODUCER_STEPS = [
-  { icon: UserPlus,       title: 'Üye Ol',          desc: 'Firma bilgilerinle ücretsiz kayıt ol, kimliğini doğrulat.' },
-  { icon: ClipboardList,  title: 'İlan Ver',         desc: 'Ürün ve hizmetlerini fotoğraf ve detaylarla listele.' },
-  { icon: Handshake,      title: 'Müşteriye Ulaş',  desc: 'Gelen teklif taleplerini değerlendir, anlaş.' },
-];
-
-/* ─── Güven artırıcı özellikler ──────────────────────────── */
-const TRUST_ITEMS = [
-  {
-    icon: ShieldCheck,
-    title: 'Doğrulanmış Firmalar',
-    desc: 'Her firma kimlik ve ticari sicil doğrulamasından geçer. Güvensiz satıcıya ulaşamazsın.',
-    color: 'bg-emerald-100 text-emerald-600',
-  },
-  {
-    icon: Tag,
-    title: 'Ücretsiz Teklif Sistemi',
-    desc: 'Platform üzerinden teklif almak tamamen ücretsizdir. Gizli ücret yok.',
-    color: 'bg-blue-100 text-blue-600',
-  },
-  {
-    icon: MapPin,
-    title: 'Bölge Bazlı Eşleşme',
-    desc: 'Bulunduğun bölgedeki firmalarla eşleş, gereksiz nakliye maliyeti ödeme.',
-    color: 'bg-amber-100 text-amber-600',
-  },
-  {
-    icon: Lock,
-    title: 'KVKK Uyumlu Güvenlik',
-    desc: 'Kişisel verilerinin işlenmesi Türk KVKK mevzuatına tam uyumlu şekilde yürütülür.',
-    color: 'bg-purple-100 text-purple-600',
-  },
-];
 
 /* ─── Kategori çıkarımı ──────────────────────────────────── */
 
@@ -89,7 +41,36 @@ function extractSlug(text: string): string {
 /* ─── Bileşen ────────────────────────────────────────────── */
 export default function HomePage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'customer' | 'producer'>('customer');
+
+  /* ─── Translated data arrays ────────────────────────────── */
+  const STATS = [
+    { label: t('stats.activeAds'),       value: '2.500+' },
+    { label: t('stats.registeredFirms'), value: '850+'   },
+    { label: t('stats.happyCustomers'),  value: '12.000+'},
+    { label: t('stats.cities'),          value: '81'     },
+  ];
+
+  const CUSTOMER_STEPS = [
+    { icon: Search,      title: t('step.b1.title'), desc: t('step.b1.desc') },
+    { icon: CheckSquare, title: t('step.b2.title'), desc: t('step.b2.desc') },
+    { icon: FileText,    title: t('step.b3.title'), desc: t('step.b3.desc') },
+    { icon: BarChart2,   title: t('step.b4.title'), desc: t('step.b4.desc') },
+  ];
+
+  const PRODUCER_STEPS = [
+    { icon: UserPlus,      title: t('step.s1.title'), desc: t('step.s1.desc') },
+    { icon: ClipboardList, title: t('step.s2.title'), desc: t('step.s2.desc') },
+    { icon: Handshake,     title: t('step.s3.title'), desc: t('step.s3.desc') },
+  ];
+
+  const TRUST_ITEMS = [
+    { icon: ShieldCheck, title: t('why.verified.title'),  desc: t('why.verified.desc'),  color: 'bg-emerald-100 text-emerald-600' },
+    { icon: Tag,         title: t('why.freeQuote.title'), desc: t('why.freeQuote.desc'), color: 'bg-blue-100 text-blue-600'       },
+    { icon: MapPin,      title: t('why.regional.title'),  desc: t('why.regional.desc'),  color: 'bg-amber-100 text-amber-600'     },
+    { icon: Lock,        title: t('why.kvkk.title'),      desc: t('why.kvkk.desc'),      color: 'bg-purple-100 text-purple-600'   },
+  ];
 
   /* AI widget state */
   const [aiQuery,    setAiQuery]    = useState('');
@@ -148,15 +129,14 @@ export default function HomePage() {
               {/* Öne çıkan badge */}
               <div className="inline-flex items-center gap-2 bg-amber-400 text-amber-900 text-sm font-bold px-4 py-1.5 rounded-full mb-6">
                 <Zap className="w-4 h-4" aria-hidden="true" />
-                Aynı anda 2 firmadan teklif al, en iyisini seç!
+                {t('hero.badge')}
               </div>
 
               <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
-                Modüler Yapı Çözümlerinde Türkiye'nin En Büyük Pazarı
+                {t('hero.title')}
               </h1>
               <p className="text-lg md:text-xl text-emerald-100 mb-8">
-                Prefabrik evler, konteynerler, tiny house ve daha fazlası.
-                Binlerce ilan arasından size uygun olanı bulun veya kendi ilanınızı verin.
+                {t('hero.subtitle')}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -164,13 +144,13 @@ export default function HomePage() {
                   to="/satici-formu"
                   className="bg-white text-emerald-700 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition text-center"
                 >
-                  Ücretsiz İlan Ver
+                  {t('hero.btnPostAd')}
                 </Link>
                 <Link
                   to="/kategori/prefabrik"
                   className="bg-emerald-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-400 transition text-center flex items-center justify-center gap-2"
                 >
-                  İlanları Keşfet <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                  {t('hero.btnExplore')} <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </Link>
               </div>
             </div>
@@ -195,13 +175,13 @@ export default function HomePage() {
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
                 <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
-                Claude AI Destekli
+                {t('ai.badge')}
               </div>
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                Size Uygun Yapıyı Bulalım
+                {t('ai.title')}
               </h2>
               <p className="text-emerald-100 text-sm md:text-base">
-                Şehrinizi ve ihtiyacınızı yazın, size özel öneri alalım
+                {t('ai.subtitle')}
               </p>
             </div>
 
@@ -211,7 +191,7 @@ export default function HomePage() {
                 type="text"
                 value={aiQuery}
                 onChange={(e) => setAiQuery(e.target.value)}
-                placeholder={`örn. "Ankara'da 80 m² yazlık prefabrik" veya "İzmir'de ucuz depo"`}
+                placeholder={t('ai.placeholder')}
                 className="flex-1 bg-white rounded-xl px-4 py-3.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-sm"
               />
               <button
@@ -223,7 +203,7 @@ export default function HomePage() {
                   ? <span className="w-4 h-4 border-2 border-amber-700/30 border-t-amber-900 rounded-full animate-spin" />
                   : <SendHorizontal className="w-4 h-4" aria-hidden="true" />
                 }
-                <span className="hidden sm:inline">Öneri Al</span>
+                <span className="hidden sm:inline">{t('ai.btnAsk')}</span>
               </button>
             </form>
 
@@ -235,7 +215,7 @@ export default function HomePage() {
                 {aiLoading && (
                   <div className="bg-white/10 backdrop-blur rounded-2xl px-6 py-8 text-center text-white">
                     <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block mb-3" />
-                    <p className="text-sm font-medium">Analiz ediliyor…</p>
+                    <p className="text-sm font-medium">{t('ai.analyzing')}</p>
                   </div>
                 )}
 
@@ -252,7 +232,7 @@ export default function HomePage() {
                     <div className="flex items-center gap-2.5 px-5 py-3.5 bg-emerald-50 border-b border-emerald-100">
                       <Sparkles className="w-4 h-4 text-emerald-600" aria-hidden="true" />
                       <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
-                        Yapı Asistanı Önerisi
+                        {t('ai.resultLabel')}
                       </span>
                     </div>
                     <div className="px-5 py-5">
@@ -266,14 +246,14 @@ export default function HomePage() {
                         className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition"
                       >
                         <MessageSquare className="w-4 h-4" aria-hidden="true" />
-                        Teklif İste
+                        {t('ai.btnQuote')}
                       </button>
                       <button
                         onClick={() => navigate(`/kategori/${aiSlug}`)}
                         className="flex-1 flex items-center justify-center gap-2 border border-emerald-600 text-emerald-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-50 transition"
                       >
                         <Search className="w-4 h-4" aria-hidden="true" />
-                        İlanları Gör
+                        {t('ai.btnViewAds')}
                       </button>
                     </div>
                   </div>
@@ -290,8 +270,8 @@ export default function HomePage() {
         <section className="py-12 md:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4">
             <div className="mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Kategoriler</h2>
-              <p className="text-gray-600 mt-1">İhtiyacınıza uygun kategoriyi seçin</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">{t('cats.title')}</h2>
+              <p className="text-gray-600 mt-1">{t('cats.subtitle')}</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {CATEGORIES.map((category) => {
@@ -308,7 +288,7 @@ export default function HomePage() {
                     <h3 className="font-semibold text-gray-800 group-hover:text-emerald-700 transition">
                       {category.name}
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">{category.count} ilan</p>
+                    <p className="text-sm text-gray-500 mt-1">{category.count} {t('cats.listings')}</p>
                   </Link>
                 );
               })}
@@ -320,8 +300,8 @@ export default function HomePage() {
         <section className="py-12 md:py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4">
             <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Nasıl Çalışır?</h2>
-              <p className="text-gray-600 mt-2">Hem alıcı hem satıcı için basit ve hızlı</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">{t('how.title')}</h2>
+              <p className="text-gray-600 mt-2">{t('how.subtitle')}</p>
             </div>
 
             {/* Tab seçici */}
@@ -336,7 +316,7 @@ export default function HomePage() {
                       : 'text-gray-600 hover:text-emerald-600'
                   }`}
                 >
-                  Alıcı / Müşteri
+                  {t('how.tabBuyer')}
                 </button>
                 <button
                   onClick={() => setActiveTab('producer')}
@@ -347,7 +327,7 @@ export default function HomePage() {
                       : 'text-gray-600 hover:text-emerald-600'
                   }`}
                 >
-                  Üretici / Firma
+                  {t('how.tabSeller')}
                 </button>
               </div>
             </div>
@@ -412,14 +392,14 @@ export default function HomePage() {
                   to="/kategori/prefabrik"
                   className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
                 >
-                  Hemen İlan Ara <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  {t('how.ctaBuyer')} <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </Link>
               ) : (
                 <Link
                   to="/satici-formu"
                   className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
                 >
-                  Ücretsiz Üye Ol <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  {t('how.ctaSeller')} <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </Link>
               )}
             </div>
@@ -430,10 +410,8 @@ export default function HomePage() {
         <section className="py-12 md:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4">
             <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Neden ModülerPazar?</h2>
-              <p className="text-gray-600 mt-2">
-                Güvenli, şeffaf ve ücretsiz — modüler yapı alım-satımında tek adres
-              </p>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">{t('why.title')}</h2>
+              <p className="text-gray-600 mt-2">{t('why.subtitle')}</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {TRUST_ITEMS.map((item) => {
@@ -459,16 +437,16 @@ export default function HomePage() {
         <section className="py-12 md:py-16 bg-gray-900 text-white">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Firmanız mı var? Hemen İlan Verin!
+              {t('firmCta.title')}
             </h2>
             <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-              Binlerce potansiyel müşteriye ulaşın. İlk ilanınız ücretsiz!
+              {t('firmCta.subtitle')}
             </p>
             <Link
               to="/satici-formu"
               className="inline-flex items-center gap-2 bg-emerald-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-emerald-500 transition"
             >
-              Şimdi Başla <ArrowRight className="w-5 h-5" aria-hidden="true" />
+              {t('firmCta.btn')} <ArrowRight className="w-5 h-5" aria-hidden="true" />
             </Link>
           </div>
         </section>
