@@ -109,6 +109,7 @@ export function authErrorMessage(code: string): string {
     'auth/popup-closed-by-user':   'Google girişi iptal edildi.',
     'auth/popup-blocked':          "Tarayıcınız popup'ı engelledi. Lütfen izin verin.",
     'auth/network-request-failed': 'Ağ hatası. İnternet bağlantınızı kontrol edin.',
+    'auth/unauthorized-domain':    'Bu domain Google girişi için yetkilendirilmemiş.',
   };
   return map[code] ?? 'Bir hata oluştu. Lütfen tekrar deneyin.';
 }
