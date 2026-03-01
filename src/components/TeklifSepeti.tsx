@@ -63,8 +63,8 @@ export default function TeklifSepeti() {
       await addDoc(collection(db, 'quotes'), {
         tip:       'sepet-teklif',
         firmIds:   firms.map((f) => f.id),
-        firmNames: firms.map((f) => f.firmName),
-        ilanlar:   firms.map((f) => ({ id: f.id, title: f.title, price: f.price, category: f.category })),
+        firmNames: firms.map((f) => f.firmaAdi),
+        ilanlar:   firms.map((f) => ({ id: f.id, baslik: f.baslik, fiyat: f.fiyat, kategori: f.kategori })),
         ad:        form.ad.trim(),
         telefon:   form.telefon.trim(),
         email:     form.email.trim(),
@@ -329,7 +329,7 @@ export default function TeklifSepeti() {
                   {/* Logo placeholder */}
                   <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                     <span className="text-emerald-700 font-extrabold text-base leading-none">
-                      {firm.firmName.charAt(0)}
+                      {(firm.firmaAdi || 'F').charAt(0)}
                     </span>
                   </div>
 
@@ -337,23 +337,25 @@ export default function TeklifSepeti() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="font-semibold text-gray-800 text-sm leading-snug line-clamp-1">
-                        {firm.firmName}
+                        {firm.firmaAdi}
                       </p>
-                      {firm.firmVerified && (
+                      {firm.firmaDogrulanmis && (
                         <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                       )}
                     </div>
                     <span className="inline-flex items-center gap-1 text-xs text-gray-500 mt-0.5">
-                      <MapPin className="w-3 h-3" />{firm.firmCity}
+                      <MapPin className="w-3 h-3" />{firm.sehir}
                     </span>
-                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{firm.title}</p>
-                    <p className="text-xs font-semibold text-emerald-600 mt-0.5">{firm.price}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{firm.baslik}</p>
+                    <p className="text-xs font-semibold text-emerald-600 mt-0.5">
+                      {new Intl.NumberFormat('tr-TR').format(firm.fiyat)} ₺
+                    </p>
                   </div>
 
                   {/* Remove button */}
                   <button
                     onClick={() => removeFirm(firm.id)}
-                    aria-label={`${firm.firmName} firmayı çıkar`}
+                    aria-label={`${firm.firmaAdi} firmayı çıkar`}
                     className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition flex-shrink-0"
                   >
                     <X className="w-4 h-4" />

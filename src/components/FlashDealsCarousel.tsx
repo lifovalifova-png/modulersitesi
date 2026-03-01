@@ -4,24 +4,50 @@ import { ChevronLeft, ChevronRight, MapPin, Clock, Flame, Tag } from 'lucide-rea
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { FLASH_DEALS, type FlashDeal } from '../data/flashDeals';
+import { type Ilan } from '../hooks/useIlanlar';
 
-/* ── Types ──────────────────────────────────────────────────── */
-interface FirestoreDeal {
-  id: string;
-  title: string;
-  location: string;
-  price: string;
+/* ── Unified display type ───────────────────────────────────── */
+interface CarouselItem {
+  id:            string;
+  title:         string;
+  location:      string;
+  price:         string;
   originalPrice?: string;
-  image: string;
-  category: string;
-  urgent: boolean;
-  discount?: number;
+  image:         string;
+  category:      string;
+  urgent:        boolean;
+  indirimli:     boolean;
+  href:          string;
 }
 
-type CarouselDeal = FlashDeal | FirestoreDeal;
+function ilanToItem(d: Ilan): CarouselItem {
+  return {
+    id:        d.id,
+    title:     d.baslik,
+    location:  d.sehir,
+    price:     new Intl.NumberFormat('tr-TR').format(d.fiyat) + ' ₺',
+    image:     d.gorseller?.[0] ?? '',
+    category:  d.kategori,
+    urgent:    d.acil,
+    indirimli: d.indirimli,
+    href:      `/ilan/${d.id}`,
+  };
+}
 
-const isFirestoreDeal = (d: CarouselDeal): d is FirestoreDeal =>
-  typeof d.id === 'string';
+function flashDealToItem(d: FlashDeal): CarouselItem {
+  return {
+    id:            String(d.id),
+    title:         d.title,
+    location:      d.location,
+    price:         d.price,
+    originalPrice: d.originalPrice,
+    image:         d.image,
+    category:      d.category,
+    urgent:        d.urgent,
+    indirimli:     (d.discount ?? 0) > 0,
+    href:          `/ilan/${d.id}`,
+  };
+}
 
 /* ── Category badge colors ──────────────────────────────────── */
 const CATEGORY_COLORS: Record<string, string> = {
@@ -39,23 +65,25 @@ const CARD_WIDTH = 320 + 16; // w-80 + gap-4
 
 export default function FlashDealsCarousel() {
   const [activeIndex,    setActiveIndex]    = useState(0);
-  const [firestoreDeals, setFirestoreDeals] = useState<FirestoreDeal[] | null>(null);
+  const [firestoreItems, setFirestoreItems] = useState<CarouselItem[] | null>(null);
   const scrollRef     = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isPausedRef   = useRef(false);
 
-  /* Firestore'dan çek — varsa kullan, yoksa static fallback */
+  /* Firestore ilanlar — acil veya indirimli olanları çek */
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'flashDeals'), (snap) => {
-      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as FirestoreDeal));
-      setFirestoreDeals(docs);
+    const unsub = onSnapshot(collection(db, 'ilanlar'), (snap) => {
+      const docs = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() } as Ilan))
+        .filter((d) => d.status === 'aktif' && (d.acil || d.indirimli))
+        .map(ilanToItem);
+      setFirestoreItems(docs.length > 0 ? docs : null);
     });
     return unsub;
   }, []);
 
-  /* Hangi veriyi göster */
-  const deals: CarouselDeal[] =
-    firestoreDeals && firestoreDeals.length > 0 ? firestoreDeals : FLASH_DEALS;
+  /* Gösterilecek ilanlar: Firestore varsa kullan, yoksa static fallback */
+  const items: CarouselItem[] = firestoreItems ?? FLASH_DEALS.map(flashDealToItem);
 
   /* ── Scroll helpers ─────────────────────────────────────── */
   const scrollToIndex = useCallback((index: number) => {
@@ -65,7 +93,7 @@ export default function FlashDealsCarousel() {
   }, []);
 
   const scrollBy = useCallback((direction: 'left' | 'right') => {
-    const total = deals.length;
+    const total = items.length;
     setActiveIndex((prev) => {
       const next =
         direction === 'right'
@@ -74,7 +102,7 @@ export default function FlashDealsCarousel() {
       scrollToIndex(next);
       return next;
     });
-  }, [scrollToIndex, deals.length]);
+  }, [scrollToIndex, items.length]);
 
   /* ── Auto-scroll ────────────────────────────────────────── */
   const startAutoScroll = useCallback(() => {
@@ -99,7 +127,7 @@ export default function FlashDealsCarousel() {
   }, []);
 
   const canScrollLeft  = activeIndex > 0;
-  const canScrollRight = activeIndex < deals.length - 1;
+  const canScrollRight = activeIndex < items.length - 1;
 
   return (
     <section className="py-12 md:py-16 bg-gradient-to-b from-amber-50 to-white">
@@ -159,25 +187,21 @@ export default function FlashDealsCarousel() {
             className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {deals.map((deal) => {
-              const badgeClass = CATEGORY_COLORS[deal.category] ?? 'bg-gray-100 text-gray-600';
-              /* Firestore ilanları için detay sayfası yok → talep oluştur */
-              const detailHref = isFirestoreDeal(deal)
-                ? `/talep-olustur`
-                : `/ilan/${deal.id}`;
+            {items.map((item) => {
+              const badgeClass = CATEGORY_COLORS[item.category] ?? 'bg-gray-100 text-gray-600';
 
               return (
                 <div
-                  key={deal.id}
+                  key={item.id}
                   className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow snap-start flex flex-col"
                 >
                   {/* Image */}
-                  <Link to={detailHref} className="block">
+                  <Link to={item.href} className="block">
                     <div className="relative h-48">
-                      {deal.image ? (
+                      {item.image ? (
                         <img
-                          src={deal.image}
-                          alt={`${deal.title} — ${deal.location}`}
+                          src={item.image}
+                          alt={`${item.title} — ${item.location}`}
                           loading="lazy"
                           className="w-full h-full object-cover"
                         />
@@ -186,16 +210,16 @@ export default function FlashDealsCarousel() {
                           <Flame className="w-10 h-10 text-gray-300" />
                         </div>
                       )}
-                      {deal.urgent && (
+                      {item.urgent && (
                         <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
                           ACİL
                         </div>
                       )}
-                      {deal.discount ? (
+                      {item.indirimli && (
                         <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
-                          %{deal.discount} İNDİRİM
+                          İNDİRİMLİ
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   </Link>
 
@@ -205,32 +229,32 @@ export default function FlashDealsCarousel() {
                     <div className="flex items-center gap-1.5 mb-2 flex-wrap">
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                         <MapPin className="w-3 h-3" aria-hidden="true" />
-                        {deal.location}
+                        {item.location}
                       </span>
                       <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${badgeClass}`}>
                         <Tag className="w-3 h-3" aria-hidden="true" />
-                        {deal.category}
+                        {item.category}
                       </span>
                     </div>
 
                     <Link
-                      to={detailHref}
+                      to={item.href}
                       className="font-semibold text-gray-800 mb-3 line-clamp-2 min-h-[48px] hover:text-emerald-600 transition text-sm"
                     >
-                      {deal.title}
+                      {item.title}
                     </Link>
 
                     <div className="flex items-center justify-between mb-4 mt-auto">
                       <div>
-                        <div className="text-lg font-bold text-emerald-600">{deal.price}</div>
-                        {deal.originalPrice && (
-                          <div className="text-sm text-gray-400 line-through">{deal.originalPrice}</div>
+                        <div className="text-lg font-bold text-emerald-600">{item.price}</div>
+                        {item.originalPrice && (
+                          <div className="text-sm text-gray-400 line-through">{item.originalPrice}</div>
                         )}
                       </div>
                     </div>
 
                     <Link
-                      to={detailHref}
+                      to={item.href}
                       className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition text-center text-sm"
                     >
                       Teklif Al
@@ -243,7 +267,7 @@ export default function FlashDealsCarousel() {
 
           {/* Dot Indicators */}
           <div className="flex justify-center gap-1.5 mt-4">
-            {deals.map((_, i) => (
+            {items.map((_, i) => (
               <button
                 key={i}
                 onClick={() => { scrollToIndex(i); startAutoScroll(); }}

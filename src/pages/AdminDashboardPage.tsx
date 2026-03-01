@@ -85,7 +85,24 @@ interface AdminTalep {
   tarih:                { seconds: number } | null;
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'firms' | 'talepler';
+interface AdminIlan {
+  id?:               string;
+  baslik:            string;
+  kategori:          string;
+  kategoriSlug:      string;
+  sehir:             string;
+  fiyat:             number;
+  aciklama:          string;
+  firmaAdi:          string;
+  firmaId:           string;
+  firmaDogrulanmis:  boolean;
+  gorseller:         string[];
+  acil:              boolean;
+  indirimli:         boolean;
+  status:            'aktif' | 'pasif';
+}
+
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
@@ -112,6 +129,13 @@ const DEAL_CATEGORIES = [
 const EMPTY_DEAL: Omit<AdminFlashDeal, 'id'> = {
   title: '', location: '', price: '', originalPrice: '',
   image: '', category: 'Prefabrik', urgent: false, discount: 0,
+};
+
+const EMPTY_ILAN: Omit<AdminIlan, 'id'> = {
+  baslik: '', kategori: 'Prefabrik', kategoriSlug: 'prefabrik',
+  sehir: '', fiyat: 0, aciklama: '',
+  firmaAdi: '', firmaId: '', firmaDogrulanmis: false,
+  gorseller: [], acil: false, indirimli: false, status: 'aktif',
 };
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -152,11 +176,11 @@ function Badge({ status }: { status: AdminFirm['status'] }) {
    TAB 1 — OVERVIEW
 ════════════════════════════════════════════════════════════ */
 function OverviewTab() {
-  const [counts, setCounts] = useState({ deals: 0, approved: 0, pending: 0, rejected: 0, talepler: 0 });
+  const [counts, setCounts] = useState({ ilanlar: 0, approved: 0, pending: 0, rejected: 0, talepler: 0 });
 
   useEffect(() => {
-    const u1 = onSnapshot(collection(db, 'flashDeals'), (s) =>
-      setCounts((p) => ({ ...p, deals: s.size })));
+    const u1 = onSnapshot(collection(db, 'ilanlar'), (s) =>
+      setCounts((p) => ({ ...p, ilanlar: s.size })));
     const u2 = onSnapshot(collection(db, 'firms'), (s) => {
       const docs = s.docs.map((d) => d.data() as AdminFirm);
       setCounts((p) => ({
@@ -175,7 +199,7 @@ function OverviewTab() {
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-800">Genel Bakış</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Flash İlanlar"     value={counts.deals}    color="text-emerald-600" sub="Firestore kayıtları" />
+        <StatCard label="Toplam İlanlar"    value={counts.ilanlar}  color="text-emerald-600" sub="Firestore ilanlar" />
         <StatCard label="Onaylı Firmalar"   value={counts.approved} color="text-blue-600"    sub="Aktif firmalar" />
         <StatCard label="Onay Bekleyen"     value={counts.pending}  color="text-amber-500"   sub="İnceleme gerekiyor" />
         <StatCard label="Gelen Talepler"    value={counts.talepler} color="text-purple-600"  sub="Müşteri talepleri" />
@@ -185,10 +209,16 @@ function OverviewTab() {
         <h3 className="font-semibold text-gray-700 mb-3 text-sm">Hızlı İşlemler</h3>
         <div className="flex flex-wrap gap-3">
           <button
-            onClick={() => toast.info('Flash İlanlar sekmesine gidin.')}
+            onClick={() => toast.info('İlanlar sekmesine gidin.')}
             className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm px-4 py-2 rounded-lg hover:bg-emerald-100 transition"
           >
-            <Zap className="w-4 h-4" /> Yeni Flash İlan
+            <FileText className="w-4 h-4" /> Yeni İlan
+          </button>
+          <button
+            onClick={() => toast.info('Flash İlanlar sekmesine gidin.')}
+            className="flex items-center gap-2 bg-amber-50 text-amber-700 border border-amber-200 text-sm px-4 py-2 rounded-lg hover:bg-amber-100 transition"
+          >
+            <Zap className="w-4 h-4" /> Flash İlanlar
           </button>
           <button
             onClick={() => toast.info('Firmalar sekmesine gidin.')}
@@ -548,7 +578,337 @@ function FlashDealsTab() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TAB 4 — FIRMS
+   TAB 4 — İLANLAR CRUD
+════════════════════════════════════════════════════════════ */
+function IlanlarTab() {
+  const [ilanlar,   setIlanlar]   = useState<AdminIlan[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form,      setForm]      = useState<Omit<AdminIlan, 'id'>>(EMPTY_ILAN);
+  const [gorselUrl, setGorselUrl] = useState('');
+  const [saving,    setSaving]    = useState(false);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'ilanlar'), (snap) => {
+      setIlanlar(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminIlan)));
+    });
+    return unsub;
+  }, []);
+
+  const openAdd = () => { setForm(EMPTY_ILAN); setGorselUrl(''); setModalOpen(true); };
+
+  const handleSave = async () => {
+    if (!form.baslik.trim() || !form.sehir.trim() || !form.fiyat) {
+      toast.error('Başlık, şehir ve fiyat zorunludur.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const cat  = CATEGORIES.find((c) => c.slug === form.kategoriSlug);
+      const data = {
+        ...form,
+        kategori: cat?.name ?? form.kategori,
+        gorseller: gorselUrl.trim() ? [gorselUrl.trim()] : [],
+        tarih: serverTimestamp(),
+      };
+      await addDoc(collection(db, 'ilanlar'), data);
+      toast.success('İlan eklendi.');
+      setModalOpen(false);
+      setForm(EMPTY_ILAN);
+      setGorselUrl('');
+    } catch {
+      toast.error('İşlem sırasında hata oluştu.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleStatus = async (ilan: AdminIlan) => {
+    if (!ilan.id) return;
+    const next = ilan.status === 'aktif' ? 'pasif' : 'aktif';
+    try {
+      await updateDoc(doc(db, 'ilanlar', ilan.id), { status: next });
+      toast.success(`İlan ${next === 'aktif' ? 'aktif edildi' : 'pasife alındı'}.`);
+    } catch {
+      toast.error('İşlem başarısız.');
+    }
+  };
+
+  const deleteIlan = async (id: string) => {
+    if (!window.confirm('Bu ilanı silmek istediğinizden emin misiniz?')) return;
+    try {
+      await deleteDoc(doc(db, 'ilanlar', id));
+      toast.success('İlan silindi.');
+    } catch {
+      toast.error('Silme işlemi başarısız.');
+    }
+  };
+
+  const upd = (patch: Partial<Omit<AdminIlan, 'id'>>) =>
+    setForm((p) => ({ ...p, ...patch }));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-800">İlanlar</h2>
+        <button
+          onClick={openAdd}
+          className="flex items-center gap-2 bg-emerald-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-emerald-700 transition"
+        >
+          <Plus className="w-4 h-4" /> Yeni İlan
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {ilanlar.length === 0 ? (
+          <div className="py-16 text-center text-gray-400 text-sm">
+            <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            Henüz ilan yok. "Yeni İlan" ile ekleyin.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Başlık / Firma</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Şehir</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Fiyat</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Etiket</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Durum</th>
+                  <th className="text-right px-4 py-3 font-semibold text-gray-600">İşlem</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {ilanlar.map((ilan) => (
+                  <tr key={ilan.id} className="hover:bg-gray-50 transition">
+                    <td className="px-4 py-3 max-w-[200px]">
+                      <p className="font-medium text-gray-800 truncate">{ilan.baslik}</p>
+                      <p className="text-xs text-gray-400 truncate">{ilan.firmaAdi || '—'}</p>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{ilan.sehir}</td>
+                    <td className="px-4 py-3 font-semibold text-emerald-600 whitespace-nowrap">
+                      {new Intl.NumberFormat('tr-TR').format(ilan.fiyat)} ₺
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1 flex-wrap">
+                        {ilan.acil && (
+                          <span className="bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5 rounded-full">ACİL</span>
+                        )}
+                        {ilan.indirimli && (
+                          <span className="bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">İNDİRİM</span>
+                        )}
+                        {!ilan.acil && !ilan.indirimli && (
+                          <span className="text-gray-400 text-xs">—</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        ilan.status === 'aktif'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {ilan.status === 'aktif' ? 'Aktif' : 'Pasif'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => toggleStatus(ilan)}
+                          aria-label={ilan.status === 'aktif' ? 'Pasife al' : 'Aktif et'}
+                          title={ilan.status === 'aktif' ? 'Pasife al' : 'Aktif et'}
+                          className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition"
+                        >
+                          {ilan.status === 'aktif'
+                            ? <XCircle className="w-4 h-4" />
+                            : <CheckCircle className="w-4 h-4" />
+                          }
+                        </button>
+                        <button
+                          onClick={() => deleteIlan(ilan.id!)}
+                          aria-label="Sil"
+                          title="Sil"
+                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false); }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <h3 className="font-bold text-gray-800">Yeni İlan Ekle</h3>
+              <button onClick={() => setModalOpen(false)} aria-label="Kapat">
+                <X className="w-5 h-5 text-gray-500 hover:text-gray-700" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Başlık */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Başlık *</label>
+                <input
+                  value={form.baslik}
+                  onChange={(e) => upd({ baslik: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="80 m² Prefabrik Ev"
+                />
+              </div>
+
+              {/* Kategori + Şehir */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Kategori</label>
+                  <select
+                    value={form.kategoriSlug}
+                    onChange={(e) => {
+                      const cat = CATEGORIES.find((c) => c.slug === e.target.value);
+                      upd({ kategoriSlug: e.target.value, kategori: cat?.name ?? e.target.value });
+                    }}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c.slug} value={c.slug}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Şehir *</label>
+                  <input
+                    value={form.sehir}
+                    onChange={(e) => upd({ sehir: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="İstanbul"
+                  />
+                </div>
+              </div>
+
+              {/* Fiyat + Firma Adı */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Fiyat (₺) *</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.fiyat || ''}
+                    onChange={(e) => upd({ fiyat: Number(e.target.value) })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="320000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Firma Adı</label>
+                  <input
+                    value={form.firmaAdi}
+                    onChange={(e) => upd({ firmaAdi: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="ABC Yapı Ltd."
+                  />
+                </div>
+              </div>
+
+              {/* Açıklama */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Açıklama</label>
+                <textarea
+                  value={form.aciklama}
+                  onChange={(e) => upd({ aciklama: e.target.value })}
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  placeholder="İlan açıklaması..."
+                />
+              </div>
+
+              {/* Görsel URL */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Görsel URL</label>
+                <input
+                  value={gorselUrl}
+                  onChange={(e) => setGorselUrl(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="https://images.unsplash.com/..."
+                />
+                {gorselUrl && (
+                  <img
+                    src={gorselUrl}
+                    alt="Önizleme"
+                    className="mt-2 w-full h-32 object-cover rounded-lg border border-gray-200"
+                  />
+                )}
+              </div>
+
+              {/* Checkboxes */}
+              <div className="flex flex-wrap gap-5 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.acil}
+                    onChange={(e) => upd({ acil: e.target.checked })}
+                    className="w-4 h-4 accent-red-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Acil İlan</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.indirimli}
+                    onChange={(e) => upd({ indirimli: e.target.checked })}
+                    className="w-4 h-4 accent-amber-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">İndirimli</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.status === 'aktif'}
+                    onChange={(e) => upd({ status: e.target.checked ? 'aktif' : 'pasif' })}
+                    className="w-4 h-4 accent-emerald-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Yayında (Aktif)</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 p-5 border-t border-gray-100">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 bg-emerald-600 text-white text-sm px-5 py-2 rounded-lg hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {saving
+                  ? <><span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor…</>
+                  : <><Save className="w-4 h-4" /> Kaydet</>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TAB 5 — FIRMS
 ════════════════════════════════════════════════════════════ */
 function FirmsTab() {
   const [firms,  setFirms]  = useState<AdminFirm[]>([]);
@@ -923,6 +1283,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'overview',   label: 'Genel Bakış',   icon: <LayoutDashboard className="w-4 h-4" /> },
   { key: 'settings',   label: 'Site Ayarları', icon: <Settings className="w-4 h-4" /> },
   { key: 'flashDeals', label: 'Flash İlanlar', icon: <Zap className="w-4 h-4" /> },
+  { key: 'ilanlar',   label: 'İlanlar',        icon: <FileText className="w-4 h-4" /> },
   { key: 'firms',      label: 'Firmalar',      icon: <BuildingIcon className="w-4 h-4" /> },
   { key: 'talepler',   label: 'Talepler',      icon: <Inbox className="w-4 h-4" /> },
 ];
@@ -1039,6 +1400,7 @@ export default function AdminDashboardPage() {
           {tab === 'overview'   && <OverviewTab />}
           {tab === 'settings'   && <SettingsTab />}
           {tab === 'flashDeals' && <FlashDealsTab />}
+          {tab === 'ilanlar'   && <IlanlarTab />}
           {tab === 'firms'      && <FirmsTab />}
           {tab === 'talepler'   && <TaleplerTab />}
         </main>

@@ -1,10 +1,21 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { FIRMS } from '../data/firms';
 import { CATEGORIES } from '../data/categories';
-import { ShieldCheck, MapPin, Tag, ChevronDown } from 'lucide-react';
+import { ShieldCheck, MapPin, Tag, ChevronDown, Building2 } from 'lucide-react';
+
+/* ── Firma tipi (Firestore firms koleksiyonu) ───────────────── */
+interface Firm {
+  id:       string;
+  name:     string;
+  category: string;
+  city:     string;
+  verified: boolean;
+  status:   'pending' | 'approved' | 'rejected';
+}
 
 /* ── Category badge colors ──────────────────────────────────── */
 const CAT_COLORS: Record<string, string> = {
@@ -16,20 +27,48 @@ const CAT_COLORS: Record<string, string> = {
   'Özel Projeler':       'bg-pink-100 text-pink-700',
 };
 
+/* ── Skeleton kart ──────────────────────────────────────────── */
+function SkeletonCard() {
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl p-5 animate-pulse flex flex-col gap-3">
+      <div className="h-4 bg-gray-200 rounded w-3/4" />
+      <div className="flex gap-2">
+        <div className="h-5 bg-gray-100 rounded-full w-24" />
+        <div className="h-5 bg-gray-100 rounded-full w-20" />
+      </div>
+      <div className="h-8 bg-gray-100 rounded-lg mt-auto" />
+    </div>
+  );
+}
+
 /* ── Component ──────────────────────────────────────────────── */
 export default function FirmalarHaritaPage() {
+  const [firms,          setFirms]          = useState<Firm[]>([]);
+  const [loading,        setLoading]        = useState(true);
   const [filterCategory, setFilterCategory] = useState('');
   const [filterCity,     setFilterCity]     = useState('');
 
-  /* filtered list */
-  const filtered = useMemo(() => FIRMS.filter((f) => {
+  /* Firestore'dan onaylı firmaları çek */
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'firms'), (snap) => {
+      const docs = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() } as Firm))
+        .filter((f) => f.status === 'approved');
+      setFirms(docs);
+      setLoading(false);
+    }, () => setLoading(false));
+    return unsub;
+  }, []);
+
+  /* Filtrelenmiş liste */
+  const filtered = useMemo(() => firms.filter((f) => {
     if (filterCategory && f.category !== filterCategory) return false;
     if (filterCity     && f.city     !== filterCity)     return false;
     return true;
-  }), [filterCategory, filterCity]);
+  }), [firms, filterCategory, filterCity]);
 
-  /* unique cities from data */
-  const cities = useMemo(() => [...new Set(FIRMS.map((f) => f.city))].sort(), []);
+  /* Unique şehirler */
+  const cities = useMemo(() => [...new Set(firms.map((f) => f.city))].sort(), [firms]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -38,7 +77,7 @@ export default function FirmalarHaritaPage() {
       <main className="flex-1 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 py-8">
 
-          {/* Page heading */}
+          {/* Sayfa başlığı */}
           <div className="mb-6">
             <nav className="text-sm text-gray-500 mb-3 flex items-center gap-2">
               <Link to="/" className="hover:text-emerald-600 transition">Ana Sayfa</Link>
@@ -47,13 +86,13 @@ export default function FirmalarHaritaPage() {
             </nav>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Kayıtlı Firmalar</h1>
             <p className="text-gray-500 mt-1 text-sm">
-              Türkiye genelindeki {FIRMS.length} kayıtlı firma
+              {loading ? 'Yükleniyor…' : `Türkiye genelinde ${firms.length} onaylı firma`}
             </p>
           </div>
 
-          {/* Filters */}
+          {/* Filtreler */}
           <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex flex-wrap gap-3 items-center">
-            {/* Category filter */}
+            {/* Kategori */}
             <div className="relative">
               <select
                 value={filterCategory}
@@ -69,7 +108,7 @@ export default function FirmalarHaritaPage() {
               <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
             </div>
 
-            {/* City filter */}
+            {/* Şehir */}
             <div className="relative">
               <select
                 value={filterCity}
@@ -85,9 +124,11 @@ export default function FirmalarHaritaPage() {
               <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
             </div>
 
-            <span className="text-sm text-gray-500 ml-auto">
-              {filtered.length} firma gösteriliyor
-            </span>
+            {!loading && (
+              <span className="text-sm text-gray-500 ml-auto">
+                {filtered.length} firma gösteriliyor
+              </span>
+            )}
 
             {/* Legend */}
             <div className="flex items-center gap-4 text-xs text-gray-500 border-l border-gray-200 pl-4">
@@ -98,10 +139,27 @@ export default function FirmalarHaritaPage() {
             </div>
           </div>
 
-          {/* Firm cards grid */}
-          {filtered.length === 0 ? (
-            <div className="text-center text-gray-500 text-sm py-20 bg-white rounded-2xl border border-gray-200">
-              Filtrelerle eşleşen firma bulunamadı.
+          {/* İçerik */}
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
+              <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm font-medium">
+                {firms.length === 0
+                  ? 'Henüz onaylı firma yok.'
+                  : 'Filtrelerle eşleşen firma bulunamadı.'}
+              </p>
+              {firms.length === 0 && (
+                <Link
+                  to="/satici-formu"
+                  className="inline-block mt-4 text-sm text-emerald-600 hover:underline font-medium"
+                >
+                  İlk firma olmak için kayıt olun →
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -110,7 +168,7 @@ export default function FirmalarHaritaPage() {
                   key={firm.id}
                   className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-emerald-300 hover:shadow-sm transition flex flex-col gap-3"
                 >
-                  {/* Header */}
+                  {/* Başlık */}
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold text-gray-800 text-sm leading-snug">{firm.name}</p>
                     {firm.verified && (
@@ -118,7 +176,7 @@ export default function FirmalarHaritaPage() {
                     )}
                   </div>
 
-                  {/* Badges */}
+                  {/* Rozetler */}
                   <div className="flex flex-wrap gap-1.5">
                     <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${CAT_COLORS[firm.category] ?? 'bg-gray-100 text-gray-600'}`}>
                       <Tag className="w-2.5 h-2.5" aria-hidden="true" />
@@ -130,7 +188,7 @@ export default function FirmalarHaritaPage() {
                     </span>
                   </div>
 
-                  {/* Actions */}
+                  {/* Buton */}
                   <div className="mt-auto pt-1">
                     <Link
                       to={`/talep-olustur?firma=${firm.id}`}
