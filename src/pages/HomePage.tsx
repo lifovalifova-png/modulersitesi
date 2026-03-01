@@ -5,7 +5,7 @@ import {
   Zap, Search, CheckSquare, FileText, BarChart2,
   UserPlus, ClipboardList, Handshake,
   ShieldCheck, Tag, MapPin, Lock,
-  Sparkles, SendHorizontal, MessageSquare,
+  Sparkles, MessageSquare,
   type LucideIcon,
 } from 'lucide-react';
 import Header from '../components/Header';
@@ -122,7 +122,7 @@ export default function HomePage() {
       <main className="flex-1">
 
         {/* ── Hero ─────────────────────────────────────────── */}
-        <section className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white py-16 md:py-24">
+        <section className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white py-16 md:py-20">
           <div className="max-w-7xl mx-auto px-4">
             <div className="max-w-3xl">
 
@@ -139,7 +139,8 @@ export default function HomePage() {
                 {t('hero.subtitle')}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              {/* CTA butonları */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link
                   to="/satici-formu"
                   className="bg-white text-emerald-700 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition text-center"
@@ -153,10 +154,35 @@ export default function HomePage() {
                   {t('hero.btnExplore')} <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </Link>
               </div>
+
+              {/* ── AI Mini Input ──────────────────────────── */}
+              <form onSubmit={handleAsk} className="flex gap-2">
+                <div className="relative flex-1">
+                  <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" aria-hidden="true" />
+                  <input
+                    type="text"
+                    value={aiQuery}
+                    onChange={(e) => setAiQuery(e.target.value)}
+                    placeholder={t('ai.placeholder')}
+                    className="w-full pl-9 pr-3 py-3 bg-white/15 backdrop-blur border border-white/30 rounded-xl text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!aiQuery.trim() || aiLoading}
+                  className="flex-shrink-0 flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold px-4 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+                >
+                  {aiLoading
+                    ? <span className="w-4 h-4 border-2 border-amber-700/30 border-t-amber-900 rounded-full animate-spin" />
+                    : <Sparkles className="w-4 h-4" aria-hidden="true" />
+                  }
+                  <span className="hidden sm:inline">{t('ai.btnAsk')}</span>
+                </button>
+              </form>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
               {STATS.map((stat) => (
                 <div key={stat.label} className="bg-white/10 backdrop-blur rounded-lg p-4 text-center">
                   <div className="text-2xl md:text-3xl font-bold">{stat.value}</div>
@@ -167,101 +193,59 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Yapı Asistanı Widget ─────────────────────────── */}
-        <section className="py-12 md:py-16 bg-gradient-to-br from-emerald-600 to-emerald-800">
-          <div className="max-w-3xl mx-auto px-4">
+        {/* ── AI Sonuç Kutusu (hero altında, beyaz bg) ─────── */}
+        {(aiResponse || aiLoading || aiError) && (
+          <div ref={resultRef} className="bg-white border-b border-gray-200 shadow-sm">
+            <div className="max-w-3xl mx-auto px-4 py-6">
 
-            {/* Başlık */}
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
-                <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
-                {t('ai.badge')}
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                {t('ai.title')}
-              </h2>
-              <p className="text-emerald-100 text-sm md:text-base">
-                {t('ai.subtitle')}
-              </p>
+              {/* Loading */}
+              {aiLoading && (
+                <div className="flex items-center justify-center gap-3 py-4 text-gray-500">
+                  <span className="w-5 h-5 border-2 border-emerald-300 border-t-emerald-600 rounded-full animate-spin" />
+                  <span className="text-sm font-medium">{t('ai.analyzing')}</span>
+                </div>
+              )}
+
+              {/* Hata */}
+              {aiError && !aiLoading && (
+                <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4 text-sm text-red-700">
+                  {aiError}
+                </div>
+              )}
+
+              {/* Yanıt */}
+              {aiResponse && !aiLoading && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+                    <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+                      {t('ai.resultLabel')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line mb-4">
+                    {aiResponse}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2.5">
+                    <button
+                      onClick={() => navigate('/talep-olustur')}
+                      className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition"
+                    >
+                      <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                      {t('ai.btnQuote')}
+                    </button>
+                    <button
+                      onClick={() => navigate(`/kategori/${aiSlug}`)}
+                      className="flex-1 flex items-center justify-center gap-2 border border-emerald-600 text-emerald-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-50 transition"
+                    >
+                      <Search className="w-4 h-4" aria-hidden="true" />
+                      {t('ai.btnViewAds')}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-
-            {/* Input + Buton */}
-            <form onSubmit={handleAsk} className="flex gap-2">
-              <input
-                type="text"
-                value={aiQuery}
-                onChange={(e) => setAiQuery(e.target.value)}
-                placeholder={t('ai.placeholder')}
-                className="flex-1 bg-white rounded-xl px-4 py-3.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-sm"
-              />
-              <button
-                type="submit"
-                disabled={!aiQuery.trim() || aiLoading}
-                className="flex-shrink-0 flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold px-5 py-3.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm"
-              >
-                {aiLoading
-                  ? <span className="w-4 h-4 border-2 border-amber-700/30 border-t-amber-900 rounded-full animate-spin" />
-                  : <SendHorizontal className="w-4 h-4" aria-hidden="true" />
-                }
-                <span className="hidden sm:inline">{t('ai.btnAsk')}</span>
-              </button>
-            </form>
-
-            {/* Sonuç kutusu */}
-            {(aiResponse || aiLoading || aiError) && (
-              <div ref={resultRef} className="mt-4">
-
-                {/* Loading */}
-                {aiLoading && (
-                  <div className="bg-white/10 backdrop-blur rounded-2xl px-6 py-8 text-center text-white">
-                    <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block mb-3" />
-                    <p className="text-sm font-medium">{t('ai.analyzing')}</p>
-                  </div>
-                )}
-
-                {/* Hata */}
-                {aiError && !aiLoading && (
-                  <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 text-sm text-red-700">
-                    {aiError}
-                  </div>
-                )}
-
-                {/* Yanıt */}
-                {aiResponse && !aiLoading && (
-                  <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                    <div className="flex items-center gap-2.5 px-5 py-3.5 bg-emerald-50 border-b border-emerald-100">
-                      <Sparkles className="w-4 h-4 text-emerald-600" aria-hidden="true" />
-                      <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
-                        {t('ai.resultLabel')}
-                      </span>
-                    </div>
-                    <div className="px-5 py-5">
-                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                        {aiResponse}
-                      </p>
-                    </div>
-                    <div className="px-5 pb-5 flex flex-col sm:flex-row gap-2.5">
-                      <button
-                        onClick={() => navigate('/talep-olustur')}
-                        className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition"
-                      >
-                        <MessageSquare className="w-4 h-4" aria-hidden="true" />
-                        {t('ai.btnQuote')}
-                      </button>
-                      <button
-                        onClick={() => navigate(`/kategori/${aiSlug}`)}
-                        className="flex-1 flex items-center justify-center gap-2 border border-emerald-600 text-emerald-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-50 transition"
-                      >
-                        <Search className="w-4 h-4" aria-hidden="true" />
-                        {t('ai.btnViewAds')}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
-        </section>
+        )}
 
         {/* ── Flaş Fırsatlar ───────────────────────────────── */}
         <FlashDealsCarousel />
