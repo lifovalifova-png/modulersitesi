@@ -524,6 +524,15 @@ export default function IlanDetayPage() {
                   <span className="ml-1">4.0</span>
                 </div>
 
+                {ilan.firmaId && (
+                  <Link
+                    to={`/firma/${ilan.firmaId}`}
+                    className="flex items-center justify-center gap-2 w-full border border-emerald-200 text-emerald-700 bg-emerald-50 py-2.5 rounded-xl text-sm font-medium hover:bg-emerald-100 transition mb-3"
+                  >
+                    Firma Profilini Gör
+                  </Link>
+                )}
+
                 {/* Telefon (opsiyonel - Ilan tipinde yok, firma datasından gelir) */}
                 {showPhone ? (
                   <a href="#" className="flex items-center justify-center gap-2 w-full border border-emerald-300 text-emerald-700 bg-emerald-50 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition mb-1">

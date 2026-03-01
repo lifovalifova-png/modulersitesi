@@ -191,7 +191,7 @@ export default function FirmalarHaritaPage() {
                   {/* Buton */}
                   <div className="mt-auto pt-1">
                     <Link
-                      to={`/talep-olustur?firma=${firm.id}`}
+                      to={`/firma/${firm.id}`}
                       className="block w-full text-center bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-emerald-700 transition"
                     >
                       Teklif İste

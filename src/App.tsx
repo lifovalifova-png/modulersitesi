@@ -29,6 +29,7 @@ const GizlilikPage          = lazy(() => import('./pages/GizlilikPage'));
 const KullanimKosullariPage = lazy(() => import('./pages/KullanimKosullariPage'));
 const LegalPage             = lazy(() => import('./pages/LegalPage'));
 const LogoKitPage           = lazy(() => import('./pages/LogoKitPage'));
+const FirmaProfilPage       = lazy(() => import('./pages/FirmaProfilPage'));
 
 /* ── Sayfa yüklenirken gösterilecek spinner ───────────────── */
 function PageLoader() {
@@ -53,6 +54,7 @@ function App() {
                 <Route path="/kategori/:slug"    element={<CategoryPage />} />
                 <Route path="/ilan/:id"          element={<IlanDetayPage />} />
                 <Route path="/firmalar-harita"   element={<FirmalarHaritaPage />} />
+                <Route path="/firma/:id"         element={<FirmaProfilPage />} />
                 <Route path="/satici-formu"      element={<SellerFormPage />} />
                 <Route path="/talep-olustur"     element={<TalepOlusturPage />} />
                 <Route path="/firma-paneli"      element={<FirmaPaneliPage />} />
