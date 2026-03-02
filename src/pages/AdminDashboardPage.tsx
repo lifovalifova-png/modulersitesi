@@ -15,6 +15,10 @@ import {
   setDoc,
   arrayUnion,
   serverTimestamp,
+  getDocs,
+  query,
+  where,
+  Timestamp,
 } from 'firebase/firestore';
 import { CATEGORIES } from '../data/categories';
 import { BLOG_POSTS, type BlogPost } from '../data/blogPosts';
@@ -24,7 +28,7 @@ import {
   LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle,
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
   Send, Eye, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
-  Inbox, BookOpen,
+  Inbox, BookOpen, BarChart2, Download,
 } from 'lucide-react';
 import logoSrc from '../assets/logo.svg';
 import { auth, db } from '../lib/firebase';
@@ -104,7 +108,7 @@ interface AdminIlan {
   status:            'aktif' | 'pasif';
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog';
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
@@ -1418,6 +1422,390 @@ function BlogTab() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   TAB 8 — RAPOR
+════════════════════════════════════════════════════════════ */
+
+/* Google Apps Script kodu — kurulum kılavuzunda gösterilir */
+const GAS_SCRIPT = `function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+  // İlk çalıştırmada başlık satırı oluştur
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['Tarih', 'Kategori', 'Şehir', 'Bütçe', 'Durum', 'Ad', 'Telefon', 'E-posta']);
+  }
+
+  // Tek satır veya toplu dizi desteklenir
+  const rows = Array.isArray(data.rows) ? data.rows : [data];
+  rows.forEach(function(row) {
+    sheet.appendRow([
+      row.tarih ? new Date(row.tarih) : new Date(),
+      row.kategori || '',
+      row.sehir    || '',
+      row.butce    || '',
+      row.status   || '',
+      row.ad       || '',
+      row.telefon  || '',
+      row.email    || ''
+    ]);
+  });
+
+  return ContentService
+    .createTextResponse(JSON.stringify({ ok: true, rows: rows.length }))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+interface TalepRapor {
+  id:       string;
+  kategori: string;
+  sehir:    string;
+  butce:    string;
+  status:   string;
+  ad:       string;
+  telefon:  string;
+  email:    string;
+  tarih:    Timestamp | null;
+}
+
+function RaporTab() {
+  const [loading,   setLoading]   = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [stats, setStats] = useState({
+    totalIlanlar: 0, totalFirmalar: 0, totalTalepler: 0, newTalepler: 0,
+  });
+  const [kategoriData,    setKategoriData]    = useState<Array<{ kategori: string; sayi: number }>>([]);
+  const [recentTalepler,  setRecentTalepler]  = useState<TalepRapor[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const ts30 = Timestamp.fromDate(thirtyDaysAgo);
+
+        const [ilanSnap, firmSnap, talepSnap, newTalepSnap] = await Promise.all([
+          getDocs(collection(db, 'ilanlar')),
+          getDocs(collection(db, 'firms')),
+          getDocs(collection(db, 'taleplar')),
+          getDocs(query(collection(db, 'taleplar'), where('tarih', '>=', ts30))),
+        ]);
+
+        setStats({
+          totalIlanlar:  ilanSnap.size,
+          totalFirmalar: firmSnap.size,
+          totalTalepler: talepSnap.size,
+          newTalepler:   newTalepSnap.size,
+        });
+
+        /* Kategori dağılımı */
+        const katMap: Record<string, number> = {};
+        newTalepSnap.forEach((d) => {
+          const k = (d.data().kategori as string) || 'diger';
+          katMap[k] = (katMap[k] ?? 0) + 1;
+        });
+        setKategoriData(
+          Object.entries(katMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([kategori, sayi]) => ({ kategori, sayi }))
+        );
+
+        /* Son 30 gün talepler listesi */
+        const talepler: TalepRapor[] = newTalepSnap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id:       d.id,
+            kategori: (data.kategori as string)  ?? '',
+            sehir:    (data.sehir    as string)  ?? '',
+            butce:    (data.butce    as string)  ?? '',
+            status:   (data.status   as string)  ?? '',
+            ad:       (data.ad       as string)  ?? '',
+            telefon:  (data.telefon  as string)  ?? '',
+            email:    (data.email    as string)  ?? '',
+            tarih:    (data.tarih    as Timestamp | null) ?? null,
+          };
+        }).sort((a, b) => (b.tarih?.seconds ?? 0) - (a.tarih?.seconds ?? 0));
+
+        setRecentTalepler(talepler);
+      } catch (err) {
+        console.error('[RaporTab] Veri yüklenemedi:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    void load();
+  }, []);
+
+  /* CSV indirme */
+  function downloadCSV() {
+    const header = ['Tarih', 'Kategori', 'Şehir', 'Bütçe', 'Durum', 'Ad', 'Telefon', 'E-posta'];
+    const rows = recentTalepler.map((t) => [
+      t.tarih ? new Date(t.tarih.seconds * 1000).toLocaleDateString('tr-TR') : '',
+      CAT_MAP[t.kategori] ?? t.kategori,
+      t.sehir,
+      BUDGET_LABELS[t.butce] ?? t.butce,
+      t.status,
+      t.ad,
+      t.telefon,
+      t.email,
+    ]);
+    const csv = [header, ...rows]
+      .map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `talepler-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /* Google Sheets aktar */
+  async function handleExport() {
+    if (recentTalepler.length === 0) return;
+    setExporting(true);
+    try {
+      const rows = recentTalepler.map((t) => ({
+        tarih:    t.tarih ? new Date(t.tarih.seconds * 1000).toISOString() : new Date().toISOString(),
+        kategori: CAT_MAP[t.kategori] ?? t.kategori,
+        sehir:    t.sehir,
+        butce:    BUDGET_LABELS[t.butce] ?? t.butce,
+        status:   t.status,
+        ad:       t.ad,
+        telefon:  t.telefon,
+        email:    t.email,
+      }));
+
+      const resp = await fetch('/api/sheets-export', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ rows }),
+      });
+
+      if (resp.ok) {
+        toast.success(`${rows.length} talep Google Sheets'e aktarıldı.`);
+      } else {
+        const data = await resp.json() as { error?: string };
+        if (resp.status === 503) {
+          toast.error('SHEETS_WEBHOOK_URL ayarlı değil. Kurulum kılavuzuna bakın.');
+        } else {
+          toast.error(`Aktarma başarısız: ${data.error ?? resp.statusText}`);
+        }
+      }
+    } catch {
+      toast.error('Bağlantı hatası — /api/sheets-export erişilemiyor.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const statusLabel = (s: string) =>
+    s === 'tamamlandi' ? 'Tamamlandı' : s === 'iletildi' ? 'İletildi' : 'Beklemede';
+  const statusColor = (s: string) =>
+    s === 'tamamlandi' ? 'bg-emerald-100 text-emerald-700'
+    : s === 'iletildi' ? 'bg-blue-100 text-blue-700'
+    : 'bg-amber-100 text-amber-700';
+
+  return (
+    <div className="space-y-6">
+      {/* Başlık */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-800">Rapor & İstatistikler</h2>
+        <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">Son 30 gün</span>
+      </div>
+
+      {/* Genel toplamlar */}
+      <section>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Genel Toplamlar</p>
+        <div className="grid grid-cols-3 gap-4">
+          <StatCard label="Toplam İlan"    value={stats.totalIlanlar}  color="text-emerald-600" />
+          <StatCard label="Toplam Firma"   value={stats.totalFirmalar} color="text-blue-600" />
+          <StatCard label="Toplam Talep"   value={stats.totalTalepler} color="text-amber-600" />
+        </div>
+      </section>
+
+      {/* Son 30 gün */}
+      <section>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Son 30 Gün</p>
+        <div className="grid grid-cols-1 gap-4">
+          <StatCard
+            label="Yeni Talep"
+            value={stats.newTalepler}
+            sub={`${stats.totalTalepler > 0 ? Math.round((stats.newTalepler / stats.totalTalepler) * 100) : 0}% toplam içinde`}
+            color="text-amber-600"
+          />
+        </div>
+      </section>
+
+      {/* Kategori dağılımı */}
+      {kategoriData.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-5">
+          <h3 className="font-semibold text-gray-800 text-sm mb-4">Kategori Dağılımı (Son 30 Gün)</h3>
+          <div className="space-y-2.5">
+            {kategoriData.map(({ kategori, sayi }) => {
+              const pct = stats.newTalepler > 0
+                ? Math.round((sayi / stats.newTalepler) * 100)
+                : 0;
+              return (
+                <div key={kategori} className="flex items-center gap-3">
+                  <span className="text-xs text-gray-600 w-44 truncate flex-shrink-0">
+                    {CAT_MAP[kategori] ?? kategori}
+                  </span>
+                  <div className="flex-1 bg-gray-100 rounded-full h-2 min-w-0">
+                    <div
+                      className="bg-emerald-500 h-2 rounded-full"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700 w-16 text-right flex-shrink-0">
+                    {sayi} (%{pct})
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Son 30 gün talep tablosu */}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-800 text-sm">Son 30 Günün Talepleri</h3>
+          <span className="text-xs text-gray-400">{recentTalepler.length} talep</span>
+        </div>
+
+        {recentTalepler.length === 0 ? (
+          <p className="text-center py-12 text-sm text-gray-400">Son 30 günde talep bulunmuyor.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-gray-50 text-gray-500 text-left">
+                  <th className="px-4 py-2.5 font-medium">Tarih</th>
+                  <th className="px-4 py-2.5 font-medium">Kategori</th>
+                  <th className="px-4 py-2.5 font-medium">Şehir</th>
+                  <th className="px-4 py-2.5 font-medium">Bütçe</th>
+                  <th className="px-4 py-2.5 font-medium">Durum</th>
+                  <th className="px-4 py-2.5 font-medium">Ad</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {recentTalepler.slice(0, 100).map((t) => (
+                  <tr key={t.id} className="hover:bg-gray-50 transition">
+                    <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
+                      {t.tarih
+                        ? new Date(t.tarih.seconds * 1000).toLocaleDateString('tr-TR')
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-gray-700">{CAT_MAP[t.kategori] ?? t.kategori}</td>
+                    <td className="px-4 py-2.5 text-gray-700">{t.sehir}</td>
+                    <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">
+                      {BUDGET_LABELS[t.butce] ?? t.butce}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor(t.status)}`}>
+                        {statusLabel(t.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-gray-700">{t.ad}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Google Sheets & CSV dışa aktarım */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+        <div>
+          <h3 className="font-semibold text-gray-800 text-sm">Dışa Aktar</h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Son 30 günün {recentTalepler.length} talebini dışa aktarır.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleExport}
+            disabled={exporting || recentTalepler.length === 0}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-60 transition"
+          >
+            {exporting
+              ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              : <FileText className="w-4 h-4" />}
+            {exporting ? 'Aktarılıyor…' : `📤 Google Sheets'e Aktar`}
+          </button>
+
+          <button
+            onClick={downloadCSV}
+            disabled={recentTalepler.length === 0}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-60 transition"
+          >
+            <Download className="w-4 h-4" />
+            CSV İndir
+          </button>
+        </div>
+
+        {/* Kurulum kılavuzu */}
+        <details className="border border-dashed border-gray-200 rounded-xl overflow-hidden">
+          <summary className="px-4 py-3 text-xs font-medium text-emerald-700 cursor-pointer hover:bg-emerald-50 transition select-none">
+            📋 Google Apps Script Kurulum Kılavuzu (adım adım)
+          </summary>
+          <div className="px-5 py-4 text-xs text-gray-600 space-y-3 bg-gray-50">
+            <p>
+              <strong>1.</strong>{' '}
+              <a href="https://script.google.com" target="_blank" rel="noopener noreferrer"
+                className="text-emerald-600 hover:underline">script.google.com</a>{' '}
+              adresine gidin → <em>Yeni proje</em> oluşturun.
+            </p>
+            <p>
+              <strong>2.</strong> Aşağıdaki kodu <code className="bg-gray-200 px-1 rounded">Code.gs</code> dosyasına yapıştırın:
+            </p>
+            <pre className="bg-gray-900 text-green-400 rounded-xl p-4 overflow-x-auto text-[10px] leading-relaxed whitespace-pre">
+              {GAS_SCRIPT}
+            </pre>
+            <p>
+              <strong>3.</strong> <em>Dağıt</em> → <em>Yeni dağıtım</em> → Tür: <strong>Web uygulaması</strong><br />
+              Şöyle erişim izni ayarlayın: <strong>Herkes</strong> → <em>Dağıt</em>.
+            </p>
+            <p>
+              <strong>4.</strong> Oluşan URL'yi kopyalayın:{' '}
+              <code className="bg-gray-200 px-1 rounded">{'https://script.google.com/macros/s/.../exec'}</code>
+            </p>
+            <p>
+              <strong>5.</strong> Vercel Dashboard → <em>Settings → Environment Variables</em> bölümüne gidin.
+            </p>
+            <p>
+              <strong>6.</strong> Yeni değişken ekleyin:
+              <br />
+              Key: <code className="bg-gray-200 px-1 rounded font-mono">SHEETS_WEBHOOK_URL</code>
+              <br />
+              Value: 4. adımda kopyaladığınız URL
+            </p>
+            <p>
+              <strong>7.</strong> Vercel'de projeyi yeniden <em>deploy</em> edin (veya bir commit gönderin).
+            </p>
+            <p className="text-emerald-700 font-medium">
+              ✓ Artık her yeni talep otomatik olarak Google Sheets'e yazılacak.
+              Admin panelindeki &quot;📤 Google Sheets'e Aktar&quot; butonu ise mevcut verileri toplu aktarır.
+            </p>
+          </div>
+        </details>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    MAIN — ADMIN DASHBOARD
 ════════════════════════════════════════════════════════════ */
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
@@ -1427,7 +1815,8 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'ilanlar',   label: 'İlanlar',        icon: <FileText className="w-4 h-4" /> },
   { key: 'firms',      label: 'Firmalar',      icon: <BuildingIcon className="w-4 h-4" /> },
   { key: 'talepler',   label: 'Talepler',      icon: <Inbox className="w-4 h-4" /> },
-  { key: 'blog',       label: 'Blog',          icon: <BookOpen className="w-4 h-4" /> },
+  { key: 'blog',       label: 'Blog',          icon: <BookOpen   className="w-4 h-4" /> },
+  { key: 'rapor',      label: 'Rapor',         icon: <BarChart2  className="w-4 h-4" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -1593,6 +1982,7 @@ export default function AdminDashboardPage() {
           {tab === 'firms'      && <FirmsTab />}
           {tab === 'talepler'   && <TaleplerTab />}
           {tab === 'blog'       && <BlogTab />}
+          {tab === 'rapor'      && <RaporTab />}
         </main>
       </div>
     </div>

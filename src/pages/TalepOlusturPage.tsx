@@ -113,6 +113,23 @@ export default function TalepOlusturPage() {
         firmaKabulEdenler:  [],
         tarih:              serverTimestamp(),
       });
+
+      /* Google Sheets webhook — fire & forget, hata oluşursa sessizce geç */
+      void fetch('/api/sheets-export', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kategori: form.kategori,
+          sehir:    form.sehir,
+          butce:    form.butce,
+          tarih:    new Date().toISOString(),
+          ad:       sanitizeText(form.ad, 100),
+          telefon:  form.telefon.trim(),
+          email:    form.email.trim().toLowerCase(),
+          status:   'beklemede',
+        }),
+      }).catch(() => { /* webhook hatası kullanıcıyı etkilemez */ });
+
       setDone(true);
     } catch {
       toast.error('Bir hata oluştu. Lütfen tekrar deneyin.');
