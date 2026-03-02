@@ -23,7 +23,7 @@ export const BLOG_POSTS: BlogPost[] = [
     tarih: '2025-01-10',
     okumaSuresi: 7,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=500&fit=crop',
     icerik: `## Prefabrik Ev Nedir?
 
 Prefabrik ev; duvar panelleri, çatı elemanları ve zemin bileşenlerinin fabrika ortamında üretilip daha sonra inşaat alanında bir araya getirildiği yapı sistemidir. "Prefabrication" (önceden üretim) kelimesinden türeyen bu kavram, Türkiye'de son on yılda büyük bir ivme kazanmıştır.
@@ -68,7 +68,7 @@ Prefabrik ev, hızlı, ekonomik ve sürdürülebilir bir konut çözümü arayan
     tarih: '2025-01-15',
     okumaSuresi: 8,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1565610222536-ef125c59da2e?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=500&fit=crop',
     icerik: `## Temel Fark Nedir?
 
 "Prefabrik" ve "çelik yapı" terimleri zaman zaman birbirinin yerine kullanılsa da teknik açıdan farklı kavramlardır. Prefabrik; üretimin fabrikada yapılıp sahada monte edilmesini tanımlayan genel bir yöntemdir. Çelik yapı ise belirli bir malzeme sistemini —galvanizli çelik profiller ve saç kaplamalar— ifade eder.
@@ -115,7 +115,7 @@ Tek bir "kazanan" yoktur; doğru seçim projenize, bütçenize ve arazinizin bul
     tarih: '2025-01-22',
     okumaSuresi: 6,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1587061949409-02df41d5e562?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=800&h=500&fit=crop',
     icerik: `## Tiny House Hareketi Türkiye'ye Nasıl Geldi?
 
 Amerika ve Avrupa'da 2000'li yıllardan itibaren yaygınlaşan tiny house hareketi, son beş yılda Türkiye'de de güçlü bir ivme kazandı. Yüksek konut maliyetleri, doğayla bütünleşme arzusu ve minimalist yaşam felsefesi bu trendin arkasındaki başlıca etkenlerdir.
@@ -160,7 +160,7 @@ Türkiye'de tiny house yaşamı, doğru planlama yapıldığında son derece tat
     tarih: '2025-01-28',
     okumaSuresi: 7,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1565183997392-2f6f122e5912?w=800&h=500&fit=crop',
     icerik: `## Neden Konteyner Ev?
 
 ISO standartlı yük konteynerleri, yüzlerce ton yükü taşıyacak şekilde tasarlanmış, son derece sağlam çelik kutulardır. Bu konteynerlerin konut amaçlı dönüştürülmesi —"container home" ya da "cargotecture"— hem çevresel sürdürülebilirlik hem de yaratıcı mimari açısından ilgi çekici bir seçenektir.
@@ -217,7 +217,7 @@ Konteyner ev; doğru planlama, kaliteli yalıtım ve uzman firma seçimiyle hem 
     tarih: '2025-02-03',
     okumaSuresi: 8,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1524813686514-a57563d77965?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=500&fit=crop',
     icerik: `## Neden Şehir Bazlı Yapı Seçimi?
 
 Türkiye; bir uçta Doğu Anadolu'nun sert karasal iklimi, öte uçta Akdeniz'in subtropikal sıcaklıkları ve Karadeniz'in yoğun yağışıyla son derece çeşitli bir iklim coğrafyasına sahiptir. Bu çeşitlilik, yapı seçimini ve tasarımını doğrudan etkiler.
@@ -274,7 +274,7 @@ Türkiye'de yapı tipi seçimi; yalnızca bütçe değil, yaşanacak bölgenin i
     tarih: '2025-02-10',
     okumaSuresi: 6,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop',
     icerik: `## DASK Nedir ve Kimler Yaptırmak Zorunda?
 
 Doğal Afet Sigortaları Kurumu (DASK), Türkiye'de yaşanan büyük depremlerin ardından 1999 yılında kurulmuştur. DASK zorunlu deprem sigortasını yönetmekte ve Türkiye'deki tüm konut binalarını kapsamaktadır.
@@ -321,7 +321,7 @@ Modüler yapılarda sigorta; geleneksel binayla özünde aynı mantığa dayanı
     tarih: '2025-02-14',
     okumaSuresi: 7,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=500&fit=crop',
     icerik: `## Prefabrik Ev İçin Ruhsat Gerekiyor mu?
 
 Sıkça sorulan bu sorunun cevabı kesinlikle evet'tir. Türkiye İmar Kanunu (3194 sayılı) çerçevesinde prefabrik yapılar, geleneksel betonarme ya da yığma yapılarla aynı hukuki statüdedir. Belediye sınırları içinde veya mücavir alanda yapı yapılabilmesi için inşaat ruhsatı alınması zorunludur.
@@ -372,7 +372,7 @@ Prefabrik ev sahibi olmak, ruhsat süreçleri doğru yönetildiğinde geleneksel
     tarih: '2025-02-20',
     okumaSuresi: 7,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1510627489930-0c1b0bfb6785?w=800&h=500&fit=crop',
     icerik: `## İki Köklü Malzeme: Ahşap ve Çelik
 
 Ahşap ve çelik, modüler yapı sektörünün iki temel malzemesidir. Her ikisi de prefabrik sistemlere uyarlanabilir, her ikisinin de güçlü ve zayıf yönleri vardır. Hangisinin "daha dayanıklı" olduğu sorusu, aslında "hangi koşulda?" sorusuna bağlıdır.

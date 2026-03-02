@@ -535,7 +535,7 @@ export default function CategoryPage() {
 
               {/* Loading skeleton */}
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
                 </div>
               ) : paginated.length === 0 ? (
@@ -558,7 +558,7 @@ export default function CategoryPage() {
                   )}
                 </div>
               ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {paginated.map((ilan) => <GridCard key={ilan.id} ilan={ilan} />)}
                 </div>
               ) : (

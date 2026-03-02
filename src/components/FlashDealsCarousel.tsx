@@ -193,7 +193,7 @@ export default function FlashDealsCarousel() {
               return (
                 <div
                   key={item.id}
-                  className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow snap-start flex flex-col"
+                  className="flex-shrink-0 w-64 sm:w-72 bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow snap-start flex flex-col"
                 >
                   {/* Image */}
                   <Link to={item.href} className="block">

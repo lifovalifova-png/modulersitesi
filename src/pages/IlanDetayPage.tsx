@@ -396,7 +396,7 @@ export default function IlanDetayPage() {
                 <div className="relative bg-gray-100 aspect-[16/9] max-h-[480px]">
                   {images[activeImg] ? (
                     <img src={images[activeImg]} alt={`${ilan.baslik} — görsel ${activeImg + 1}`}
-                      className="w-full h-full object-cover" />
+                      loading="lazy" width={800} height={600} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300 text-6xl">🏠</div>
                   )}
@@ -429,7 +429,7 @@ export default function IlanDetayPage() {
                         className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition ${
                           i === activeImg ? 'border-emerald-500 ring-1 ring-emerald-400' : 'border-transparent hover:border-gray-300'
                         }`}>
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <img src={img} alt="" loading="lazy" width={80} height={56} className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>

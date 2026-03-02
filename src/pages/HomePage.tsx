@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, Building, Container, Home, Hammer, TreePine, Recycle, Star,
@@ -13,6 +13,25 @@ import Footer from '../components/Footer';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
 import { CATEGORIES } from '../data/categories';
 import { useLanguage } from '../context/LanguageContext';
+
+/* ─── CountUp: 0'dan hedefe sayma animasyonu ────────────── */
+function StatCounter({ target, suffix, active }: { target: number; suffix: string; active: boolean }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    let frame = 0;
+    const totalFrames = 80; // ~1.3s @60fps
+    const timer = setInterval(() => {
+      frame++;
+      // easeOutQuart
+      const ease = 1 - Math.pow(1 - frame / totalFrames, 4);
+      setCount(frame >= totalFrames ? target : Math.round(ease * target));
+      if (frame >= totalFrames) clearInterval(timer);
+    }, 16);
+    return () => clearInterval(timer);
+  }, [target, active]);
+  return <>{count.toLocaleString('tr-TR')}{suffix}</>;
+}
 
 /* ─── Kategori ikon eşlemesi ─────────────────────────────── */
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -46,11 +65,24 @@ export default function HomePage() {
 
   /* ─── Translated data arrays ────────────────────────────── */
   const STATS = [
-    { label: t('stats.activeAds'),       value: '2.500+' },
-    { label: t('stats.registeredFirms'), value: '850+'   },
-    { label: t('stats.happyCustomers'),  value: '12.000+'},
-    { label: t('stats.cities'),          value: '81'     },
+    { label: t('stats.activeAds'),       target: 2500,  suffix: '+' },
+    { label: t('stats.registeredFirms'), target: 850,   suffix: '+' },
+    { label: t('stats.happyCustomers'),  target: 12000, suffix: '+' },
+    { label: t('stats.cities'),          target: 81,    suffix: ''  },
   ];
+
+  const [statsActive, setStatsActive] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = statsRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setStatsActive(true); obs.disconnect(); } },
+      { threshold: 0.4 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   const CUSTOMER_STEPS = [
     { icon: Search,      title: t('step.b1.title'), desc: t('step.b1.desc') },
@@ -182,10 +214,12 @@ export default function HomePage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
+            <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
               {STATS.map((stat) => (
                 <div key={stat.label} className="bg-white/10 backdrop-blur rounded-lg p-4 text-center">
-                  <div className="text-2xl md:text-3xl font-bold">{stat.value}</div>
+                  <div className="text-2xl md:text-3xl font-bold">
+                    <StatCounter target={stat.target} suffix={stat.suffix} active={statsActive} />
+                  </div>
                   <div className="text-emerald-200 text-sm">{stat.label}</div>
                 </div>
               ))}

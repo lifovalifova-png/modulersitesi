@@ -391,7 +391,7 @@ export default function Header() {
             </button>
             <Link
               to="/firmalar-harita"
-              className="flex items-center gap-2 px-2 py-2 text-gray-700 hover:text-emerald-600"
+              className="flex items-center gap-2 w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Map className="w-5 h-5" aria-hidden="true" />
@@ -399,14 +399,14 @@ export default function Header() {
             </Link>
             <Link
               to="/blog"
-              className="block px-2 py-2 text-gray-700 hover:text-emerald-600"
+              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.blog')}
             </Link>
             <Link
               to="/sss"
-              className="block px-2 py-2 text-gray-700 hover:text-emerald-600"
+              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.faq')}
@@ -417,7 +417,7 @@ export default function Header() {
                 <Link
                   key={cat.slug}
                   to={`/kategori/${cat.slug}`}
-                  className="block px-2 py-2 text-gray-700 hover:text-emerald-600 text-sm"
+                  className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition text-sm"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {cat.name}
