@@ -1,12 +1,11 @@
 export const config = { runtime: 'edge' };
 
-/* ── Rate limiter (in-memory, Edge instance başına) ──────────────
-   Her Edge instance bağımsız Map tutar. Yatay scale'de limitler
-   yaklaşık olur; production'da KV store önerilir.
-──────────────────────────────────────────────────────────────── */
-const WINDOW_MS = 60_000; // 1 dakika
-const MAX_REQ   = 5;      // dakikada max istek
-const MAX_BODY  = 500;    // max mesaj karakteri
+/* ── Rate limiter: IP başına günde 10 sorgu (24 saat reset) ─
+   Edge instance başına bağımsız Map; production'da KV önerilir.
+─────────────────────────────────────────────────────────── */
+const WINDOW_MS = 24 * 60 * 60 * 1_000; // 24 saat
+const MAX_REQ   = 10;
+const MAX_BODY  = 500;
 
 interface RateEntry { count: number; resetAt: number }
 const ratemap = new Map<string, RateEntry>();
@@ -19,27 +18,36 @@ function getIp(req: Request): string {
   );
 }
 
-function checkRateLimit(ip: string): boolean {
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
   const now   = Date.now();
   const entry = ratemap.get(ip);
 
   if (!entry || now > entry.resetAt) {
     ratemap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    return true;
+    return { allowed: true, remaining: MAX_REQ - 1 };
   }
-  if (entry.count >= MAX_REQ) return false;
+  if (entry.count >= MAX_REQ) {
+    return { allowed: false, remaining: 0 };
+  }
   entry.count++;
-  return true;
+  return { allowed: true, remaining: MAX_REQ - entry.count };
 }
 
-/* ── CORS headers ──────────────────────────────────────────────── */
+/* ── CORS ───────────────────────────────────────────────── */
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Methods': 'POST',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-/* ── System prompt ─────────────────────────────────────────────── */
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...CORS },
+  });
+}
+
+/* ── System prompt ──────────────────────────────────────── */
 const SYSTEM_PROMPT = `Sen ModülerPazar'ın yapı danışmanısın. Türkiye'deki tüm illerin iklim özelliklerini, kar yağışı, deprem riski, zemin yapısı ve sıcaklık ortalamalarını biliyorsun. Örneğin:
 - Doğu illeri (Erzurum, Kars, Ağrı): Çok sert kış, kar yükü fazla → dik çatı zorunlu
 - Ege/Akdeniz: Sıcak iklim, hafif yapılar yeterli
@@ -55,88 +63,71 @@ Kullanıcının belirttiği şehir ve ihtiyaca göre:
 
 Kısa, net, Türkçe yanıt ver. 3-4 paragraf yeterli.`;
 
-/* ── Handler ───────────────────────────────────────────────────── */
+/* ── Handler ────────────────────────────────────────────── */
 export default async function handler(req: Request) {
-  /* Preflight */
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: CORS });
+    return new Response(null, { status: 204, headers: CORS });
   }
 
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Yalnızca POST desteklenmektedir.' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json', ...CORS },
-    });
+    return json({ error: 'Yalnızca POST desteklenmektedir.' }, 405);
   }
 
   /* Rate limit */
   const ip = getIp(req);
-  if (!checkRateLimit(ip)) {
-    return new Response(JSON.stringify({ error: 'Çok fazla istek, lütfen bekleyin.' }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', ...CORS },
-    });
+  const { allowed, remaining } = checkRateLimit(ip);
+  if (!allowed) {
+    return json({ error: 'Günlük soru limitiniz doldu. Yarın tekrar deneyin.', remaining: 0 }, 429);
   }
 
-  /* Body doğrulama */
+  /* Body */
   let message: unknown;
   try {
     ({ message } = await req.json() as { message: unknown });
   } catch {
-    return new Response(JSON.stringify({ error: 'Geçersiz JSON.' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json', ...CORS },
-    });
+    return json({ error: 'Geçersiz JSON.' }, 400);
   }
 
   if (typeof message !== 'string' || !message.trim()) {
-    return new Response(JSON.stringify({ error: 'Geçersiz istek.' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json', ...CORS },
-    });
+    return json({ error: 'Geçersiz istek.' }, 400);
   }
-
   if (message.length > MAX_BODY) {
-    return new Response(
-      JSON.stringify({ error: `Mesaj en fazla ${MAX_BODY} karakter olabilir.` }),
-      { status: 400, headers: { 'Content-Type': 'application/json', ...CORS } },
-    );
+    return json({ error: `Mesaj en fazla ${MAX_BODY} karakter olabilir.` }, 400);
   }
 
-  /* Anthropic API */
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  /* Gemini API */
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'Sunucu yapılandırma hatası.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...CORS },
-    });
+    return json({ error: 'Sunucu yapılandırma hatası.' }, 500);
   }
 
   try {
-    const upstream = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type':      'application/json',
-        'x-api-key':         apiKey,
-        'anthropic-version': '2023-06-01',
+    const upstream = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ parts: [{ text: message.trim() }] }],
+          generationConfig: { maxOutputTokens: 1024 },
+        }),
       },
-      body: JSON.stringify({
-        model:      'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
-        system:     SYSTEM_PROMPT,
-        messages:   [{ role: 'user', content: message.trim() }],
-      }),
-    });
+    );
 
-    const data = await upstream.json();
-    return new Response(JSON.stringify(data), {
-      status: upstream.status,
-      headers: { 'Content-Type': 'application/json', ...CORS },
-    });
+    const data = await upstream.json() as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      error?: { message?: string };
+    };
+
+    if (!upstream.ok) {
+      const detail = data.error?.message ?? `Gemini ${upstream.status}`;
+      return json({ error: detail, remaining }, upstream.status);
+    }
+
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    return json({ reply, remaining });
   } catch {
-    return new Response(JSON.stringify({ error: 'Yapay zeka servisine ulaşılamadı.' }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json', ...CORS },
-    });
+    return json({ error: 'Yapay zeka servisine ulaşılamadı.' }, 502);
   }
 }

@@ -45,6 +45,25 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
 };
 
 
+/* ─── AI rate limit — localStorage kalıcılığı ───────────── */
+const RL_KEY  = 'mp_chat_rl';
+const MAX_QPS = 10;
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+function loadRemaining(): number {
+  try {
+    const raw = localStorage.getItem(RL_KEY);
+    if (!raw) return MAX_QPS;
+    const { date, remaining } = JSON.parse(raw) as { date: string; remaining: number };
+    return date === todayStr() ? remaining : MAX_QPS;
+  } catch { return MAX_QPS; }
+}
+
+function saveRemaining(remaining: number) {
+  try { localStorage.setItem(RL_KEY, JSON.stringify({ date: todayStr(), remaining })); } catch { /* ignore */ }
+}
+
 /* ─── Kategori çıkarımı ──────────────────────────────────── */
 
 function extractSlug(text: string): string {
@@ -105,17 +124,18 @@ export default function HomePage() {
   ];
 
   /* AI widget state */
-  const [aiQuery,    setAiQuery]    = useState('');
-  const [aiResponse, setAiResponse] = useState('');
-  const [aiLoading,  setAiLoading]  = useState(false);
-  const [aiError,    setAiError]    = useState('');
-  const [aiSlug,     setAiSlug]     = useState('prefabrik');
+  const [aiQuery,     setAiQuery]     = useState('');
+  const [aiResponse,  setAiResponse]  = useState('');
+  const [aiLoading,   setAiLoading]   = useState(false);
+  const [aiError,     setAiError]     = useState('');
+  const [aiSlug,      setAiSlug]      = useState('prefabrik');
+  const [aiRemaining, setAiRemaining] = useState<number>(() => loadRemaining());
   const resultRef = useRef<HTMLDivElement>(null);
 
   const handleAsk = async (ev: React.FormEvent) => {
     ev.preventDefault();
     const q = aiQuery.trim();
-    if (!q) return;
+    if (!q || aiRemaining === 0) return;
     setAiLoading(true);
     setAiResponse('');
     setAiError('');
@@ -127,16 +147,23 @@ export default function HomePage() {
         body: JSON.stringify({ message: q }),
       });
       const data = await res.json() as {
-        content?: Array<{ text: string }>;
-        error?:   { message?: string } | string;
+        reply?:     string;
+        remaining?: number;
+        error?:     string;
       };
+
+      const serverRemaining = data.remaining ?? (aiRemaining - 1);
+
       if (!res.ok) {
-        const msg = typeof data.error === 'string'
-          ? data.error
-          : (data.error as { message?: string })?.message ?? `HTTP ${res.status}`;
-        throw new Error(msg);
+        const rem = res.status === 429 ? 0 : serverRemaining;
+        setAiRemaining(rem);
+        saveRemaining(rem);
+        throw new Error(data.error ?? `HTTP ${res.status}`);
       }
-      const text = data.content?.[0]?.text ?? '';
+
+      setAiRemaining(serverRemaining);
+      saveRemaining(serverRemaining);
+      const text = data.reply ?? '';
       setAiResponse(text);
       setAiSlug(extractSlug(text));
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
@@ -195,13 +222,14 @@ export default function HomePage() {
                     type="text"
                     value={aiQuery}
                     onChange={(e) => setAiQuery(e.target.value)}
-                    placeholder={t('ai.placeholder')}
-                    className="w-full pl-9 pr-3 py-3 bg-white/15 backdrop-blur border border-white/30 rounded-xl text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition"
+                    placeholder={aiRemaining === 0 ? 'Yarın tekrar deneyin…' : t('ai.placeholder')}
+                    disabled={aiRemaining === 0}
+                    className="w-full pl-9 pr-3 py-3 bg-white/15 backdrop-blur border border-white/30 rounded-xl text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <button
                   type="submit"
-                  disabled={!aiQuery.trim() || aiLoading}
+                  disabled={!aiQuery.trim() || aiLoading || aiRemaining === 0}
                   className="flex-shrink-0 flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold px-4 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
                 >
                   {aiLoading
@@ -211,6 +239,14 @@ export default function HomePage() {
                   <span className="hidden sm:inline">{t('ai.btnAsk')}</span>
                 </button>
               </form>
+
+              {/* Kalan hak göstergesi */}
+              <p className="mt-2 text-xs text-white/50">
+                {aiRemaining === 0
+                  ? '⚠️ Bugünkü soru hakkınız doldu. Yarın tekrar deneyin.'
+                  : `Bugün ${aiRemaining} soru hakkınız kaldı.`
+                }
+              </p>
             </div>
 
             {/* Stats */}
