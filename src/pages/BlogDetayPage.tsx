@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, ChevronRight, Share2, MessageSquare, Check, ArrowLeft } from 'lucide-react';
 import Header from '../components/Header';
@@ -6,6 +6,8 @@ import Footer from '../components/Footer';
 import { BLOG_POSTS, type BlogKategori } from '../data/blogPosts';
 import { toast } from 'sonner';
 import SEOMeta from '../components/SEOMeta';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 /* ── Kategori renkleri ──────────────────────────────────────── */
 const KAT_COLORS: Record<BlogKategori, string> = {
@@ -61,6 +63,19 @@ export default function BlogDetayPage() {
   const { slug }     = useParams<{ slug: string }>();
   const navigate     = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [blogSetting, setBlogSetting] = useState<{
+    fiyatBilgisi: string;
+    guncelleme: { toDate: () => Date } | null;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!slug) return;
+    getDoc(doc(db, 'blogSettings', slug)).then((snap) => {
+      if (snap.exists()) {
+        setBlogSetting(snap.data() as { fiyatBilgisi: string; guncelleme: { toDate: () => Date } | null });
+      }
+    });
+  }, [slug]);
 
   const post    = BLOG_POSTS.find((p) => p.slug === slug);
   const related = BLOG_POSTS.filter((p) => p.id !== post?.id && p.kategori === post?.kategori).slice(0, 3);
@@ -197,6 +212,19 @@ export default function BlogDetayPage() {
               <div className="space-y-4">
                 {renderIcerik(post.icerik)}
               </div>
+
+              {/* Güncel fiyat bilgisi (Firestore override) */}
+              {blogSetting?.fiyatBilgisi && (
+                <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                  <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-2">Güncel Fiyat Bilgisi</p>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{blogSetting.fiyatBilgisi}</p>
+                  {blogSetting.guncelleme && (
+                    <p className="text-xs text-gray-400 mt-3 border-t border-emerald-100 pt-2">
+                      Fiyat bilgileri {blogSetting.guncelleme.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} tarihinde güncellendi.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Alt navigasyon */}
               <div className="mt-10 pt-6 border-t border-gray-100 flex items-center gap-3">

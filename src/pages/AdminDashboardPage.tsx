@@ -17,13 +17,14 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { CATEGORIES } from '../data/categories';
+import { BLOG_POSTS, type BlogPost } from '../data/blogPosts';
 import { toast } from 'sonner';
 import {
   LayoutDashboard, Settings, Zap, Building2 as BuildingIcon,
   LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle,
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
   Send, Eye, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
-  Inbox,
+  Inbox, BookOpen,
 } from 'lucide-react';
 import logoSrc from '../assets/logo.svg';
 import { auth, db } from '../lib/firebase';
@@ -102,7 +103,7 @@ interface AdminIlan {
   status:            'aktif' | 'pasif';
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler';
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
@@ -1277,6 +1278,145 @@ function TaleplerTab() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   TAB 7 — BLOG
+════════════════════════════════════════════════════════════ */
+interface BlogSetting {
+  slug: string;
+  fiyatBilgisi: string;
+  guncelleme: { toDate: () => Date } | null;
+}
+
+function BlogTab() {
+  const [settings, setSettings] = useState<Record<string, BlogSetting>>({});
+  const [editing, setEditing]   = useState<BlogPost | null>(null);
+  const [fiyatMetni, setFiyatMetni] = useState('');
+  const [saving, setSaving]     = useState(false);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'blogSettings'), (snap) => {
+      const map: Record<string, BlogSetting> = {};
+      snap.forEach((d) => {
+        const data = d.data() as BlogSetting;
+        map[data.slug] = data;
+      });
+      setSettings(map);
+    });
+    return unsub;
+  }, []);
+
+  function openEdit(post: BlogPost) {
+    setEditing(post);
+    setFiyatMetni(settings[post.slug]?.fiyatBilgisi ?? '');
+  }
+
+  async function handleSave() {
+    if (!editing) return;
+    setSaving(true);
+    try {
+      await setDoc(doc(db, 'blogSettings', editing.slug), {
+        slug: editing.slug,
+        fiyatBilgisi: fiyatMetni.trim(),
+        guncelleme: serverTimestamp(),
+      });
+      toast.success('Fiyat bilgisi kaydedildi.');
+      setEditing(null);
+    } catch {
+      toast.error('Kayıt başarısız.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-800">Blog Yazıları</h2>
+        <p className="text-sm text-gray-400">{BLOG_POSTS.length} yazı</p>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+        {BLOG_POSTS.map((post) => {
+          const saved = settings[post.slug];
+          return (
+            <div key={post.slug} className="flex items-center gap-4 p-4">
+              <img
+                src={post.kapakGorseli}
+                alt={post.baslik}
+                className="w-14 h-12 object-cover rounded-lg flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 truncate">{post.baslik}</p>
+                <p className="text-xs text-gray-400 mt-0.5">/{post.slug}</p>
+                {saved?.fiyatBilgisi ? (
+                  <p className="text-xs text-emerald-600 mt-0.5 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Fiyat bilgisi mevcut
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-400 mt-0.5">Fiyat bilgisi yok</p>
+                )}
+              </div>
+              <button
+                onClick={() => openEdit(post)}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:border-emerald-400 hover:text-emerald-700 transition"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Düzenle
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Düzenle modal */}
+      {editing && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div>
+                <h3 className="font-bold text-gray-800 text-sm">Fiyat Bilgisini Düzenle</h3>
+                <p className="text-xs text-gray-400 mt-0.5 truncate max-w-xs">{editing.baslik}</p>
+              </div>
+              <button onClick={() => setEditing(null)} className="text-gray-400 hover:text-gray-600 transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-4">
+              <label className="block text-xs font-medium text-gray-600 mb-2">Fiyat Bilgileri</label>
+              <textarea
+                value={fiyatMetni}
+                onChange={(e) => setFiyatMetni(e.target.value)}
+                rows={6}
+                placeholder="Güncel fiyat bilgilerini girin (paragraf olarak)..."
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">
+                Bu metin blog yazısında içerik sonunda yeşil bir kutuda gösterilir.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-100">
+              <button
+                onClick={() => setEditing(null)}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-60 transition"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? 'Kaydediliyor…' : 'Kaydet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    MAIN — ADMIN DASHBOARD
 ════════════════════════════════════════════════════════════ */
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
@@ -1286,6 +1426,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'ilanlar',   label: 'İlanlar',        icon: <FileText className="w-4 h-4" /> },
   { key: 'firms',      label: 'Firmalar',      icon: <BuildingIcon className="w-4 h-4" /> },
   { key: 'talepler',   label: 'Talepler',      icon: <Inbox className="w-4 h-4" /> },
+  { key: 'blog',       label: 'Blog',          icon: <BookOpen className="w-4 h-4" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -1403,6 +1544,7 @@ export default function AdminDashboardPage() {
           {tab === 'ilanlar'   && <IlanlarTab />}
           {tab === 'firms'      && <FirmsTab />}
           {tab === 'talepler'   && <TaleplerTab />}
+          {tab === 'blog'       && <BlogTab />}
         </main>
       </div>
     </div>
