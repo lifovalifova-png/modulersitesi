@@ -50,14 +50,13 @@ export default function UserMenu() {
   return (
     <div className="relative" ref={ref}>
       {/* Trigger */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Hesap menüsü"
-        aria-expanded={open}
-        className="flex items-center gap-2 text-gray-700 hover:text-emerald-600 transition"
-      >
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm flex-shrink-0">
+      <div className="flex items-center gap-1 text-gray-700">
+        {/* Avatar → /profil */}
+        <Link
+          to="/profil"
+          aria-label="Profilim"
+          className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm flex-shrink-0 hover:opacity-80 transition overflow-hidden"
+        >
           {currentUser.photoURL ? (
             <img
               src={currentUser.photoURL}
@@ -67,24 +66,36 @@ export default function UserMenu() {
           ) : (
             initials
           )}
-        </div>
-        <span className="text-sm font-medium hidden lg:inline max-w-[120px] truncate">{displayName}</span>
-        <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
+        </Link>
+        {/* Ad + chevron → dropdown */}
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Hesap menüsü"
+          aria-expanded={open}
+          className="flex items-center gap-1 hover:text-emerald-600 transition"
+        >
+          <span className="text-sm font-medium hidden lg:inline max-w-[120px] truncate">{displayName}</span>
+          <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
 
       {/* Dropdown */}
       {open && (
         <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-          {/* Kullanıcı bilgisi */}
-          <div className="px-4 py-2.5 border-b border-gray-100">
+          {/* Kullanıcı bilgisi → /profil */}
+          <Link
+            to="/profil"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 border-b border-gray-100 hover:bg-emerald-50 transition"
+          >
             <p className="font-semibold text-gray-800 text-sm truncate">{displayName}</p>
             <p className="text-xs text-gray-400 truncate mt-0.5">{currentUser.email}</p>
-          </div>
+          </Link>
 
           {/* Menü öğeleri */}
           <div className="py-1">
             <Link
-              to="/profilim"
+              to="/profil"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition"
             >

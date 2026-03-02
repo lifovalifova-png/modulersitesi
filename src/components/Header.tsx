@@ -429,7 +429,11 @@ export default function Header() {
             <div className="pt-3 border-t border-gray-200">
               {currentUser ? (
                 <>
-                  <div className="flex items-center gap-3 px-2 py-2 mb-1">
+                  <Link
+                    to="/profil"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-2 py-2 mb-1 hover:bg-emerald-50 rounded-lg transition"
+                  >
                     <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {currentUser.photoURL ? (
                         <img src={currentUser.photoURL} alt="" className="w-full h-full object-cover" />
@@ -445,9 +449,9 @@ export default function Header() {
                       </p>
                       <p className="text-xs text-gray-400 truncate">{currentUser.email}</p>
                     </div>
-                  </div>
+                  </Link>
                   <Link
-                    to="/profilim"
+                    to="/profil"
                     className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 hover:text-emerald-600"
                     onClick={() => setMobileMenuOpen(false)}
                   >
