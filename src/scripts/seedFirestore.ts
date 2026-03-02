@@ -4,9 +4,10 @@
  * Admin Dashboard'daki butonlarla çalıştırılır.
  */
 import {
+  collection,
   doc,
   writeBatch,
-  deleteDoc,
+  getDocs,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -316,15 +317,27 @@ const QUOTES = [
 ];
 
 /* ══════════════════════════════════════════════════════════
-   SEED — her koleksiyonu ayrı batch ile Firestore'a yazar
+   SEED — her çalıştırmada benzersiz ID üretir (üst üste eklenebilir)
 ══════════════════════════════════════════════════════════ */
 export async function seedFirestore(): Promise<void> {
-  console.log('[seed] Seed başladı...');
+  const ts   = Date.now();
+  const rand = Math.random().toString(36).substr(2, 5);
+  const mkId = (prefix: string, n: number) =>
+    `seed_${prefix}_${ts}_${rand}_${String(n).padStart(2, '0')}`;
+
+  console.log('[seed] Seed başladı...', { ts, rand });
+
+  /* Statik id → dinamik id haritaları */
+  const firmIdMap: Record<string, string> = {};
+  FIRMS.forEach(({ id }, i) => { firmIdMap[id] = mkId('firm', i + 1); });
+
+  const ilanIdMap: Record<string, string> = {};
+  ILANLAR.forEach(({ id }, i) => { ilanIdMap[id] = mkId('ilan', i + 1); });
 
   /* 1. Firms */
   const firmBatch = writeBatch(db);
   FIRMS.forEach(({ id, ...data }, i) => {
-    firmBatch.set(doc(db, 'firms', id), {
+    firmBatch.set(doc(db, 'firms', firmIdMap[id]), {
       ...data,
       verified: true,
       status: 'approved',
@@ -339,13 +352,13 @@ export async function seedFirestore(): Promise<void> {
   const ilanBatch = writeBatch(db);
   ILANLAR.forEach(({ id, firmaId, ...data }, i) => {
     const firm = FIRMS.find((f) => f.id === firmaId)!;
-    ilanBatch.set(doc(db, 'ilanlar', id), {
+    ilanBatch.set(doc(db, 'ilanlar', ilanIdMap[id]), {
       ...data,
       kategori: firm.category,
       kategoriSlug: firm.kategoriSlug,
       sehir: firm.sehir,
       firmaAdi: firm.name,
-      firmaId: firm.id,
+      firmaId: firmIdMap[firmaId],
       firmaDogrulanmis: true,
       gorseller: IMGS[firm.kategoriSlug] ?? IMGS['prefabrik'],
       status: 'aktif',
@@ -359,11 +372,12 @@ export async function seedFirestore(): Promise<void> {
   /* 3. Talepler */
   const talepBatch = writeBatch(db);
   TALEPLER.forEach((t, i) => {
-    const padded = String(i + 1).padStart(2, '0');
-    talepBatch.set(doc(db, 'taleplar', `seed_talep_${padded}`), {
+    talepBatch.set(doc(db, 'taleplar', mkId('talep', i + 1)), {
       ...t,
       fotograflar: [],
-      firmaGonderilenler: t.status === 'iletildi' ? [FIRMS[i % FIRMS.length].id] : [],
+      firmaGonderilenler: t.status === 'iletildi'
+        ? [firmIdMap[FIRMS[i % FIRMS.length].id]]
+        : [],
       firmaKabulEdenler: [],
       _seed: true,
       tarih: daysAgo(45 - i * 2),
@@ -375,9 +389,10 @@ export async function seedFirestore(): Promise<void> {
   /* 4. Quotes */
   const quoteBatch = writeBatch(db);
   QUOTES.forEach((q, i) => {
-    const padded = String(i + 1).padStart(2, '0');
-    quoteBatch.set(doc(db, 'quotes', `seed_quote_${padded}`), {
+    quoteBatch.set(doc(db, 'quotes', mkId('quote', i + 1)), {
       ...q,
+      firmaId: firmIdMap[q.firmaId],
+      ilanId:  ilanIdMap[q.ilanId],
       _seed: true,
       tarih: daysAgo(20 - i),
     });
@@ -389,41 +404,24 @@ export async function seedFirestore(): Promise<void> {
 }
 
 /* ══════════════════════════════════════════════════════════
-   CLEAR — seed_ prefix'li ID'leri direkt siler
+   CLEAR — "seed_" prefix'li tüm ID'leri getDocs ile bulup siler
 ══════════════════════════════════════════════════════════ */
 export async function clearSeedData(): Promise<void> {
   console.log('[clear] Temizleme başladı...');
 
-  /* Firms */
-  for (const { id } of FIRMS) {
-    try { await deleteDoc(doc(db, 'firms', id)); }
-    catch (e) { console.warn(`[clear] firms/${id}:`, e); }
+  const colls = ['firms', 'ilanlar', 'taleplar', 'quotes'] as const;
+  for (const coll of colls) {
+    const snap     = await getDocs(collection(db, coll));
+    const toDelete = snap.docs.filter((d) => d.id.startsWith('seed_'));
+    if (toDelete.length === 0) {
+      console.log(`[clear] ${coll}: silinecek doküman yok`);
+      continue;
+    }
+    const batch = writeBatch(db);
+    toDelete.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    console.log(`[clear] ${coll} temizlendi (${toDelete.length} adet)`);
   }
-  console.log('[clear] firms temizlendi');
-
-  /* İlanlar */
-  for (let i = 1; i <= 30; i++) {
-    const id = `seed_ilan_${String(i).padStart(2, '0')}`;
-    try { await deleteDoc(doc(db, 'ilanlar', id)); }
-    catch (e) { console.warn(`[clear] ilanlar/${id}:`, e); }
-  }
-  console.log('[clear] ilanlar temizlendi');
-
-  /* Talepler */
-  for (let i = 1; i <= 15; i++) {
-    const id = `seed_talep_${String(i).padStart(2, '0')}`;
-    try { await deleteDoc(doc(db, 'taleplar', id)); }
-    catch (e) { console.warn(`[clear] taleplar/${id}:`, e); }
-  }
-  console.log('[clear] talepler temizlendi');
-
-  /* Quotes */
-  for (let i = 1; i <= 10; i++) {
-    const id = `seed_quote_${String(i).padStart(2, '0')}`;
-    try { await deleteDoc(doc(db, 'quotes', id)); }
-    catch (e) { console.warn(`[clear] quotes/${id}:`, e); }
-  }
-  console.log('[clear] quotes temizlendi');
 
   console.log('[clear] Tamamlandı ✓');
 }

@@ -1970,6 +1970,7 @@ export default function AdminDashboardPage() {
 
   async function handleSeed() {
     console.log('[seed] Seed başlatıldı (admin)');
+    toast.info('10 firma, 30 ilan, 15 talep, 10 teklif eklenecek…');
     setSeedBusy(true);
     try {
       await seedFirestore();
