@@ -7,9 +7,7 @@ import {
   collection,
   doc,
   writeBatch,
-  getDocs,
-  query,
-  where,
+  deleteDoc,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -319,14 +317,15 @@ const QUOTES = [
 ];
 
 /* ══════════════════════════════════════════════════════════
-   SEED — tüm veriyi Firestore'a yazar
+   SEED — her koleksiyonu ayrı batch ile Firestore'a yazar
 ══════════════════════════════════════════════════════════ */
 export async function seedFirestore(): Promise<void> {
-  const batch = writeBatch(db);
+  console.log('[seed] Seed başladı...');
 
-  /* Firmlar */
+  /* 1. Firms */
+  const firmBatch = writeBatch(db);
   FIRMS.forEach(({ id, ...data }, i) => {
-    batch.set(doc(db, 'firms', id), {
+    firmBatch.set(doc(db, 'firms', id), {
       ...data,
       verified: true,
       status: 'approved',
@@ -334,11 +333,14 @@ export async function seedFirestore(): Promise<void> {
       createdAt: daysAgo(90 - i * 5),
     });
   });
+  await firmBatch.commit();
+  console.log('[seed] firms yazıldı (10 adet)');
 
-  /* İlanlar */
+  /* 2. İlanlar */
+  const ilanBatch = writeBatch(db);
   ILANLAR.forEach(({ id, firmaId, ...data }, i) => {
     const firm = FIRMS.find((f) => f.id === firmaId)!;
-    batch.set(doc(db, 'ilanlar', id), {
+    ilanBatch.set(doc(db, 'ilanlar', id), {
       ...data,
       kategori: firm.category,
       kategoriSlug: firm.kategoriSlug,
@@ -352,11 +354,14 @@ export async function seedFirestore(): Promise<void> {
       tarih: daysAgo(60 - Math.floor(i * 1.5)),
     });
   });
+  await ilanBatch.commit();
+  console.log('[seed] ilanlar yazıldı (30 adet)');
 
-  /* Talepler */
+  /* 3. Talepler */
+  const talepBatch = writeBatch(db);
   TALEPLER.forEach((t, i) => {
     const padded = String(i + 1).padStart(2, '0');
-    batch.set(doc(db, 'taleplar', `seed_talep_${padded}`), {
+    talepBatch.set(doc(db, 'taleplar', `seed_talep_${padded}`), {
       ...t,
       fotograflar: [],
       firmaGonderilenler: t.status === 'iletildi' ? [FIRMS[i % FIRMS.length].id] : [],
@@ -365,32 +370,61 @@ export async function seedFirestore(): Promise<void> {
       tarih: daysAgo(45 - i * 2),
     });
   });
+  await talepBatch.commit();
+  console.log('[seed] talepler yazıldı (15 adet)');
 
-  /* Teklifler */
+  /* 4. Quotes */
+  const quoteBatch = writeBatch(db);
   QUOTES.forEach((q, i) => {
     const padded = String(i + 1).padStart(2, '0');
-    batch.set(doc(db, 'quotes', `seed_quote_${padded}`), {
+    quoteBatch.set(doc(db, 'quotes', `seed_quote_${padded}`), {
       ...q,
       _seed: true,
       tarih: daysAgo(20 - i),
     });
   });
+  await quoteBatch.commit();
+  console.log('[seed] quotes yazıldı (10 adet)');
 
-  await batch.commit();
+  console.log('[seed] Tamamlandı ✓');
 }
 
 /* ══════════════════════════════════════════════════════════
-   CLEAR — _seed: true olan tüm belgeleri siler
+   CLEAR — seed_ prefix'li ID'leri direkt siler
 ══════════════════════════════════════════════════════════ */
 export async function clearSeedData(): Promise<void> {
-  const colls = ['firms', 'ilanlar', 'taleplar', 'quotes'];
-  for (const coll of colls) {
-    const snap = await getDocs(
-      query(collection(db, coll), where('_seed', '==', true))
-    );
-    if (snap.empty) continue;
-    const batch = writeBatch(db);
-    snap.docs.forEach((d) => batch.delete(d.ref));
-    await batch.commit();
+  console.log('[clear] Temizleme başladı...');
+
+  /* Firms */
+  for (const { id } of FIRMS) {
+    try { await deleteDoc(doc(db, 'firms', id)); }
+    catch (e) { console.warn(`[clear] firms/${id}:`, e); }
   }
+  console.log('[clear] firms temizlendi');
+
+  /* İlanlar */
+  for (let i = 1; i <= 30; i++) {
+    const id = `seed_ilan_${String(i).padStart(2, '0')}`;
+    try { await deleteDoc(doc(db, 'ilanlar', id)); }
+    catch (e) { console.warn(`[clear] ilanlar/${id}:`, e); }
+  }
+  console.log('[clear] ilanlar temizlendi');
+
+  /* Talepler */
+  for (let i = 1; i <= 15; i++) {
+    const id = `seed_talep_${String(i).padStart(2, '0')}`;
+    try { await deleteDoc(doc(db, 'taleplar', id)); }
+    catch (e) { console.warn(`[clear] taleplar/${id}:`, e); }
+  }
+  console.log('[clear] talepler temizlendi');
+
+  /* Quotes */
+  for (let i = 1; i <= 10; i++) {
+    const id = `seed_quote_${String(i).padStart(2, '0')}`;
+    try { await deleteDoc(doc(db, 'quotes', id)); }
+    catch (e) { console.warn(`[clear] quotes/${id}:`, e); }
+  }
+  console.log('[clear] quotes temizlendi');
+
+  console.log('[clear] Tamamlandı ✓');
 }

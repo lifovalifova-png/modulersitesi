@@ -1058,22 +1058,39 @@ function TaleplerTab() {
     return () => { u1(); u2(); };
   }, []);
 
-  /* Firmalara İlet */
+  /* Firmalara İlet — 3 kademeli eşleştirme */
   const handleIlet = async (talep: AdminTalep) => {
     if (!talep.id) return;
     setSending(talep.id);
     try {
-      const matching = firms.filter((f) => {
-        const catMatch =
-          (Array.isArray(f.kategoriler) && f.kategoriler.includes(talep.kategori)) ||
-          f.category === talep.kategori;
-        const cityMatch = f.sehir === talep.sehir || f.city === talep.sehir;
-        return catMatch && cityMatch && f.status === 'approved' && f.userId;
-      });
+      // Tüm onaylı firmalar (JS tarafında filtrele)
+      const approved = firms.filter((f) => f.status === 'approved' && f.userId);
 
-      if (matching.length === 0) {
-        toast.warning('Bu kriterlere uygun onaylı firma bulunamadı.');
+      if (approved.length === 0) {
+        toast.warning('Sistemde onaylı firma bulunamadı.');
         return;
+      }
+
+      const hasCat  = (f: AdminFirm) =>
+        (Array.isArray(f.kategoriler) && f.kategoriler.includes(talep.kategori)) ||
+        f.category === talep.kategori;
+      const hasCity = (f: AdminFirm) =>
+        f.sehir === talep.sehir || f.city === talep.sehir;
+
+      // 1. Aynı şehir + aynı kategori
+      let matching = approved.filter((f) => hasCat(f) && hasCity(f));
+      let matchDesc = `${talep.sehir} · ${talep.kategori}`;
+
+      // 2. Sadece aynı kategori
+      if (matching.length === 0) {
+        matching = approved.filter((f) => hasCat(f));
+        matchDesc = talep.kategori;
+      }
+
+      // 3. Tüm onaylı firmalar
+      if (matching.length === 0) {
+        matching = approved;
+        matchDesc = 'tüm onaylı firmalar';
       }
 
       const newIds = matching
@@ -1101,7 +1118,7 @@ function TaleplerTab() {
         firmaGonderilenler: arrayUnion(...newIds),
       });
 
-      toast.success(`${newIds.length} firmaya bildirim gönderildi.`);
+      toast.success(`${newIds.length} firmaya iletildi (${matchDesc}).`);
     } catch {
       toast.error('Bildirim gönderilirken hata oluştu.');
     } finally {
@@ -1952,27 +1969,31 @@ export default function AdminDashboardPage() {
   const [clearBusy, setClearBusy] = useState(false);
 
   async function handleSeed() {
+    console.log('[seed] Seed başlatıldı (admin)');
     setSeedBusy(true);
     try {
       await seedFirestore();
       toast.success('Test verisi başarıyla eklendi! (10 firma, 30 ilan, 15 talep, 10 teklif)');
+      console.log('[seed] Başarıyla tamamlandı');
     } catch (e) {
+      console.error('[seed] HATA:', e);
       toast.error('Test verisi eklenirken hata oluştu.');
-      console.error(e);
     } finally {
       setSeedBusy(false);
     }
   }
 
   async function handleClear() {
-    if (!window.confirm('Tüm test verisi silinecek (_seed: true). Devam edilsin mi?')) return;
+    if (!window.confirm('Tüm test verisi silinecek. Devam edilsin mi?')) return;
+    console.log('[clear] Temizleme başlatıldı (admin)');
     setClearBusy(true);
     try {
       await clearSeedData();
       toast.success('Test verisi temizlendi.');
+      console.log('[clear] Başarıyla tamamlandı');
     } catch (e) {
+      console.error('[clear] HATA:', e);
       toast.error('Temizleme sırasında hata oluştu.');
-      console.error(e);
     } finally {
       setClearBusy(false);
     }
