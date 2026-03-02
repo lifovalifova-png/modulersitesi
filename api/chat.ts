@@ -47,21 +47,16 @@ function json(data: unknown, status = 200) {
   });
 }
 
-/* ── System prompt ──────────────────────────────────────── */
-const SYSTEM_PROMPT = `Sen ModülerPazar'ın yapı danışmanısın. Türkiye'deki tüm illerin iklim özelliklerini, kar yağışı, deprem riski, zemin yapısı ve sıcaklık ortalamalarını biliyorsun. Örneğin:
-- Doğu illeri (Erzurum, Kars, Ağrı): Çok sert kış, kar yükü fazla → dik çatı zorunlu
-- Ege/Akdeniz: Sıcak iklim, hafif yapılar yeterli
-- Marmara: Deprem riski yüksek → çelik yapı avantajlı
-- İç Anadolu: Geniş sıcaklık farkı → yalıtım kritik
-- Karadeniz: Yağış fazla → su yalıtımı önemli
+/* ── System prompt — few-shot olarak contents dizisine eklenir ── */
+const SYSTEM_TURN = {
+  role: 'user',
+  parts: [{ text: "Sen ModülerPazar'ın yapı danışmanısın. SADECE modüler yapı, prefabrik ev, çelik yapı, konteyner ev, tiny house, ahşap yapı konularında yardım et. Konu dışı sorulara 'Üzgünüm, sadece modüler yapı konularında yardımcı olabilirim' de. Türkiye'deki tüm illerin iklim, deprem riski, zemin yapısı bilgilerini biliyorsun. Yanıtları şu formatta ver:\n🌍 Bölge & İklim Analizi\n🏗️ Önerilen Yapı Tipi\n💰 Tahmini Maliyet (m² başına TL)\n⚠️ Dikkat Edilecekler\n\nFiyatlar piyasa koşullarına göre değişir, kesin fiyat için firma tekliflerini karşılaştırın. Yanıt sonunda her zaman: 'ModülerPazar üzerinden ücretsiz teklif alarak en uygun fiyatı bulabilirsiniz 👉 modulerpazar.com' ekle." }],
+};
 
-Kullanıcının belirttiği şehir ve ihtiyaca göre:
-🌍 Bölge & İklim Analizi
-🏗️ Önerilen Yapı Tipi ve Nedeni
-💰 Tahmini m² Maliyeti (TL)
-⚠️ Dikkat Edilmesi Gerekenler
-
-Kısa, net, Türkçe yanıt ver. 3-4 paragraf yeterli.`;
+const ACK_TURN = {
+  role: 'model',
+  parts: [{ text: 'Anlaşıldı, ModülerPazar yapı danışmanı olarak hizmet vermeye hazırım.' }],
+};
 
 /* ── Handler ────────────────────────────────────────────── */
 export default async function handler(req: Request) {
@@ -108,8 +103,12 @@ export default async function handler(req: Request) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ parts: [{ text: message.trim() }] }],
+          contents: [
+            SYSTEM_TURN,
+            ACK_TURN,
+            { role: 'user', parts: [{ text: message.trim() }] },
+          ],
+          tools: [{ googleSearch: {} }],
           generationConfig: { maxOutputTokens: 1024 },
         }),
       },
@@ -125,7 +124,11 @@ export default async function handler(req: Request) {
       return json({ error: detail, remaining }, upstream.status);
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    const parts = data.candidates?.[0]?.content?.parts;
+    const reply =
+      parts?.[0]?.text ||
+      parts?.map((p) => p.text ?? '').join('') ||
+      'Yanıt alınamadı';
     return json({ reply, remaining });
   } catch {
     return json({ error: 'Yapay zeka servisine ulaşılamadı.' }, 502);
