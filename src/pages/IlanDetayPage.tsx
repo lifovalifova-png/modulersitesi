@@ -8,7 +8,7 @@ import { CATEGORIES } from '../data/categories';
 import { FLASH_DEALS } from '../data/flashDeals';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
-import { usePageTitle } from '../hooks/usePageTitle';
+import SEOMeta from '../components/SEOMeta';
 import { sanitizeText } from '../utils/sanitize';
 import {
   MapPin, Tag, Calendar, ShieldCheck, Phone, ChevronLeft, ChevronRight,
@@ -283,7 +283,6 @@ export default function IlanDetayPage() {
   const [fetching, setFetching] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  usePageTitle(ilan ? `${ilan.baslik} | ModülerPazar` : 'ModülerPazar');
 
   /* Firestore'dan çek; bulunamazsa statik fallback */
   useEffect(() => {
@@ -373,6 +372,12 @@ export default function IlanDetayPage() {
   return (
     <>
       <Header />
+      <SEOMeta
+        title={ilan.baslik}
+        description={ilan.aciklama.slice(0, 160)}
+        image={ilan.gorseller[0]}
+        url={`/ilan/${ilan.id}`}
+      />
 
       <main className="bg-gray-50 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 py-8">

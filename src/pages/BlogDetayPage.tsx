@@ -5,7 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { BLOG_POSTS, type BlogKategori } from '../data/blogPosts';
 import { toast } from 'sonner';
-import { usePageTitle } from '../hooks/usePageTitle';
+import SEOMeta from '../components/SEOMeta';
 
 /* ── Kategori renkleri ──────────────────────────────────────── */
 const KAT_COLORS: Record<BlogKategori, string> = {
@@ -65,8 +65,6 @@ export default function BlogDetayPage() {
   const post    = BLOG_POSTS.find((p) => p.slug === slug);
   const related = BLOG_POSTS.filter((p) => p.id !== post?.id && p.kategori === post?.kategori).slice(0, 3);
 
-  usePageTitle(post ? `${post.baslik} | ModülerPazar` : 'Blog | ModülerPazar');
-
   if (!post) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -103,6 +101,14 @@ export default function BlogDetayPage() {
     <div className="flex flex-col min-h-screen">
       <Header />
 
+      <SEOMeta
+        title={post.baslik}
+        description={post.ozet}
+        image={post.kapakGorseli}
+        url={`/blog/${post.slug}`}
+        type="article"
+      />
+
       <main className="flex-1 bg-gray-50">
 
         {/* ── Hero / kapak ─────────────────────────────── */}
@@ -113,6 +119,7 @@ export default function BlogDetayPage() {
             className="absolute inset-0 w-full h-full object-cover opacity-60"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+
           <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-end pb-6">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-white/70 text-xs mb-3">

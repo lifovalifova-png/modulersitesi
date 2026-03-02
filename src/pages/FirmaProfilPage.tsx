@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { CATEGORIES } from '../data/categories';
 import { formatFiyat, type Ilan } from '../hooks/useIlanlar';
-import { usePageTitle } from '../hooks/usePageTitle';
+import SEOMeta from '../components/SEOMeta';
 import {
   ShieldCheck, MapPin, Tag, Star, Send, Building2, Globe,
   MessageCircle, Clock, Factory, Store, Package, Calendar,
@@ -110,7 +110,6 @@ export default function FirmaProfilPage() {
   const [loading,  setLoading]  = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  usePageTitle(firma ? `${firma.name} | ModülerPazar` : 'ModülerPazar');
 
   /* Firma verisini çek */
   useEffect(() => {
@@ -184,8 +183,17 @@ export default function FirmaProfilPage() {
   const bolgeler    = Array.isArray(firma.hizmetBolgeleri) ? firma.hizmetBolgeleri : [];
   const ilkKategori = kategoriler[0] || firma.category || '';
 
+  const seoDesc = firma.tanitimMetni
+    ? firma.tanitimMetni.slice(0, 160)
+    : `${firma.name} — ${sehir ? sehir + ' ' : ''}${ilkKategori ? (CAT_MAP[ilkKategori] || ilkKategori) + ' ' : ''}firması. ModülerPazar'da ilanları ve iletişim bilgileri.`;
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <SEOMeta
+        title={firma.name}
+        description={seoDesc}
+        url={`/firma/${id}`}
+      />
       <Header />
 
       <main className="flex-1">

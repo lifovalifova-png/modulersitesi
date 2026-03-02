@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { CATEGORIES } from '../data/categories';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
-import { usePageTitle } from '../hooks/usePageTitle';
+import SEOMeta from '../components/SEOMeta';
 import {
   MapPin, Tag, Calendar, ShieldCheck, Grid, List, Filter, X,
   ChevronLeft, ChevronRight, ChevronDown, SlidersHorizontal, Zap, Loader2,
@@ -418,10 +418,13 @@ export default function CategoryPage() {
   const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
   const pageTitle  = category?.fullName ?? 'Tüm İlanlar';
 
-  usePageTitle(`${pageTitle} İlanları | ModülerPazar`);
-
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title={`${pageTitle} İlanları`}
+        description={`${pageTitle} ilanları — ModülerPazar'da ${pageTitle.toLowerCase()} fiyatları ve firmaları. Ücretsiz teklif alın.`}
+        url={`/kategori/${slug}`}
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50">
