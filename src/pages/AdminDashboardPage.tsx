@@ -27,7 +27,7 @@ import {
   LayoutDashboard, Settings, Zap, Building2 as BuildingIcon,
   LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle,
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
-  Send, Eye, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
+  Send, Eye, EyeOff, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
   Inbox, BookOpen, BarChart2, Download,
 } from 'lucide-react';
 import logoSrc from '../assets/logo.svg';
@@ -1286,16 +1286,36 @@ function TaleplerTab() {
    TAB 7 — BLOG
 ════════════════════════════════════════════════════════════ */
 interface BlogSetting {
-  slug: string;
-  fiyatBilgisi: string;
-  guncelleme: { toDate: () => Date } | null;
+  slug:          string;
+  fiyatBilgisi:  string;
+  oneCikanBilgi: string;
+  uyariMetni:    string;
+  ekMetin:       string;
+  yayinda:       boolean;
+  guncelleme:    { toDate: () => Date } | null;
 }
+
+interface BlogForm {
+  fiyatBilgisi:  string;
+  oneCikanBilgi: string;
+  uyariMetni:    string;
+  ekMetin:       string;
+  yayinda:       boolean;
+}
+
+const EMPTY_BLOG_FORM: BlogForm = {
+  fiyatBilgisi:  '',
+  oneCikanBilgi: '',
+  uyariMetni:    '',
+  ekMetin:       '',
+  yayinda:       true,
+};
 
 function BlogTab() {
   const [settings, setSettings] = useState<Record<string, BlogSetting>>({});
-  const [editing, setEditing]   = useState<BlogPost | null>(null);
-  const [fiyatMetni, setFiyatMetni] = useState('');
-  const [saving, setSaving]     = useState(false);
+  const [editing,  setEditing]  = useState<BlogPost | null>(null);
+  const [form,     setForm]     = useState<BlogForm>(EMPTY_BLOG_FORM);
+  const [saving,   setSaving]   = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'blogSettings'), (snap) => {
@@ -1310,20 +1330,34 @@ function BlogTab() {
   }, []);
 
   function openEdit(post: BlogPost) {
+    const saved = settings[post.slug];
     setEditing(post);
-    setFiyatMetni(settings[post.slug]?.fiyatBilgisi ?? '');
+    setForm({
+      fiyatBilgisi:  saved?.fiyatBilgisi  ?? '',
+      oneCikanBilgi: saved?.oneCikanBilgi ?? '',
+      uyariMetni:    saved?.uyariMetni    ?? '',
+      ekMetin:       saved?.ekMetin       ?? '',
+      yayinda:       saved?.yayinda       ?? true,
+    });
   }
+
+  const setField = <K extends keyof BlogForm>(k: K, v: BlogForm[K]) =>
+    setForm((p) => ({ ...p, [k]: v }));
 
   async function handleSave() {
     if (!editing) return;
     setSaving(true);
     try {
       await setDoc(doc(db, 'blogSettings', editing.slug), {
-        slug: editing.slug,
-        fiyatBilgisi: fiyatMetni.trim(),
-        guncelleme: serverTimestamp(),
+        slug:          editing.slug,
+        fiyatBilgisi:  form.fiyatBilgisi.trim(),
+        oneCikanBilgi: form.oneCikanBilgi.trim(),
+        uyariMetni:    form.uyariMetni.trim(),
+        ekMetin:       form.ekMetin.trim(),
+        yayinda:       form.yayinda,
+        guncelleme:    serverTimestamp(),
       });
-      toast.success('Fiyat bilgisi kaydedildi.');
+      toast.success('Blog ayarları kaydedildi.');
       setEditing(null);
     } catch {
       toast.error('Kayıt başarısız.');
@@ -1341,7 +1375,15 @@ function BlogTab() {
 
       <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
         {BLOG_POSTS.map((post) => {
-          const saved = settings[post.slug];
+          const saved      = settings[post.slug];
+          const isOnline   = saved?.yayinda !== false;
+          const blockCount = [
+            saved?.fiyatBilgisi,
+            saved?.oneCikanBilgi,
+            saved?.uyariMetni,
+            saved?.ekMetin,
+          ].filter(Boolean).length;
+
           return (
             <div key={post.slug} className="flex items-center gap-4 p-4">
               <img
@@ -1352,17 +1394,25 @@ function BlogTab() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-800 truncate">{post.baslik}</p>
                 <p className="text-xs text-gray-400 mt-0.5">/{post.slug}</p>
-                {saved?.fiyatBilgisi ? (
-                  <p className="text-xs text-emerald-600 mt-0.5 flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" /> Fiyat bilgisi mevcut
-                  </p>
-                ) : (
-                  <p className="text-xs text-gray-400 mt-0.5">Fiyat bilgisi yok</p>
-                )}
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {!isOnline && (
+                    <span className="flex items-center gap-0.5 text-xs text-red-600 font-medium">
+                      <EyeOff className="w-3 h-3" /> Yayında Değil
+                    </span>
+                  )}
+                  {blockCount > 0 && (
+                    <span className="flex items-center gap-0.5 text-xs text-emerald-600">
+                      <CheckCircle className="w-3 h-3" /> {blockCount} içerik aktif
+                    </span>
+                  )}
+                  {blockCount === 0 && isOnline && (
+                    <span className="text-xs text-gray-400">Ayar yok</span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => openEdit(post)}
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:border-emerald-400 hover:text-emerald-700 transition"
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:border-emerald-400 hover:text-emerald-700 transition flex-shrink-0"
               >
                 <Pencil className="w-3.5 h-3.5" />
                 Düzenle
@@ -1372,33 +1422,107 @@ function BlogTab() {
         })}
       </div>
 
-      {/* Düzenle modal */}
+      {/* ── Düzenle modal ──────────────────────────────────── */}
       {editing && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <div>
-                <h3 className="font-bold text-gray-800 text-sm">Fiyat Bilgisini Düzenle</h3>
-                <p className="text-xs text-gray-400 mt-0.5 truncate max-w-xs">{editing.baslik}</p>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+
+            {/* Başlık */}
+            <div className="flex items-start justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="min-w-0 pr-4">
+                <h3 className="font-bold text-gray-800 text-sm">Blog Yazısı Ayarları</h3>
+                <p className="text-xs text-gray-400 mt-0.5 truncate">{editing.baslik}</p>
               </div>
-              <button onClick={() => setEditing(null)} className="text-gray-400 hover:text-gray-600 transition">
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                {/* Yayında toggle */}
+                <button
+                  onClick={() => setField('yayinda', !form.yayinda)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    form.yayinda
+                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                      : 'bg-red-100 text-red-700 hover:bg-red-200'
+                  }`}
+                >
+                  {form.yayinda
+                    ? <><Eye    className="w-3.5 h-3.5" /> Yayında</>
+                    : <><EyeOff className="w-3.5 h-3.5" /> Yayında Değil</>}
+                </button>
+                <button onClick={() => setEditing(null)} className="text-gray-400 hover:text-gray-600 transition">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
-            <div className="px-6 py-4">
-              <label className="block text-xs font-medium text-gray-600 mb-2">Fiyat Bilgileri</label>
-              <textarea
-                value={fiyatMetni}
-                onChange={(e) => setFiyatMetni(e.target.value)}
-                rows={6}
-                placeholder="Güncel fiyat bilgilerini girin (paragraf olarak)..."
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              />
-              <p className="text-xs text-gray-400 mt-1.5">
-                Bu metin blog yazısında içerik sonunda yeşil bir kutuda gösterilir.
-              </p>
+
+            {/* Scrollable içerik */}
+            <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+
+              {/* 1 — Öne Çıkan Bilgi */}
+              <div>
+                <label className="flex items-center gap-2 text-xs font-semibold text-emerald-700 mb-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-emerald-500 flex-shrink-0" />
+                  Öne Çıkan Bilgi Kutusu
+                  <span className="font-normal text-gray-400">(yazının başında — yeşil kutu)</span>
+                </label>
+                <textarea
+                  value={form.oneCikanBilgi}
+                  onChange={(e) => setField('oneCikanBilgi', e.target.value)}
+                  rows={3}
+                  placeholder='Örn: "2025 güncel bilgi: Bu kategori için ortalama teslim süresi 45 gündür."'
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                />
+              </div>
+
+              {/* 2 — Uyarı */}
+              <div>
+                <label className="flex items-center gap-2 text-xs font-semibold text-amber-700 mb-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-amber-400 flex-shrink-0" />
+                  Uyarı Kutusu
+                  <span className="font-normal text-gray-400">(yazının başında — sarı kutu)</span>
+                </label>
+                <textarea
+                  value={form.uyariMetni}
+                  onChange={(e) => setField('uyariMetni', e.target.value)}
+                  rows={3}
+                  placeholder='Örn: "Dikkat: Bu yapı tipi için belediye izni gerekebilir."'
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+              </div>
+
+              {/* 3 — Fiyat Bilgisi */}
+              <div>
+                <label className="flex items-center gap-2 text-xs font-semibold text-blue-700 mb-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-blue-500 flex-shrink-0" />
+                  Fiyat Bilgisi
+                  <span className="font-normal text-gray-400">(yazının sonunda — mavi kutu)</span>
+                </label>
+                <textarea
+                  value={form.fiyatBilgisi}
+                  onChange={(e) => setField('fiyatBilgisi', e.target.value)}
+                  rows={4}
+                  placeholder="Güncel fiyat aralıklarını ve bilgileri buraya girin…"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+
+              {/* 4 — Ek Metin */}
+              <div>
+                <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-gray-400 flex-shrink-0" />
+                  Ek Metin
+                  <span className="font-normal text-gray-400">(yazının sonunda — normal paragraf)</span>
+                </label>
+                <textarea
+                  value={form.ekMetin}
+                  onChange={(e) => setField('ekMetin', e.target.value)}
+                  rows={4}
+                  placeholder="Yazının sonuna eklemek istediğiniz ek bilgi veya paragraf…"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-gray-400"
+                />
+              </div>
             </div>
-            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-100">
+
+            {/* Alt butonlar */}
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-100 flex-shrink-0">
               <button
                 onClick={() => setEditing(null)}
                 className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition"

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, ChevronRight, Share2, MessageSquare, Check, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, Share2, MessageSquare, Check, ArrowLeft, Info, AlertTriangle, EyeOff } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { BLOG_POSTS, type BlogKategori } from '../data/blogPosts';
@@ -64,15 +64,22 @@ export default function BlogDetayPage() {
   const navigate     = useNavigate();
   const [copied, setCopied] = useState(false);
   const [blogSetting, setBlogSetting] = useState<{
-    fiyatBilgisi: string;
-    guncelleme: { toDate: () => Date } | null;
+    fiyatBilgisi:  string;
+    oneCikanBilgi: string;
+    uyariMetni:    string;
+    ekMetin:       string;
+    yayinda:       boolean;
+    guncelleme:    { toDate: () => Date } | null;
   } | null>(null);
 
   useEffect(() => {
     if (!slug) return;
     getDoc(doc(db, 'blogSettings', slug)).then((snap) => {
       if (snap.exists()) {
-        setBlogSetting(snap.data() as { fiyatBilgisi: string; guncelleme: { toDate: () => Date } | null });
+        setBlogSetting(snap.data() as {
+          fiyatBilgisi: string; oneCikanBilgi: string; uyariMetni: string;
+          ekMetin: string; yayinda: boolean; guncelleme: { toDate: () => Date } | null;
+        });
       }
     });
   }, [slug]);
@@ -203,10 +210,34 @@ export default function BlogDetayPage() {
                 </div>
               </div>
 
+              {/* Yayında değil uyarısı */}
+              {blogSetting && blogSetting.yayinda === false && (
+                <div className="flex items-center gap-2 mb-5 rounded-xl border border-orange-300 bg-orange-50 px-4 py-3">
+                  <EyeOff className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                  <p className="text-sm font-medium text-orange-700">Bu yazı şu an yayında değil.</p>
+                </div>
+              )}
+
               {/* Özet */}
               <p className="text-base text-gray-600 font-medium leading-relaxed mb-6 italic border-l-4 border-emerald-400 pl-4">
                 {post.ozet}
               </p>
+
+              {/* Öne çıkan bilgi kutusu */}
+              {blogSetting?.oneCikanBilgi && (
+                <div className="flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-4">
+                  <Info className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-emerald-800 leading-relaxed whitespace-pre-line">{blogSetting.oneCikanBilgi}</p>
+                </div>
+              )}
+
+              {/* Uyarı kutusu */}
+              {blogSetting?.uyariMetni && (
+                <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 mb-4">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-800 leading-relaxed whitespace-pre-line">{blogSetting.uyariMetni}</p>
+                </div>
+              )}
 
               {/* İçerik */}
               <div className="space-y-4">
@@ -215,15 +246,20 @@ export default function BlogDetayPage() {
 
               {/* Güncel fiyat bilgisi (Firestore override) */}
               {blogSetting?.fiyatBilgisi && (
-                <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-2">Güncel Fiyat Bilgisi</p>
+                <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                  <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-2">Güncel Fiyat Bilgisi</p>
                   <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{blogSetting.fiyatBilgisi}</p>
                   {blogSetting.guncelleme && (
-                    <p className="text-xs text-gray-400 mt-3 border-t border-emerald-100 pt-2">
+                    <p className="text-xs text-gray-400 mt-3 border-t border-blue-100 pt-2">
                       Fiyat bilgileri {blogSetting.guncelleme.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} tarihinde güncellendi.
                     </p>
                   )}
                 </div>
+              )}
+
+              {/* Ek metin */}
+              {blogSetting?.ekMetin && (
+                <p className="mt-4 text-sm text-gray-700 leading-relaxed whitespace-pre-line">{blogSetting.ekMetin}</p>
               )}
 
               {/* Alt navigasyon */}
