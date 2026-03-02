@@ -46,22 +46,24 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
 
 
 /* ─── AI rate limit — localStorage kalıcılığı ───────────── */
-const RL_KEY  = 'mp_chat_rl';
-const MAX_QPS = 10;
-
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+const RL_KEY = 'mp_chat_rl';
 
 function loadRemaining(): number {
   try {
     const raw = localStorage.getItem(RL_KEY);
-    if (!raw) return MAX_QPS;
-    const { date, remaining } = JSON.parse(raw) as { date: string; remaining: number };
-    return date === todayStr() ? remaining : MAX_QPS;
-  } catch { return MAX_QPS; }
+    if (!raw) return 10;
+    const { date, remaining } = JSON.parse(raw);
+    if (date !== new Date().toDateString()) return 10;
+    return typeof remaining === 'number' ? remaining : 10;
+  } catch {
+    return 10;
+  }
 }
 
 function saveRemaining(remaining: number) {
-  try { localStorage.setItem(RL_KEY, JSON.stringify({ date: todayStr(), remaining })); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(RL_KEY, JSON.stringify({ date: new Date().toDateString(), remaining }));
+  } catch { /* ignore */ }
 }
 
 /* ─── Kategori çıkarımı ──────────────────────────────────── */
