@@ -1063,8 +1063,14 @@ function TaleplerTab() {
     if (!talep.id) return;
     setSending(talep.id);
     try {
-      // Tüm onaylı firmalar (JS tarafında filtrele)
-      const approved = firms.filter((f) => f.status === 'approved' && f.userId);
+      // Tüm onaylı firmalar — userId olmayanlar eşleşmeye dahil, bildirime dahil değil
+      const approved = firms.filter((f) => f.status === 'approved');
+
+      console.log(
+        `[ilet] toplam firms: ${firms.length}`,
+        `| onaylı: ${approved.length}`,
+        `| status değerleri:`, [...new Set(firms.map((f) => f.status))],
+      );
 
       if (approved.length === 0) {
         toast.warning('Sistemde onaylı firma bulunamadı.');
@@ -1093,9 +1099,12 @@ function TaleplerTab() {
         matchDesc = 'tüm onaylı firmalar';
       }
 
+      console.log(`[ilet] eşleşme: "${matchDesc}" → ${matching.length} firma`);
+
+      // userId olan firmalar bildirim alır; olmayanlar sadece iletildi sayısına girer
       const newIds = matching
         .map((f) => f.userId as string)
-        .filter((uid) => !talep.firmaGonderilenler.includes(uid));
+        .filter((uid) => uid && !talep.firmaGonderilenler.includes(uid));
 
       if (newIds.length === 0) {
         toast.info('Uygun firmalar zaten bilgilendirilmiş.');

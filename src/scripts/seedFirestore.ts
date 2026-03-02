@@ -341,6 +341,7 @@ export async function seedFirestore(): Promise<void> {
       ...data,
       verified: true,
       status: 'approved',
+      userId: `seed_user_${String(i + 1).padStart(2, '0')}`,
       _seed: true,
       createdAt: daysAgo(90 - i * 5),
     });
