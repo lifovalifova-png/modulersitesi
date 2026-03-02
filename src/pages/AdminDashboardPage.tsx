@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import logoSrc from '../assets/logo.svg';
 import { auth, db } from '../lib/firebase';
+import { seedFirestore, clearSeedData } from '../scripts/seedFirestore';
 
 /* ═══════════════════════════════════════════════════════════
    TYPES
@@ -1434,6 +1435,35 @@ export default function AdminDashboardPage() {
   const [user, setUser]     = useState<User | null>(null);
   const [tab,  setTab]      = useState<TabKey>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [seedBusy,  setSeedBusy]  = useState(false);
+  const [clearBusy, setClearBusy] = useState(false);
+
+  async function handleSeed() {
+    setSeedBusy(true);
+    try {
+      await seedFirestore();
+      toast.success('Test verisi başarıyla eklendi! (10 firma, 30 ilan, 15 talep, 10 teklif)');
+    } catch (e) {
+      toast.error('Test verisi eklenirken hata oluştu.');
+      console.error(e);
+    } finally {
+      setSeedBusy(false);
+    }
+  }
+
+  async function handleClear() {
+    if (!window.confirm('Tüm test verisi silinecek (_seed: true). Devam edilsin mi?')) return;
+    setClearBusy(true);
+    try {
+      await clearSeedData();
+      toast.success('Test verisi temizlendi.');
+    } catch (e) {
+      toast.error('Temizleme sırasında hata oluştu.');
+      console.error(e);
+    } finally {
+      setClearBusy(false);
+    }
+  }
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -1524,6 +1554,24 @@ export default function AdminDashboardPage() {
               <span className="text-xs text-gray-400">
                 {new Date().toLocaleDateString('tr-TR')}
               </span>
+            </div>
+            {/* Test verisi araçları */}
+            <div className="px-3 pt-2 pb-1 space-y-1 border-t border-dashed border-gray-200 mt-2">
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Geliştirici</p>
+              <button
+                onClick={handleSeed}
+                disabled={seedBusy || clearBusy}
+                className="w-full text-left text-xs px-2 py-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 transition"
+              >
+                {seedBusy ? '⏳ Ekleniyor…' : '🌱 Test Verisi Ekle'}
+              </button>
+              <button
+                onClick={handleClear}
+                disabled={seedBusy || clearBusy}
+                className="w-full text-left text-xs px-2 py-1.5 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-50 transition"
+              >
+                {clearBusy ? '⏳ Temizleniyor…' : '🗑️ Test Verisini Temizle'}
+              </button>
             </div>
           </div>
         </aside>
