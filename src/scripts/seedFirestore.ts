@@ -4,7 +4,6 @@
  * Admin Dashboard'daki butonlarla çalıştırılır.
  */
 import {
-  collection,
   doc,
   writeBatch,
   deleteDoc,
