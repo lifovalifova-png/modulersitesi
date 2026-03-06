@@ -104,6 +104,39 @@ export default function Footer() {
           </p>
         </div>
       </div>
+
+      {/* schema.org Organization markup */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'ModülerPazar',
+          url: 'https://modulerpazar.com',
+          logo: 'https://modulerpazar.com/favicon.svg',
+          description: 'Türkiye\'nin en büyük modüler yapı pazarı. Prefabrik ev, çelik yapı, konteyner ev, tiny house fiyatları ve firmaları.',
+          contactPoint: {
+            '@type': 'ContactPoint',
+            telephone: SITE_CONFIG.phone,
+            email: SITE_CONFIG.email,
+            contactType: 'customer service',
+            availableLanguage: 'Turkish',
+          },
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'Maslak Mah. AOS 55. Sk. 42 Maslak',
+            addressLocality: 'Sarıyer',
+            addressRegion: 'İstanbul',
+            addressCountry: 'TR',
+          },
+          sameAs: [
+            'https://www.facebook.com/modulerpazar',
+            'https://www.instagram.com/modulerpazar',
+            'https://twitter.com/modulerpazar',
+            'https://www.linkedin.com/company/modulerpazar',
+          ],
+        }) }}
+      />
     </footer>
   );
 }

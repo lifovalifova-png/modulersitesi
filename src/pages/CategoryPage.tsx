@@ -421,6 +421,7 @@ export default function CategoryPage() {
 
   const category   = CATEGORIES.find((c) => c.slug === slug);
   const activeCount = [city, (priceMin || priceMax) ? 'price' : '', sort !== 'newest' ? 'sort' : '', ...features].filter(Boolean).length;
+  const h1Title    = category ? `${category.fullName} İlanları` : 'Tüm İlanlar';
 
   const clearFilters = () => {
     setCity(''); setPriceMin(''); setPriceMax('');
@@ -472,7 +473,7 @@ export default function CategoryPage() {
           {/* Başlık + üst kontroller */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{pageTitle}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{h1Title}</h1>
               <p className="text-gray-500 text-sm mt-1">
                 {loading ? (
                   <span className="flex items-center gap-1.5">

@@ -3,5 +3,6 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/dashboard
 Disallow: /firma-paneli
+Disallow: /profil
 
-Sitemap: https://modulersitesi.vercel.app/sitemap.xml
+Sitemap: https://modulerpazar.com/sitemap.xml
