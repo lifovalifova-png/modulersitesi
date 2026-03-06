@@ -25,10 +25,13 @@ const CITIES = [
 ];
 
 const BUDGET_RANGES = [
-  { value: '50k_alti',  label: '50.000 ₺ altı' },
-  { value: '50k_100k',  label: '50.000 – 100.000 ₺' },
-  { value: '100k_250k', label: '100.000 – 250.000 ₺' },
-  { value: '250k_ustu', label: '250.000 ₺ üzeri' },
+  { value: '0_100k',    label: '0 – 100.000 TL'           },
+  { value: '100k_250k', label: '100.000 – 250.000 TL'     },
+  { value: '250k_500k', label: '250.000 – 500.000 TL'     },
+  { value: '500k_1m',   label: '500.000 – 1.000.000 TL'   },
+  { value: '1m_1m5',    label: '1.000.000 – 1.500.000 TL' },
+  { value: '1m5_2m',    label: '1.500.000 – 2.000.000 TL' },
+  { value: '2m_ustu',   label: '2.000.000 TL ve üzeri'    },
 ];
 
 /* ─── Tipler ──────────────────────────────────────────────── */

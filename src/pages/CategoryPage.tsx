@@ -25,6 +25,17 @@ const CITIES = [
   'Bartın','Ardahan','Iğdır','Yalova','Karabük','Kilis','Osmaniye','Düzce',
 ];
 
+const PRICE_RANGES = [
+  { label: 'Tümü',                      min: 0,       max: Infinity },
+  { label: '0 – 100.000 TL',            min: 0,       max: 100000   },
+  { label: '100.000 – 250.000 TL',      min: 100000,  max: 250000   },
+  { label: '250.000 – 500.000 TL',      min: 250000,  max: 500000   },
+  { label: '500.000 – 1.000.000 TL',    min: 500000,  max: 1000000  },
+  { label: '1.000.000 – 1.500.000 TL',  min: 1000000, max: 1500000  },
+  { label: '1.500.000 – 2.000.000 TL',  min: 1500000, max: 2000000  },
+  { label: '2.000.000 TL ve üzeri',     min: 2000000, max: Infinity },
+];
+
 const SORT_OPTIONS = [
   { value: 'newest',       label: 'En Yeni' },
   { value: 'price_asc',    label: 'Fiyat: Düşükten Yükseğe' },
@@ -112,12 +123,33 @@ function Sidebar({
 
       {/* Fiyat Aralığı */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Fiyat Aralığı (₺)</p>
-        <div className="space-y-2">
-          <input type="number" placeholder="Min fiyat" value={priceMin}
-            onChange={(e) => setPriceMin(e.target.value)} min={0} className={inp} />
-          <input type="number" placeholder="Maks fiyat" value={priceMax}
-            onChange={(e) => setPriceMax(e.target.value)} min={0} className={inp} />
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Fiyat Aralığı</p>
+        <div className="relative">
+          <select
+            value={
+              !priceMin && !priceMax
+                ? ''
+                : `${priceMin || '0'},${priceMax || 'inf'}`
+            }
+            onChange={(e) => {
+              const v = e.target.value;
+              if (!v) { setPriceMin(''); setPriceMax(''); return; }
+              const [minStr, maxStr] = v.split(',');
+              setPriceMin(minStr === '0' ? '' : minStr);
+              setPriceMax(maxStr === 'inf' ? '' : maxStr);
+            }}
+            className={inp + ' pr-8'}
+          >
+            {PRICE_RANGES.map((r, i) => (
+              <option
+                key={i}
+                value={i === 0 ? '' : `${r.min},${r.max === Infinity ? 'inf' : r.max}`}
+              >
+                {r.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         </div>
       </div>
 
@@ -388,7 +420,7 @@ export default function CategoryPage() {
   useEffect(() => { setSidebarOpen(false); }, [slug]);
 
   const category   = CATEGORIES.find((c) => c.slug === slug);
-  const activeCount = [city, priceMin, priceMax, sort !== 'newest' ? 'sort' : '', ...features].filter(Boolean).length;
+  const activeCount = [city, (priceMin || priceMax) ? 'price' : '', sort !== 'newest' ? 'sort' : '', ...features].filter(Boolean).length;
 
   const clearFilters = () => {
     setCity(''); setPriceMin(''); setPriceMax('');

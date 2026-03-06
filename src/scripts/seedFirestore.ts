@@ -228,55 +228,55 @@ interface IlanSeed {
 }
 
 const ILANLAR: IlanSeed[] = [
-  /* ── Anadolu Prefabrik / Ankara ── */
-  { id: 'seed_ilan_01', firmaId: 'seed_firm_01', baslik: '80m² Prefabrik Villa - Anahtar Teslim', fiyat: 380000, aciklama: 'Fabrikada üretilmiş, anahtar teslim 80m² prefabrik villa. Isı yalıtımlı, çift camlı, kurulum dahil fiyat.', acil: false, indirimli: false },
-  { id: 'seed_ilan_02', firmaId: 'seed_firm_01', baslik: '120m² Prefabrik Müstakil Ev - 3+1', fiyat: 550000, aciklama: 'Geniş 3+1 müstakil prefabrik ev. Yerden ısıtma, klima altyapısı, balkon ve teras dahil.', acil: false, indirimli: false },
-  { id: 'seed_ilan_03', firmaId: 'seed_firm_01', baslik: '50m² Yazlık Prefabrik - 45 Gün Teslim', fiyat: 220000, aciklama: 'Yazlık ve tatil amaçlı kompakt prefabrik. 45 günde teslim garantisi. Temel hariç fiyat.', acil: true, indirimli: false },
+  /* ── Anadolu Prefabrik / Ankara — 3.500 TL/m² ── */
+  { id: 'seed_ilan_01', firmaId: 'seed_firm_01', baslik: '80m² Prefabrik Villa - Anahtar Teslim',    fiyat:  280000, aciklama: 'Fabrikada üretilmiş, anahtar teslim 80m² prefabrik villa. Isı yalıtımlı, çift camlı, kurulum dahil fiyat.', acil: false, indirimli: false },
+  { id: 'seed_ilan_02', firmaId: 'seed_firm_01', baslik: '120m² Prefabrik Müstakil Ev - 3+1',        fiyat:  420000, aciklama: 'Geniş 3+1 müstakil prefabrik ev. Yerden ısıtma, klima altyapısı, balkon ve teras dahil.', acil: false, indirimli: false },
+  { id: 'seed_ilan_03', firmaId: 'seed_firm_01', baslik: '50m² Yazlık Prefabrik - 45 Gün Teslim',   fiyat:  175000, aciklama: 'Yazlık ve tatil amaçlı kompakt prefabrik. 45 günde teslim garantisi. Temel hariç fiyat.', acil: true, indirimli: false },
 
-  /* ── İstanbul Konteyner / İstanbul ── */
-  { id: 'seed_ilan_04', firmaId: 'seed_firm_02', baslik: '20 Feet Konteyner Ofis - Hazır Teslimat', fiyat: 180000, aciklama: 'Komple düzenlenmiş konteyner ofis. Klimalı, ısı yalıtımlı, elektrik tesisatı tamamlanmış.', acil: false, indirimli: true },
-  { id: 'seed_ilan_05', firmaId: 'seed_firm_02', baslik: '40 Feet Yaşam Konteyneri - 2+1', fiyat: 320000, aciklama: '40 feet konteynerden dönüştürülmüş 2+1 yaşam alanı. Mutfak, banyo, salon ve yatak odası tam donanımlı.', acil: false, indirimli: false },
-  { id: 'seed_ilan_06', firmaId: 'seed_firm_02', baslik: 'Çift Konteyner Villa - Geniş Bahçeli', fiyat: 520000, aciklama: 'İki 40 feet konteynerin birleşiminden oluşan lüks villa. Geniş terası ve özel bahçesiyle dikkat çekiyor.', acil: true, indirimli: false },
+  /* ── İstanbul Konteyner / İstanbul — 150k-450k ── */
+  { id: 'seed_ilan_04', firmaId: 'seed_firm_02', baslik: '20 Feet Konteyner Ofis - Hazır Teslimat',  fiyat:  180000, aciklama: 'Komple düzenlenmiş konteyner ofis. Klimalı, ısı yalıtımlı, elektrik tesisatı tamamlanmış.', acil: false, indirimli: true },
+  { id: 'seed_ilan_05', firmaId: 'seed_firm_02', baslik: '40 Feet Yaşam Konteyneri - 2+1',           fiyat:  320000, aciklama: '40 feet konteynerden dönüştürülmüş 2+1 yaşam alanı. Mutfak, banyo, salon ve yatak odası tam donanımlı.', acil: false, indirimli: false },
+  { id: 'seed_ilan_06', firmaId: 'seed_firm_02', baslik: 'Çift Konteyner Villa - Geniş Bahçeli',    fiyat:  420000, aciklama: 'İki 40 feet konteynerin birleşiminden oluşan lüks villa. Geniş terası ve özel bahçesiyle dikkat çekiyor.', acil: true, indirimli: false },
 
-  /* ── Ege Çelik Yapı / İzmir ── */
-  { id: 'seed_ilan_07', firmaId: 'seed_firm_03', baslik: 'Çift Katlı Çelik Ev - 120m²', fiyat: 680000, aciklama: 'Çelik iskelet sistem üzerine inşa edilmiş 120m² çift katlı ev. Depreme dayanıklı, uzun ömürlü.', acil: false, indirimli: false },
-  { id: 'seed_ilan_08', firmaId: 'seed_firm_03', baslik: 'Çelik İskelet Prefabrik 80m² - Stok Fiyatı', fiyat: 420000, aciklama: 'Sezonu kapattık, stok temizleme fiyatıyla 80m² çelik iskelet prefabrik ev. Sınırlı stok!', acil: false, indirimli: true },
-  { id: 'seed_ilan_09', firmaId: 'seed_firm_03', baslik: '150m² Çelik Yapı Villa - Panoramik Cam', fiyat: 850000, aciklama: 'Deniz manzaralı arsa için tasarlanmış 150m² lüks çelik yapı. Panoramik cam cephe ve havuz altyapısı dahil.', acil: false, indirimli: false },
+  /* ── Ege Çelik Yapı / İzmir — 40.000 TL/m² (1.250 USD × 32 TL) ── */
+  { id: 'seed_ilan_07', firmaId: 'seed_firm_03', baslik: 'Çift Katlı Çelik Ev - 120m²',             fiyat: 4800000, aciklama: 'Çelik iskelet sistem üzerine inşa edilmiş 120m² çift katlı ev. Depreme dayanıklı, uzun ömürlü.', acil: false, indirimli: false },
+  { id: 'seed_ilan_08', firmaId: 'seed_firm_03', baslik: 'Çelik İskelet Prefabrik 80m² - Stok Fiyatı', fiyat: 3200000, aciklama: 'Sezonu kapattık, stok temizleme fiyatıyla 80m² çelik iskelet prefabrik ev. Sınırlı stok!', acil: false, indirimli: true },
+  { id: 'seed_ilan_09', firmaId: 'seed_firm_03', baslik: '150m² Çelik Yapı Villa - Panoramik Cam',  fiyat: 6000000, aciklama: 'Deniz manzaralı arsa için tasarlanmış 150m² lüks çelik yapı. Panoramik cam cephe ve havuz altyapısı dahil.', acil: false, indirimli: false },
 
-  /* ── Karadeniz Tiny House / Trabzon ── */
-  { id: 'seed_ilan_10', firmaId: 'seed_firm_04', baslik: 'Orman İçi Tiny House 35m² - Acil Satış', fiyat: 195000, aciklama: 'Karadeniz ormanları içine kurmak için tasarlanmış 35m² tiny house. Kaçırılmayacak fırsat!', acil: true, indirimli: false },
-  { id: 'seed_ilan_11', firmaId: 'seed_firm_04', baslik: 'Tekerlekli Tiny House - Gezici Yaşam', fiyat: 175000, aciklama: 'Her yere taşıyabileceğiniz tekerlekli tiny house. Güneş enerjisi ve su tankı altyapısı dahil.', acil: false, indirimli: false },
-  { id: 'seed_ilan_12', firmaId: 'seed_firm_04', baslik: 'Ahşap Tiny House 40m² - Karadeniz Serisi', fiyat: 215000, aciklama: 'Karadeniz mimarisi ilhamıyla, yerel ahşap kullanılmış 40m² tiny house. Özel indirimli fiyat!', acil: false, indirimli: true },
+  /* ── Karadeniz Tiny House / Trabzon — 200k-600k ── */
+  { id: 'seed_ilan_10', firmaId: 'seed_firm_04', baslik: 'Orman İçi Tiny House 35m² - Acil Satış',  fiyat:  220000, aciklama: 'Karadeniz ormanları içine kurmak için tasarlanmış 35m² tiny house. Kaçırılmayacak fırsat!', acil: true, indirimli: false },
+  { id: 'seed_ilan_11', firmaId: 'seed_firm_04', baslik: 'Tekerlekli Tiny House - Gezici Yaşam',    fiyat:  210000, aciklama: 'Her yere taşıyabileceğiniz tekerlekli tiny house. Güneş enerjisi ve su tankı altyapısı dahil.', acil: false, indirimli: false },
+  { id: 'seed_ilan_12', firmaId: 'seed_firm_04', baslik: 'Ahşap Tiny House 40m² - Karadeniz Serisi', fiyat: 250000, aciklama: 'Karadeniz mimarisi ilhamıyla, yerel ahşap kullanılmış 40m² tiny house. Özel indirimli fiyat!', acil: false, indirimli: true },
 
-  /* ── Bursa Modüler / Bursa ── */
-  { id: 'seed_ilan_13', firmaId: 'seed_firm_05', baslik: '100m² Modüler Prefabrik - Tek Kat', fiyat: 520000, aciklama: 'Geniş yaşam alanı sunan 100m² modüler prefabrik ev. 4 ay içinde teslim, temel dahil.', acil: false, indirimli: false },
-  { id: 'seed_ilan_14', firmaId: 'seed_firm_05', baslik: '60m² Prefabrik Bungalov - Hızlı Teslim', fiyat: 290000, aciklama: 'Bahçe düzenlemesi dahil 60m² bungalov tipi prefabrik ev. Komşusuz, sessiz arsa için ideal.', acil: true, indirimli: false },
-  { id: 'seed_ilan_15', firmaId: 'seed_firm_05', baslik: '3+1 Prefabrik Ev 130m² - Anahtar Teslim', fiyat: 640000, aciklama: 'Komple donanımlı 3+1 prefabrik ev. Banyo, mutfak, ısıtma-soğutma sistemleri dahil.', acil: false, indirimli: false },
+  /* ── Bursa Modüler / Bursa — 3.500 TL/m² ── */
+  { id: 'seed_ilan_13', firmaId: 'seed_firm_05', baslik: '100m² Modüler Prefabrik - Tek Kat',       fiyat:  350000, aciklama: 'Geniş yaşam alanı sunan 100m² modüler prefabrik ev. 4 ay içinde teslim, temel dahil.', acil: false, indirimli: false },
+  { id: 'seed_ilan_14', firmaId: 'seed_firm_05', baslik: '60m² Prefabrik Bungalov - Hızlı Teslim',  fiyat:  210000, aciklama: 'Bahçe düzenlemesi dahil 60m² bungalov tipi prefabrik ev. Komşusuz, sessiz arsa için ideal.', acil: true, indirimli: false },
+  { id: 'seed_ilan_15', firmaId: 'seed_firm_05', baslik: '3+1 Prefabrik Ev 130m² - Anahtar Teslim', fiyat:  455000, aciklama: 'Komple donanımlı 3+1 prefabrik ev. Banyo, mutfak, ısıtma-soğutma sistemleri dahil.', acil: false, indirimli: false },
 
-  /* ── Antalya Prefabrik / Antalya ── */
-  { id: 'seed_ilan_16', firmaId: 'seed_firm_06', baslik: 'Tatil Köyü Tipi Prefabrik Bungalov', fiyat: 310000, aciklama: 'Tatil köyü ve kamp alanları için toplu üretim. 5 ve üzeri alımlarda ekstra indirim uygulanır.', acil: false, indirimli: true },
-  { id: 'seed_ilan_17', firmaId: 'seed_firm_06', baslik: 'Yazlık Prefabrik 70m² - Deniz İklimi', fiyat: 340000, aciklama: 'Deniz kenarı arazilere özel tasarım, tuz atmosferine dayanıklı malzeme kullanımı. Hemen teslim.', acil: false, indirimli: false },
-  { id: 'seed_ilan_18', firmaId: 'seed_firm_06', baslik: 'Çift Katlı Prefabrik Villa - 5 Oda', fiyat: 750000, aciklama: '2 katlı 5 odalı prefabrik villa. Antalya ve Muğla bölgesi için optimum iklim yalıtımı uygulanmış.', acil: false, indirimli: false },
+  /* ── Antalya Prefabrik / Antalya — 3.500 TL/m² ── */
+  { id: 'seed_ilan_16', firmaId: 'seed_firm_06', baslik: 'Tatil Köyü Tipi Prefabrik Bungalov',      fiyat:  245000, aciklama: 'Tatil köyü ve kamp alanları için toplu üretim. 5 ve üzeri alımlarda ekstra indirim uygulanır.', acil: false, indirimli: true },
+  { id: 'seed_ilan_17', firmaId: 'seed_firm_06', baslik: 'Yazlık Prefabrik 70m² - Deniz İklimi',    fiyat:  245000, aciklama: 'Deniz kenarı arazilere özel tasarım, tuz atmosferine dayanıklı malzeme kullanımı. Hemen teslim.', acil: false, indirimli: false },
+  { id: 'seed_ilan_18', firmaId: 'seed_firm_06', baslik: 'Çift Katlı Prefabrik Villa - 5 Oda',      fiyat:  630000, aciklama: '2 katlı 5 odalı prefabrik villa. Antalya ve Muğla bölgesi için optimum iklim yalıtımı uygulanmış.', acil: false, indirimli: false },
 
-  /* ── Konya Çelik / Konya ── */
-  { id: 'seed_ilan_19', firmaId: 'seed_firm_07', baslik: 'Çelik Yapı Depo + Konut Kombine - Acil', fiyat: 480000, aciklama: 'Alt kat depo/atölye, üst kat konut şeklinde tasarlanmış çelik yapı. Ticari-sanayi bölgeleri için ideal.', acil: true, indirimli: false },
-  { id: 'seed_ilan_20', firmaId: 'seed_firm_07', baslik: '90m² Çelik Ev - İç Anadolu Serisi', fiyat: 395000, aciklama: 'İç Anadolu iklim koşullarına göre optimize edilmiş 90m² çelik ev. Güçlü ısı yalıtımı.', acil: false, indirimli: false },
-  { id: 'seed_ilan_21', firmaId: 'seed_firm_07', baslik: 'Çelik Çerçeveli Karma Prefabrik 80m²', fiyat: 360000, aciklama: 'Çelik taşıyıcı sistem üzerine prefabrik panel dolgu. Hem sağlam hem ekonomik çözüm!', acil: false, indirimli: true },
+  /* ── Konya Çelik / Konya — 40.000 TL/m² ── */
+  { id: 'seed_ilan_19', firmaId: 'seed_firm_07', baslik: 'Çelik Yapı Depo + Konut Kombine - Acil',  fiyat: 4000000, aciklama: 'Alt kat depo/atölye, üst kat konut şeklinde tasarlanmış çelik yapı. Ticari-sanayi bölgeleri için ideal.', acil: true, indirimli: false },
+  { id: 'seed_ilan_20', firmaId: 'seed_firm_07', baslik: '90m² Çelik Ev - İç Anadolu Serisi',       fiyat: 3600000, aciklama: 'İç Anadolu iklim koşullarına göre optimize edilmiş 90m² çelik ev. Güçlü ısı yalıtımı.', acil: false, indirimli: false },
+  { id: 'seed_ilan_21', firmaId: 'seed_firm_07', baslik: 'Çelik Çerçeveli Karma Prefabrik 80m²',    fiyat: 3200000, aciklama: 'Çelik taşıyıcı sistem üzerine prefabrik panel dolgu. Hem sağlam hem ekonomik çözüm!', acil: false, indirimli: true },
 
-  /* ── Adana Konteyner / Adana ── */
-  { id: 'seed_ilan_22', firmaId: 'seed_firm_08', baslik: 'Lüks Konteyner Ev 2+1 - Anahtar Teslim', fiyat: 390000, aciklama: 'High-cube konteynerden dönüştürülmüş 2+1 lüks konut. Açık mutfak, geniş banyo, ebeveyn odası.', acil: false, indirimli: false },
-  { id: 'seed_ilan_23', firmaId: 'seed_firm_08', baslik: 'Konteyner Yurt Ünitesi - Öğrenci Kampüsü', fiyat: 150000, aciklama: 'Öğrenci kampüsleri ve yurtlar için ekonomik konteyner yaşam ünitesi. 8 veya 2 kişilik oda düzeni.', acil: false, indirimli: false },
-  { id: 'seed_ilan_24', firmaId: 'seed_firm_08', baslik: 'Bahçeli Konteyner Villa - Çukurova', fiyat: 550000, aciklama: 'Çukurova ovasına özgü geniş bahçe tasarımıyla konteyner villa. Sıcak iklime uygun yalıtım.', acil: false, indirimli: false },
+  /* ── Adana Konteyner / Adana — 150k-450k ── */
+  { id: 'seed_ilan_22', firmaId: 'seed_firm_08', baslik: 'Lüks Konteyner Ev 2+1 - Anahtar Teslim',  fiyat:  350000, aciklama: 'High-cube konteynerden dönüştürülmüş 2+1 lüks konut. Açık mutfak, geniş banyo, ebeveyn odası.', acil: false, indirimli: false },
+  { id: 'seed_ilan_23', firmaId: 'seed_firm_08', baslik: 'Konteyner Yurt Ünitesi - Öğrenci Kampüsü', fiyat: 160000, aciklama: 'Öğrenci kampüsleri ve yurtlar için ekonomik konteyner yaşam ünitesi. 8 veya 2 kişilik oda düzeni.', acil: false, indirimli: false },
+  { id: 'seed_ilan_24', firmaId: 'seed_firm_08', baslik: 'Bahçeli Konteyner Villa - Çukurova',      fiyat:  440000, aciklama: 'Çukurova ovasına özgü geniş bahçe tasarımıyla konteyner villa. Sıcak iklime uygun yalıtım.', acil: false, indirimli: false },
 
-  /* ── Gaziantep Yapı / Gaziantep ── */
-  { id: 'seed_ilan_25', firmaId: 'seed_firm_09', baslik: 'Yığma Ahşap Bungalov 90m² - Kuzey Çamı', fiyat: 420000, aciklama: 'Kuzey Amerika çamından üretilen yığma ahşap bungalov. Doğal ve sağlıklı yaşam arayanlar için.', acil: false, indirimli: false },
-  { id: 'seed_ilan_26', firmaId: 'seed_firm_09', baslik: 'Ahşap Yazlık Bungalov - Söküp Taşınabilir', fiyat: 280000, aciklama: 'Küçük ama fonksiyonel ahşap yazlık ev. İç tasarım tamamen doğal ahşap. Söküp taşınabilir.', acil: false, indirimli: false },
-  { id: 'seed_ilan_27', firmaId: 'seed_firm_09', baslik: 'Kütük Ev - El İşçiliği Premium', fiyat: 580000, aciklama: 'El işçiliğiyle üretilen premium kütük ev. Her parça özel kesim, doğal kireç sıva ile iç yüzey.', acil: false, indirimli: false },
+  /* ── Gaziantep Yapı / Gaziantep — 300k-900k ── */
+  { id: 'seed_ilan_25', firmaId: 'seed_firm_09', baslik: 'Yığma Ahşap Bungalov 90m² - Kuzey Çamı',  fiyat:  420000, aciklama: 'Kuzey Amerika çamından üretilen yığma ahşap bungalov. Doğal ve sağlıklı yaşam arayanlar için.', acil: false, indirimli: false },
+  { id: 'seed_ilan_26', firmaId: 'seed_firm_09', baslik: 'Ahşap Yazlık Bungalov - Söküp Taşınabilir', fiyat: 320000, aciklama: 'Küçük ama fonksiyonel ahşap yazlık ev. İç tasarım tamamen doğal ahşap. Söküp taşınabilir.', acil: false, indirimli: false },
+  { id: 'seed_ilan_27', firmaId: 'seed_firm_09', baslik: 'Kütük Ev - El İşçiliği Premium',          fiyat:  650000, aciklama: 'El işçiliğiyle üretilen premium kütük ev. Her parça özel kesim, doğal kireç sıva ile iç yüzey.', acil: false, indirimli: false },
 
-  /* ── Mersin Modüler / Mersin ── */
-  { id: 'seed_ilan_28', firmaId: 'seed_firm_10', baslik: 'Deniz Manzaralı Tiny House 40m²', fiyat: 265000, aciklama: 'Akdeniz kıyılarına özel tasarım, tüm odalardan deniz görünen tiny house. Teraslı ve pergoleli.', acil: false, indirimli: false },
-  { id: 'seed_ilan_29', firmaId: 'seed_firm_10', baslik: 'Söküp Takılabilir Tiny House - Mobil', fiyat: 165000, aciklama: 'Tamamen söküp başka bir yere kurulabilen modüler tiny house. Arazi almadan özgür yaşam!', acil: false, indirimli: false },
-  { id: 'seed_ilan_30', firmaId: 'seed_firm_10', baslik: 'Lüks Tiny House 45m² - Plunge Havuzlu', fiyat: 310000, aciklama: 'Plunge havuzu ve güneş terası dahil 45m² lüks tiny house. Mersin ve çevre ilçelere ücretsiz montaj.', acil: false, indirimli: false },
+  /* ── Mersin Modüler / Mersin — 200k-600k ── */
+  { id: 'seed_ilan_28', firmaId: 'seed_firm_10', baslik: 'Deniz Manzaralı Tiny House 40m²',         fiyat:  290000, aciklama: 'Akdeniz kıyılarına özel tasarım, tüm odalardan deniz görünen tiny house. Teraslı ve pergoleli.', acil: false, indirimli: false },
+  { id: 'seed_ilan_29', firmaId: 'seed_firm_10', baslik: 'Söküp Takılabilir Tiny House - Mobil',    fiyat:  210000, aciklama: 'Tamamen söküp başka bir yere kurulabilen modüler tiny house. Arazi almadan özgür yaşam!', acil: false, indirimli: false },
+  { id: 'seed_ilan_30', firmaId: 'seed_firm_10', baslik: 'Lüks Tiny House 45m² - Plunge Havuzlu',   fiyat:  380000, aciklama: 'Plunge havuzu ve güneş terası dahil 45m² lüks tiny house. Mersin ve çevre ilçelere ücretsiz montaj.', acil: false, indirimli: false },
 ];
 
 /* ══════════════════════════════════════════════════════════
