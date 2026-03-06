@@ -47,16 +47,8 @@ function json(data: unknown, status = 200) {
   });
 }
 
-/* ── System prompt — few-shot olarak contents dizisine eklenir ── */
-const SYSTEM_TURN = {
-  role: 'user',
-  parts: [{ text: "Sen ModülerPazar'ın yapı danışmanısın. SADECE modüler yapı, prefabrik ev, çelik yapı, konteyner ev, tiny house, ahşap yapı konularında yardım et. Konu dışı sorulara 'Üzgünüm, sadece modüler yapı konularında yardımcı olabilirim' de. Türkiye'deki tüm illerin iklim, deprem riski, zemin yapısı bilgilerini biliyorsun. Yanıtları şu formatta ver:\n🌍 Bölge & İklim Analizi\n🏗️ Önerilen Yapı Tipi\n💰 Tahmini Maliyet (m² başına TL)\n⚠️ Dikkat Edilecekler\n\nFiyatlar piyasa koşullarına göre değişir, kesin fiyat için firma tekliflerini karşılaştırın. Yanıt sonunda her zaman: 'ModülerPazar üzerinden ücretsiz teklif alarak en uygun fiyatı bulabilirsiniz 👉 modulerpazar.com' ekle." }],
-};
-
-const ACK_TURN = {
-  role: 'model',
-  parts: [{ text: 'Anlaşıldı, ModülerPazar yapı danışmanı olarak hizmet vermeye hazırım.' }],
-};
+/* ── System prompt ──────────────────────────────────────── */
+const SYSTEM_PROMPT = "Sen ModülerPazar'ın yapı danışmanısın. SADECE modüler yapı, prefabrik ev, çelik yapı, konteyner ev, tiny house, ahşap yapı konularında yardım et. Konu dışı sorulara \"Üzgünüm, sadece modüler yapı konularında yardımcı olabilirim\" de. Türkiye'deki tüm illerin iklim, deprem riski, zemin yapısı bilgilerini biliyorsun. Yanıtları şu formatta ver:\n🌍 Bölge & İklim Analizi\n🏗️ Önerilen Yapı Tipi\n💰 Tahmini Maliyet (m² başına TL)\n⚠️ Dikkat Edilecekler\n\nFiyatlar piyasa koşullarına göre değişir, kesin fiyat için firma tekliflerini karşılaştırın. Yanıt sonunda her zaman: \"ModülerPazar üzerinden ücretsiz teklif alarak en uygun fiyatı bulabilirsiniz 👉 modulerpazar.com\" ekle.";
 
 /* ── Handler ────────────────────────────────────────────── */
 export default async function handler(req: Request) {
@@ -90,45 +82,40 @@ export default async function handler(req: Request) {
     return json({ error: `Mesaj en fazla ${MAX_BODY} karakter olabilir.` }, 400);
   }
 
-  /* Gemini API */
-  const apiKey = process.env.GEMINI_API_KEY;
+  /* Groq API */
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return json({ error: 'Sunucu yapılandırma hatası.' }, 500);
   }
 
   try {
-    const upstream = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            SYSTEM_TURN,
-            ACK_TURN,
-            { role: 'user', parts: [{ text: message.trim() }] },
-          ],
-          tools: [{ googleSearch: {} }],
-          generationConfig: { maxOutputTokens: 1024 },
-        }),
+    const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${apiKey}`,
       },
-    );
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user',   content: message.trim() },
+        ],
+        max_tokens: 1024,
+      }),
+    });
 
     const data = await upstream.json() as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-      error?: { message?: string };
+      choices?: Array<{ message?: { content?: string } }>;
+      error?:   { message?: string };
     };
 
     if (!upstream.ok) {
-      const detail = data.error?.message ?? `Gemini ${upstream.status}`;
+      const detail = data.error?.message ?? `Groq ${upstream.status}`;
       return json({ error: detail, remaining }, upstream.status);
     }
 
-    const parts = data.candidates?.[0]?.content?.parts;
-    const reply =
-      parts?.[0]?.text ||
-      parts?.map((p) => p.text ?? '').join('') ||
-      'Yanıt alınamadı';
+    const reply = data.choices?.[0]?.message?.content || 'Yanıt alınamadı';
     return json({ reply, remaining });
   } catch {
     return json({ error: 'Yapay zeka servisine ulaşılamadı.' }, 502);
