@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { CheckCircle, Lock, ImageIcon, CalendarDays, MapPin } from 'lucide-react';
 import { CATEGORIES } from '../data/categories';
 import { db } from '../lib/firebase';
+import { sendTalepEmail } from '../lib/emailjs';
 import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -113,6 +114,21 @@ export default function TalepOlusturPage() {
         firmaKabulEdenler:  [],
         tarih:              serverTimestamp(),
       });
+
+      /* EmailJS bildirimi — hata oluşursa sessizce geç, talep kaydedildi */
+      try {
+        await sendTalepEmail({
+          kategori: form.kategori,
+          sehir:    form.sehir,
+          butce:    form.butce,
+          aciklama: sanitizeText(form.aciklama, 1000),
+          ad:       sanitizeText(form.ad, 100),
+          telefon:  form.telefon.trim(),
+          email:    form.email.trim().toLowerCase(),
+        });
+      } catch (err) {
+        console.error('Email gönderilemedi:', err);
+      }
 
       /* Google Sheets webhook — fire & forget, hata oluşursa sessizce geç */
       void fetch('/api/sheets-export', {
