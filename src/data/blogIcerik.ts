@@ -251,4 +251,82 @@ Ahşap ise nem emme ve salma döngüsüne bağlı olarak çatlayabilir ve uzun v
 ## Sonuç
 
 "Hangisi daha dayanıklı?" sorusunun tek bir yanıtı yoktur. Doğru malzeme; projenizin lokasyonuna, iklim koşullarına, bütçenize ve estetik beklentinize göre belirlenir. ModülerPazar'da hem ahşap hem de çelik yapı konusunda uzmanlaşmış onaylı firmalardan eş zamanlı teklif alarak en uygun seçimi kendi koşullarınıza göre yapabilirsiniz.`,
+
+  'prefabrik-ev-kredisi-nasil-alinir': `## Bankalar Prefabrik Eve Kredi Verir mi?
+
+Kısa yanıt: Evet, verir — ancak bazı koşullar geleneksel konut kredilerinden farklıdır. 2026 itibarıyla Türkiye'deki birçok kamu ve özel banka, tapu veya yapı ruhsatına bağlı prefabrik ev projelerine konut kredisi açmaktadır.
+
+Temel kural şudur: Kredi kullanabilmek için yapının "kalıcı yapı" niteliği taşıması ve inşaat ya da kullanım izninin bulunması gerekir. Tapusuz veya ruhsatsız prefabrik yapılar için kredi bulmak son derece güçtür.
+
+## Hangi Belgeler Gerekli?
+
+Başvuru sürecinde bankalar genellikle şu belgeleri talep eder. Tapu veya tahsis belgesi zorunludur. Yapı ruhsatı veya yerleşim belgesi istenir. Firmadan alınmış sözleşme ve teknik şartname gereklidir. Bağımsız gayrimenkul değerleme raporu sunulmalıdır. Kişisel belgeler olarak da son üç aylık gelir belgesi ve kimlik fotokopisi talep edilir.
+
+Bazı bankalar, onaylı prefabrik firma listesine dahil üreticilerden alınan teklifi kredi başvurusuna eklemenizi zorunlu kılabilir.
+
+## 2026 Kredi Koşulları
+
+2026 yılı başı itibarıyla prefabrik konut kredisi faiz oranları, genel konut kredisi oranlarıyla paralellik göstermektedir. Kamu bankaları yıllık %45-55 aralığında sabit faizli kampanyalar sunarken özel bankalar değişken oranlı seçenekler önerebilmektedir. Kredi vadesi çoğunlukla 10-20 yıl arasında olmakla birlikte bazı bankalar modüler yapılar için maksimum 10 yılı tercih etmektedir.
+
+## Pratik Öneriler
+
+İlk adım olarak mutlaka yapı ruhsatı alın. Ruhsatsız yapılar için kredi kapısı neredeyse tamamen kapalıdır. İkinci olarak değerleme raporu masrafını göz önünde bulundurun; bu rapor için 3.000 - 6.000 TL arasında bir ödeme yapmanız gerekebilir. Üçüncü olarak en az 3 bankayı karşılaştırın; oranlar ve şartlar kuruma göre önemli ölçüde değişir. Son olarak uzun vadeli düşünün; düşük taksit cazibesine kapılmadan toplam faiz yükünü hesaplayın.
+
+## Sonuç
+
+Prefabrik ev kredisi almak mümkündür; ancak süreç geleneksel konut kredisinden biraz daha fazla ön hazırlık gerektirir. Ruhsat, tapu ve onaylı firma seçimi bu hazırlığın temel taşlarıdır. ModülerPazar üzerinden yetkili firmalarla iletişime geçerek belgelerinizi erken hazırlamaya başlayabilirsiniz.`,
+
+  'depreme-dayanikli-moduler-yapilar': `## Deprem Gerçeği ve Modüler Yapılar
+
+Türkiye, dünyanın en aktif deprem kuşaklarından birinin üzerinde yer almaktadır. 2023 Kahramanmaraş depremleri, yapı kalitesinin ne denli kritik olduğunu bir kez daha gözler önüne serdi. Peki modüler ve prefabrik yapılar bu tabloda nerede duruyor?
+
+Yanıt hem "evet, çok güvenli" hem de "dikkat edin" şeklindedir — her şey malzeme seçimine, tasarıma ve üreticiye bağlıdır.
+
+## Çelik Karkas Sistemler
+
+Doğru projelendirilmiş çelik karkas prefabrik yapılar, deprem yönetmeliğine (TBDY 2018) uygun üretildiğinde geleneksel betonarme yapılara kıyasla önemli avantajlar sunar. Çelik, enerji emme kapasitesi yüksek bir malzemedir; elastik davranışı sayesinde depremi emer ve gevrek kırılma yerine süneklikle karşılık verir. Fabrika kontrolü de kaliteyi standartlaştırır.
+
+## Sandviç Panel Sistemler
+
+Çelik taşıyıcı çerçeve üzerine oturan sandviç panel yapılar, doğru detaylandırma yapıldığında depreme dayanıklı olabilir. Ancak burada belirleyici etken taşıyıcı sistemin tasarımıdır; panel dolgu malzemesi değil.
+
+Düşük kaliteli ve mühendissiz üretilmiş bazı sandviç panel yapıların deprem performansının zayıf olduğu bilinmektedir. Bu nedenle mutlaka statik ve betonarme hesap raporu talep edin.
+
+## Ahşap Karkas (Timber Frame)
+
+Kuzey Amerika ve Japonya verilerine göre iyi inşa edilmiş ahşap karkas yapılar son derece başarılı deprem performansı sergiler. Ahşabın esnek yapısı yatay yüklere iyi karşılık verir. Ancak Türkiye'deki denetim mekanizması henüz olgunlaşmadığından kalite büyük farklılıklar gösterebilir.
+
+## Neye Dikkat Etmeli?
+
+Güvenilir bir modüler yapı için şu kriterleri arayın. Birincisi TBDY 2018 uyumlu statik hesap raporu. İkincisi TSE veya CE belgeli malzeme kullanımı. Üçüncüsü zemin etüt raporu ve buna göre temel tasarımı. Dördüncüsü sismik bölgeye uygun bağlantı detayları. Beşincisi ise firma referansları ve tamamlanmış proje portföyü.
+
+## Sonuç
+
+Modüler yapılar depreme dayanıksız değildir — aksine, doğru üretildiğinde geleneksel yapılardan daha güvenli olabilirler. Kritik nokta; mühendislik denetimi, malzeme kalitesi ve zemin analizidir. ModülerPazar'daki onaylı firmaların tamamı bu belgeleri sunabilmektedir.`,
+
+  '100-m2-prefabrik-ev-maliyeti-2026': `## Neden 100 m²?
+
+100 metrekare, Türkiye'de tek ya da çift kişilik yaşam için ideal olarak kabul edilen ve en sık talep edilen prefabrik ev büyüklüğüdür. Bu rehberde 100 m²lik bir prefabrik ev yaptırmanın gerçek toplam maliyetini tüm kalemleriyle inceliyoruz.
+
+## Yapı Maliyeti
+
+2026 yılı başı fiyatlarına göre 100 m²lik bir prefabrik evin kaba yapı maliyeti aşağıdaki gibi şekillenmektedir. Ekonomik segment için sandviç panel sistem, 100 m² başına 800.000 - 1.200.000 TL arasında maliyetle gerçekleşmektedir. Orta segment için çelik karkas ve yüksek yalıtımlı panel sistemi 1.200.000 - 1.800.000 TL arasındadır. Üst segment için anahtar teslim lüks prefabrik projeler ise 1.800.000 TL ve üzerine çıkabilmektedir.
+
+Bu rakamlar yalnızca yapı bedelini kapsamakta olup zemin ve altyapı maliyetleri dahil değildir.
+
+## Ek Maliyetler (Çoğunlukla Göz Ardı Edilir)
+
+Gerçekçi bir bütçe oluşturmak için şu kalemleri de hesaba katmalısınız. Zemin etüdü ve temel hazırlığı 80.000 - 200.000 TL arasında değişir; zemin yapısına göre çok büyük farklılıklar gösterebilir. Ruhsat ve izin giderleri, belediyeye ve arsaya bağlı olarak 15.000 - 50.000 TL arasındadır. Nakliye ve vinç ücreti, mesafe ve arazi koşullarına göre 30.000 - 80.000 TL arasında değişir. Altyapı bağlantıları — elektrik, su, kanalizasyon, doğalgaz — 50.000 - 150.000 TL tutabilir. İç dekorasyon olarak mutfak, banyo, zemin, boya kalemleri 150.000 - 400.000 TL arasındadır. Peyzaj ve dış düzenleme, istenirse 30.000 - 100.000 TL arasında ek maliyet oluşturur.
+
+## Gerçekçi Toplam Bütçe
+
+Tüm kalemler dahil edildiğinde, anahtar teslim bir 100 m² prefabrik ev için gerçekçi toplam bütçe aralığı şöyledir. Ekonomik paket için 1.200.000 - 1.700.000 TL, orta segment için 1.700.000 - 2.500.000 TL ve üst segment için 2.500.000 TL ve üzeri beklenmelidir.
+
+## Tasarruf İpuçları
+
+Sezonu iyi seçin; ilkbahar başı montaj siparişleri kış aylarına göre daha uygun fiyatlı olabilir. Temel hazırlığını kendiniz yaptırın; firma paketinin dışında tutarak yerel bir müteahhitle çalışmak maliyet avantajı sağlayabilir. Standart kat planı seçin; özel mimari tasarımlar ek proje maliyeti getirir. Son olarak ModülerPazar üzerinden birden fazla firmaya teklif isteyin ve teklifleri karşılaştırın.
+
+## Sonuç
+
+100 m²lik prefabrik ev yaptırmak, doğru planlama yapıldığında betonarme alternatiflere kıyasla hem hızlı hem de ekonomik bir seçenektir. Ancak gizli maliyetlere karşı hazırlıklı olunması ve tüm kalemlerin baştan netleştirilmesi kritik önem taşır.`,
 };

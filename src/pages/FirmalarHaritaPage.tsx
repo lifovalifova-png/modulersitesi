@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { CATEGORIES } from '../data/categories';
-import { ShieldCheck, MapPin, Tag, ChevronDown, Building2 } from 'lucide-react';
+import { ShieldCheck, MapPin, Tag, ChevronDown, Building2, Star } from 'lucide-react';
 
 /* ── Firma tipi (Firestore firms koleksiyonu) ───────────────── */
 interface Firm {
@@ -15,6 +15,11 @@ interface Firm {
   city:     string;
   verified: boolean;
   status:   'pending' | 'approved' | 'rejected';
+}
+
+interface YorumRating {
+  avg:   number;
+  count: number;
 }
 
 /* ── Category badge colors ──────────────────────────────────── */
@@ -44,6 +49,7 @@ function SkeletonCard() {
 /* ── Component ──────────────────────────────────────────────── */
 export default function FirmalarHaritaPage() {
   const [firms,          setFirms]          = useState<Firm[]>([]);
+  const [ratings,        setRatings]        = useState<Record<string, YorumRating>>({});
   const [loading,        setLoading]        = useState(true);
   const [filterCategory, setFilterCategory] = useState('');
   const [filterCity,     setFilterCity]     = useState('');
@@ -57,6 +63,26 @@ export default function FirmalarHaritaPage() {
       setFirms(docs);
       setLoading(false);
     }, () => setLoading(false));
+    return unsub;
+  }, []);
+
+  /* Onaylı yorumlardan firma başına ortalama puan hesapla */
+  useEffect(() => {
+    const q = query(collection(db, 'yorumlar'), where('onaylandi', '==', true));
+    const unsub = onSnapshot(q, (snap) => {
+      const map: Record<string, { total: number; count: number }> = {};
+      snap.docs.forEach((d) => {
+        const data = d.data() as { firmaId: string; puan: number };
+        if (!map[data.firmaId]) map[data.firmaId] = { total: 0, count: 0 };
+        map[data.firmaId].total += data.puan;
+        map[data.firmaId].count += 1;
+      });
+      const result: Record<string, YorumRating> = {};
+      Object.entries(map).forEach(([id, v]) => {
+        result[id] = { avg: v.total / v.count, count: v.count };
+      });
+      setRatings(result);
+    });
     return unsub;
   }, []);
 
@@ -187,6 +213,20 @@ export default function FirmalarHaritaPage() {
                       {firm.city}
                     </span>
                   </div>
+
+                  {/* Ortalama puan */}
+                  {ratings[firm.id] ? (
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-3 h-3 ${i < Math.round(ratings[firm.id].avg) ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-200'}`} />
+                      ))}
+                      <span className="text-xs text-gray-500 ml-0.5">
+                        {ratings[firm.id].avg.toFixed(1)} ({ratings[firm.id].count})
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400">Henüz değerlendirme yok</p>
+                  )}
 
                   {/* Buton */}
                   <div className="mt-auto pt-1">

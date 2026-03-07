@@ -9,6 +9,7 @@ import { sendTalepEmail } from '../lib/emailjs';
 import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import Disclaimer from '../components/Disclaimer';
 
 /* ─── Sabitler ────────────────────────────────────────────── */
 const CITIES = [
@@ -217,10 +218,14 @@ export default function TalepOlusturPage() {
           </nav>
 
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Teklif İste</h1>
-          <p className="text-sm text-gray-500 mb-8">
+          <p className="text-sm text-gray-500 mb-4">
             Projenizi tanımlayın; size uygun firmalar tekliflerini iletsin.
             Kişisel bilgileriniz yalnızca talebinizi kabul eden firmalarla paylaşılır.
           </p>
+
+          <div className="mb-8">
+            <Disclaimer />
+          </div>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-6">
 

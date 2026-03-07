@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, Phone, Map, UserCircle, FileText, LogOut } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, Phone, Map, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 import { CATEGORIES } from '../data/categories';
 import { SITE_CONFIG } from '../config/site';
@@ -367,6 +367,14 @@ export default function Header() {
               {t('nav.faq')}
             </Link>
 
+            <Link
+              to="/fiyat-hesapla"
+              className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+            >
+              <Calculator className="w-4 h-4" aria-hidden="true" />
+              Fiyat Hesapla
+            </Link>
+
           </div>
         </div>
       </nav>
@@ -410,6 +418,14 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.faq')}
+            </Link>
+            <Link
+              to="/fiyat-hesapla"
+              className="flex items-center gap-2 w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Calculator className="w-5 h-5" aria-hidden="true" />
+              Fiyat Hesapla
             </Link>
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-400 mb-2 px-2">{t('header.categoriesLabel')}</p>

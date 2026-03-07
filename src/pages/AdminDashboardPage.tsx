@@ -28,7 +28,7 @@ import {
   LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle,
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
   Send, Eye, EyeOff, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
-  Inbox, BookOpen, BarChart2, Download, Sliders,
+  Inbox, BookOpen, BarChart2, Download, Sliders, Star, ThumbsUp,
 } from 'lucide-react';
 import { type FeatureFlags, DEFAULT_FLAGS } from '../hooks/useFeatureFlags';
 import logoSrc from '../assets/logo.svg';
@@ -109,7 +109,7 @@ interface AdminIlan {
   status:            'aktif' | 'pasif';
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features';
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
@@ -176,6 +176,133 @@ function Badge({ status }: { status: AdminFirm['status'] }) {
     <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${map[status]}`}>
       {label[status]}
     </span>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TAB — YORUMLAR
+════════════════════════════════════════════════════════════ */
+interface AdminYorum {
+  id: string;
+  firmaId: string;
+  userId: string;
+  userName: string;
+  puan: number;
+  yorum: string;
+  tarih: { seconds: number } | null;
+  onaylandi: boolean;
+}
+
+function YorumlarTab() {
+  const [yorumlar, setYorumlar] = useState<AdminYorum[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [filter,   setFilter]   = useState<'bekleyen' | 'onaylanan' | 'hepsi'>('bekleyen');
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'yorumlar'), (snap) => {
+      setYorumlar(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminYorum)));
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  async function onayla(id: string) {
+    await updateDoc(doc(db, 'yorumlar', id), { onaylandi: true });
+    toast.success('Yorum onaylandı');
+  }
+
+  async function reddet(id: string) {
+    await deleteDoc(doc(db, 'yorumlar', id));
+    toast.success('Yorum silindi');
+  }
+
+  const filtered = yorumlar.filter((y) =>
+    filter === 'hepsi'     ? true :
+    filter === 'bekleyen'  ? !y.onaylandi :
+    y.onaylandi
+  ).sort((a, b) => (b.tarih?.seconds ?? 0) - (a.tarih?.seconds ?? 0));
+
+  if (loading) return <div className="p-6 text-sm text-gray-500">Yükleniyor…</div>;
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">Müşteri Yorumları</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {yorumlar.filter((y) => !y.onaylandi).length} bekleyen · {yorumlar.filter((y) => y.onaylandi).length} onaylı
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {(['bekleyen', 'onaylanan', 'hepsi'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition ${
+                filter === f ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {f === 'bekleyen' ? 'Bekleyen' : f === 'onaylanan' ? 'Onaylanan' : 'Hepsi'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+          <ThumbsUp className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">Bu filtrede yorum yok.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((y) => (
+            <div
+              key={y.id}
+              className={`bg-white rounded-xl border p-4 ${y.onaylandi ? 'border-emerald-100' : 'border-amber-200'}`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-semibold text-sm text-gray-800">{y.userName}</p>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      y.onaylandi ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {y.onaylandi ? 'Onaylı' : 'Bekliyor'}
+                    </span>
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-3 h-3 ${i < y.puan ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-2">
+                    Firma ID: {y.firmaId} ·{' '}
+                    {y.tarih ? new Date(y.tarih.seconds * 1000).toLocaleDateString('tr-TR') : ''}
+                  </p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{y.yorum}</p>
+                </div>
+                {!y.onaylandi && (
+                  <div className="flex flex-col gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => onayla(y.id)}
+                      className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" /> Onayla
+                    </button>
+                    <button
+                      onClick={() => reddet(y.id)}
+                      className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold px-3 py-1.5 rounded-lg transition"
+                    >
+                      <XCircle className="w-3.5 h-3.5" /> Reddet
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -374,13 +501,38 @@ function OverviewTab() {
 /* ═══════════════════════════════════════════════════════════
    TAB 2 — SITE SETTINGS
 ════════════════════════════════════════════════════════════ */
+const DEFAULT_FIYATLAR: Record<string, number> = {
+  prefabrik:             3500,
+  'celik-yapilar':       40000,
+  'yasam-konteynerleri': 3000,
+  'tiny-house':          4000,
+  'ahsap-yapilar':       5000,
+};
+
+const FIYAT_LABELS: Record<string, string> = {
+  prefabrik:             'Prefabrik Ev (₺/m²)',
+  'celik-yapilar':       'Çelik Yapı (₺/m²)',
+  'yasam-konteynerleri': 'Yaşam Konteyneri (₺/m²)',
+  'tiny-house':          'Tiny House (₺/m²)',
+  'ahsap-yapilar':       'Ahşap Yapı (₺/m²)',
+};
+
 function SettingsTab() {
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
-  const [saving,   setSaving]   = useState(false);
+  const [settings,       setSettings]       = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [saving,         setSaving]         = useState(false);
+  const [fiyatlar,       setFiyatlar]       = useState<Record<string, number>>(DEFAULT_FIYATLAR);
+  const [fiyatlarSaving, setFiyatlarSaving] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'settings', 'site'), (snap) => {
       if (snap.exists()) setSettings(snap.data() as SiteSettings);
+    });
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'fiyatlar'), (snap) => {
+      if (snap.exists()) setFiyatlar((prev) => ({ ...prev, ...(snap.data() as Record<string, number>) }));
     });
     return unsub;
   }, []);
@@ -394,6 +546,18 @@ function SettingsTab() {
       toast.error('Kaydetme sırasında hata oluştu.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFiyatSave = async () => {
+    setFiyatlarSaving(true);
+    try {
+      await setDoc(doc(db, 'settings', 'fiyatlar'), fiyatlar);
+      toast.success('Fiyatlar kaydedildi.');
+    } catch {
+      toast.error('Fiyat kaydetme hatası.');
+    } finally {
+      setFiyatlarSaving(false);
     }
   };
 
@@ -478,6 +642,40 @@ function SettingsTab() {
           : <><Save className="w-4 h-4" /> Kaydet</>
         }
       </button>
+
+      {/* Fiyat Hesaplayıcı Tablosu */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <div>
+          <h3 className="font-semibold text-gray-700 text-sm">Fiyat Hesaplayıcı — m² Birim Fiyatlar</h3>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Bu değerler /fiyat-hesapla sayfasında kullanılır. m² başına Türk Lirası cinsinden girin.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {Object.entries(FIYAT_LABELS).map(([slug, label]) => (
+            <div key={slug}>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+              <input
+                type="number"
+                min={0}
+                value={fiyatlar[slug] ?? DEFAULT_FIYATLAR[slug]}
+                onChange={(e) => setFiyatlar((prev) => ({ ...prev, [slug]: Number(e.target.value) }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={handleFiyatSave}
+          disabled={fiyatlarSaving}
+          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {fiyatlarSaving
+            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor…</>
+            : <><Save className="w-4 h-4" /> Fiyatları Kaydet</>
+          }
+        </button>
+      </div>
     </div>
   );
 }
@@ -2101,6 +2299,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'blog',       label: 'Blog',          icon: <BookOpen   className="w-4 h-4" /> },
   { key: 'rapor',      label: 'Rapor',         icon: <BarChart2  className="w-4 h-4" /> },
   { key: 'features',   label: 'Özellikler',    icon: <Sliders    className="w-4 h-4" /> },
+  { key: 'yorumlar',   label: 'Yorumlar',      icon: <ThumbsUp   className="w-4 h-4" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -2273,6 +2472,7 @@ export default function AdminDashboardPage() {
           {tab === 'blog'       && <BlogTab />}
           {tab === 'rapor'      && <RaporTab />}
           {tab === 'features'   && <FeaturesTab />}
+          {tab === 'yorumlar'   && <YorumlarTab />}
         </main>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { db } from '../lib/firebase';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
 import {
   X, Send, ShoppingBag, CheckCircle, AlertCircle, Loader2,
-  Trash2, ShieldCheck, MapPin,
+  Trash2, ShieldCheck, MapPin, Columns2,
 } from 'lucide-react';
 
 const BUTCE_OPTIONS = [
@@ -21,7 +21,7 @@ const EMPTY_FORM = { ad: '', telefon: '', email: '', butce: '', mesaj: '', kvkk:
 export default function TeklifSepeti() {
   const { firms, removeFirm, isOpen, openDrawer, closeDrawer, clearAll } = useTeklifSepet();
 
-  const [step, setStep] = useState<'list' | 'form' | 'success'>('list');
+  const [step, setStep] = useState<'list' | 'compare' | 'form' | 'success'>('list');
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -35,6 +35,69 @@ export default function TeklifSepeti() {
       setStatus('idle');
     }
   }, [isOpen]);
+
+  /* Karşılaştırma tablosu — 2 firma yan yana */
+  const CompareTable = () => {
+    if (firms.length < 2) return null;
+    const [a, b] = firms;
+    const rows: { label: string; a: string; b: string }[] = [
+      { label: 'Firma Adı',      a: a.firmaAdi,                                            b: b.firmaAdi },
+      { label: 'Kategori',       a: a.kategori,                                             b: b.kategori },
+      { label: 'Şehir',          a: a.sehir,                                                b: b.sehir },
+      { label: 'Fiyat',          a: new Intl.NumberFormat('tr-TR').format(a.fiyat) + ' ₺', b: new Intl.NumberFormat('tr-TR').format(b.fiyat) + ' ₺' },
+      { label: 'Doğrulanmış',    a: a.firmaDogrulanmis ? '✅ Evet' : '—',                  b: b.firmaDogrulanmis ? '✅ Evet' : '—' },
+    ];
+    return (
+      <div className="p-5">
+        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <Columns2 className="w-4 h-4 text-emerald-600" /> Yan Yana Karşılaştırma
+        </h3>
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-500 w-1/3">Özellik</th>
+                <th className="text-left px-3 py-2.5 text-xs font-semibold text-emerald-700 w-1/3">
+                  {a.firmaAdi.slice(0, 14)}{a.firmaAdi.length > 14 ? '…' : ''}
+                </th>
+                <th className="text-left px-3 py-2.5 text-xs font-semibold text-blue-700 w-1/3">
+                  {b.firmaAdi.slice(0, 14)}{b.firmaAdi.length > 14 ? '…' : ''}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={i} className={`border-b border-gray-100 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                  <td className="px-3 py-2.5 text-xs font-medium text-gray-500">{row.label}</td>
+                  <td className="px-3 py-2.5 text-xs text-gray-800 font-semibold">{row.a}</td>
+                  <td className="px-3 py-2.5 text-xs text-gray-800 font-semibold">{row.b}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Her firma için ayrı teklif isteme */}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {firms.map((f) => (
+            <Link
+              key={f.id}
+              to={`/talep-olustur?firma=${f.firmaId}`}
+              onClick={closeDrawer}
+              className="block text-center border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold py-2 rounded-lg transition"
+            >
+              {f.firmaAdi.slice(0, 12)}{f.firmaAdi.length > 12 ? '…' : ''}
+            </Link>
+          ))}
+        </div>
+        <button
+          onClick={() => setStep('list')}
+          className="w-full mt-2 text-xs text-gray-400 hover:text-gray-600 transition py-2"
+        >
+          ← Geri dön
+        </button>
+      </div>
+    );
+  };
 
   const count = firms.length;
   const isFull = count >= 2;
@@ -304,6 +367,9 @@ export default function TeklifSepeti() {
             </form>
           )}
 
+          {/* ── COMPARE ───────────────────────────────────── */}
+          {step === 'compare' && <CompareTable />}
+
           {/* ── FIRM LIST ─────────────────────────────────── */}
           {step === 'list' && (
             <div className="p-5 space-y-4">
@@ -378,7 +444,7 @@ export default function TeklifSepeti() {
 
         {/* ── Drawer Footer (only on list step) ────────────── */}
         {step === 'list' && (
-          <div className="border-t border-gray-100 p-5 space-y-3 bg-white">
+          <div className="border-t border-gray-100 p-5 space-y-2 bg-white">
             <button
               onClick={() => setStep('form')}
               disabled={count === 0}
@@ -387,6 +453,14 @@ export default function TeklifSepeti() {
               <Send className="w-4 h-4" />
               Teklif Talebini Gönder
             </button>
+            {count === 2 && (
+              <button
+                onClick={() => setStep('compare')}
+                className="w-full border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition"
+              >
+                <Columns2 className="w-4 h-4" /> Karşılaştır
+              </button>
+            )}
             <button
               onClick={() => { clearAll(); closeDrawer(); }}
               className="w-full flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition"

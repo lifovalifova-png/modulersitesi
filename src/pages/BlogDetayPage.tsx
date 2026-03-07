@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import { BLOG_POSTS, type BlogKategori } from '../data/blogPosts';
 import { toast } from 'sonner';
 import SEOMeta from '../components/SEOMeta';
+import Disclaimer from '../components/Disclaimer';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -281,6 +282,11 @@ export default function BlogDetayPage() {
               {blogSetting?.ekMetin && (
                 <p className="mt-4 text-sm text-gray-700 leading-relaxed whitespace-pre-line">{blogSetting.ekMetin}</p>
               )}
+
+              {/* Uyarı */}
+              <div className="mt-6">
+                <Disclaimer />
+              </div>
 
               {/* Alt navigasyon */}
               <div className="mt-10 pt-6 border-t border-gray-100 flex items-center gap-3">
