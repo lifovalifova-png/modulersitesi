@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   collection, query, where, onSnapshot,
@@ -61,6 +61,9 @@ export default function FirmaPaneliPage() {
   const [filter,      setFilter]      = useState<FilterTab>('beklemede');
   const [expanded,    setExpanded]    = useState<Set<string>>(new Set());
   const [processing,  setProcessing]  = useState<string | null>(null);
+  /* Talep cache: daha önce çekilen talepları saklar, snapshot güncellemelerinde
+     yeniden Firestore'a gitmez — N+1 sorguyu O(yeni) okumaya düşürür. */
+  const talepCache = useRef<Record<string, TalepData>>({});
 
   /* ── Auth guard ─────────────────────────────────────────── */
   useEffect(() => {
@@ -84,20 +87,23 @@ export default function FirmaPaneliPage() {
         ...d.data(),
       })) as BildirimWithTalep[];
 
-      /* Talep verilerini çek */
-      const talepIds = [...new Set(docs.map((b) => b.talepId))];
-      const talepMap: Record<string, TalepData> = {};
-      await Promise.all(
-        talepIds.map(async (talepId) => {
-          const snap = await getDoc(doc(db, 'taleplar', talepId));
-          if (snap.exists()) {
-            talepMap[talepId] = snap.data() as TalepData;
-          }
-        }),
-      );
+      /* Talep verilerini çek — sadece cache'de olmayanlar */
+      const talepIds  = [...new Set(docs.map((b) => b.talepId))];
+      const missingIds = talepIds.filter((id) => !talepCache.current[id]);
+
+      if (missingIds.length > 0) {
+        await Promise.all(
+          missingIds.map(async (talepId) => {
+            const talepSnap = await getDoc(doc(db, 'taleplar', talepId));
+            if (talepSnap.exists()) {
+              talepCache.current[talepId] = talepSnap.data() as TalepData;
+            }
+          }),
+        );
+      }
 
       setBildirimler(
-        docs.map((b) => ({ ...b, talep: talepMap[b.talepId] ?? null })),
+        docs.map((b) => ({ ...b, talep: talepCache.current[b.talepId] ?? null })),
       );
       setDataLoading(false);
     });

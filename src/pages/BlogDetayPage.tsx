@@ -63,6 +63,8 @@ export default function BlogDetayPage() {
   const { slug }     = useParams<{ slug: string }>();
   const navigate     = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [icerik, setIcerik] = useState<string | null>(null);
+  const [icerikLoading, setIcerikLoading] = useState(true);
   const [blogSetting, setBlogSetting] = useState<{
     fiyatBilgisi:  string;
     oneCikanBilgi: string;
@@ -74,6 +76,13 @@ export default function BlogDetayPage() {
 
   useEffect(() => {
     if (!slug) return;
+    setIcerikLoading(true);
+    // İçeriği Firestore "blog/{slug}" koleksiyonundan çek
+    getDoc(doc(db, 'blog', slug)).then((snap) => {
+      if (snap.exists()) setIcerik((snap.data() as { icerik: string }).icerik ?? null);
+      setIcerikLoading(false);
+    }).catch(() => setIcerikLoading(false));
+    // Blog ayarlarını "blogSettings/{slug}" den çek
     getDoc(doc(db, 'blogSettings', slug)).then((snap) => {
       if (snap.exists()) {
         setBlogSetting(snap.data() as {
@@ -241,7 +250,18 @@ export default function BlogDetayPage() {
 
               {/* İçerik */}
               <div className="space-y-4">
-                {renderIcerik(post.icerik)}
+                {icerikLoading ? (
+                  /* Skeleton yüklenirken */
+                  <div className="space-y-3 animate-pulse">
+                    {[100, 90, 95, 85, 100, 80].map((w, i) => (
+                      <div key={i} className={`h-3 bg-gray-200 rounded`} style={{ width: `${w}%` }} />
+                    ))}
+                  </div>
+                ) : icerik ? (
+                  renderIcerik(icerik)
+                ) : (
+                  <p className="text-gray-400 text-sm italic">İçerik yüklenemedi.</p>
+                )}
               </div>
 
               {/* Güncel fiyat bilgisi (Firestore override) */}

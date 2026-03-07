@@ -11,6 +11,8 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { BLOG_POSTS } from '../data/blogPosts';
+import { BLOG_ICERIK } from '../data/blogIcerik';
 
 /* ── helpers ─────────────────────────────────────────────── */
 function daysAgo(n: number): Timestamp {
@@ -401,6 +403,26 @@ export async function seedFirestore(): Promise<void> {
   await quoteBatch.commit();
   console.log('[seed] quotes yazıldı (10 adet)');
 
+  /* 5. Blog içerikleri — "blog/{slug}" koleksiyonu */
+  const blogBatch = writeBatch(db);
+  BLOG_POSTS.forEach((post) => {
+    const icerik = BLOG_ICERIK[post.slug] ?? '';
+    blogBatch.set(doc(db, 'blog', post.slug), {
+      slug:         post.slug,
+      baslik:       post.baslik,
+      ozet:         post.ozet,
+      kategori:     post.kategori,
+      tarih:        post.tarih,
+      okumaSuresi:  post.okumaSuresi,
+      yazar:        post.yazar,
+      kapakGorseli: post.kapakGorseli,
+      icerik,
+      _seed: true,
+    });
+  });
+  await blogBatch.commit();
+  console.log('[seed] blog yazıldı (8 adet)');
+
   console.log('[seed] Tamamlandı ✓');
 }
 
@@ -410,7 +432,7 @@ export async function seedFirestore(): Promise<void> {
 export async function clearSeedData(): Promise<void> {
   console.log('[clear] Temizleme başladı...');
 
-  const colls = ['firms', 'ilanlar', 'taleplar', 'quotes'] as const;
+  const colls = ['firms', 'ilanlar', 'taleplar', 'quotes', 'blog'] as const;
   for (const coll of colls) {
     const snap     = await getDocs(collection(db, coll));
     const toDelete = snap.docs.filter((d) => d.id.startsWith('seed_'));

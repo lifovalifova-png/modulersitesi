@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 /* ── Ilan veri modeli (Firestore "ilanlar" koleksiyonu) ─── */
@@ -37,15 +37,23 @@ export function useIlanlar(kategoriSlug?: string, sehir?: string) {
     setLoading(true);
     setError(null);
 
+    /*
+     * Firestore'da tek-alan index kullanılır (composite index gerekmez).
+     * — kategoriSlug varsa: sadece o kategorinin ilanları indirilir (~%80-90 daha az veri).
+     * — yoksa: status='aktif' ile pasif ilanlar sunucu tarafında elenir.
+     * Kalan filtreler (status, sehir) küçük subset üzerinde client'ta uygulanır.
+     */
+    const fsQuery = kategoriSlug
+      ? query(collection(db, 'ilanlar'), where('kategoriSlug', '==', kategoriSlug))
+      : query(collection(db, 'ilanlar'), where('status', '==', 'aktif'));
+
     const unsub = onSnapshot(
-      collection(db, 'ilanlar'),
+      fsQuery,
       (snap) => {
         let docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Ilan));
-        /* status filtresi */
+        /* status filtresi (kategoriSlug modunda sunucudan pasifler gelebilir) */
         docs = docs.filter((d) => d.status === 'aktif');
-        /* opsiyonel kategori filtresi */
-        if (kategoriSlug) docs = docs.filter((d) => d.kategoriSlug === kategoriSlug);
-        /* opsiyonel şehir filtresi */
+        /* opsiyonel şehir filtresi — küçük subset, client OK */
         if (sehir) docs = docs.filter((d) => d.sehir === sehir);
         setIlanlar(docs);
         setLoading(false);

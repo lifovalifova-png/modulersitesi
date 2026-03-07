@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, memo } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -215,7 +215,7 @@ function Sidebar({
 
 /* ═══ İlan Kartları ════════════════════════════════════════ */
 
-function GridCard({ ilan }: { ilan: Ilan }) {
+const GridCard = memo(function GridCard({ ilan }: { ilan: Ilan }) {
   const img = ilan.gorseller[0] ?? '';
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-emerald-200 transition flex flex-col">
@@ -277,9 +277,9 @@ function GridCard({ ilan }: { ilan: Ilan }) {
       </div>
     </div>
   );
-}
+});
 
-function ListCard({ ilan }: { ilan: Ilan }) {
+const ListCard = memo(function ListCard({ ilan }: { ilan: Ilan }) {
   const img = ilan.gorseller[0] ?? '';
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-emerald-200 transition flex">
@@ -337,7 +337,7 @@ function ListCard({ ilan }: { ilan: Ilan }) {
       </div>
     </div>
   );
-}
+});
 
 /* ═══ Loading skeleton ═════════════════════════════════════ */
 function SkeletonCard() {
