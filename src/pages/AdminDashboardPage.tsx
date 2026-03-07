@@ -34,6 +34,24 @@ import { type FeatureFlags, DEFAULT_FLAGS } from '../hooks/useFeatureFlags';
 import logoSrc from '../assets/logo.svg';
 import { auth, db } from '../lib/firebase';
 import { seedFirestore, clearSeedData } from '../scripts/seedFirestore';
+import {
+  BarChart   as _BarChart,
+  Bar        as _Bar,
+  XAxis      as _XAxis,
+  YAxis      as _YAxis,
+  Tooltip    as _Tooltip,
+  ResponsiveContainer as _ResponsiveContainer,
+} from 'recharts';
+
+/* Recharts 2.x + React 18 TypeScript compat — cast to any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const BarChart            = _BarChart            as any;
+const Bar                 = _Bar                 as any;
+const XAxis               = _XAxis               as any;
+const YAxis               = _YAxis               as any;
+const Tooltip             = _Tooltip             as any;
+const ResponsiveContainer = _ResponsiveContainer as any;
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /* ═══════════════════════════════════════════════════════════
    TYPES
@@ -442,28 +460,74 @@ function FeaturesTab() {
    TAB 1 — OVERVIEW
 ════════════════════════════════════════════════════════════ */
 function OverviewTab() {
-  const [counts, setCounts] = useState({ ilanlar: 0, approved: 0, pending: 0, rejected: 0, talepler: 0 });
+  const [counts,         setCounts]         = useState({ ilanlar: 0, approved: 0, pending: 0, rejected: 0, talepler: 0 });
+  const [avgFiyat,       setAvgFiyat]       = useState(0);
+  const [kategoriDagilim, setKategoriDagilim] = useState<{ name: string; count: number }[]>([]);
+  const [son30gun,       setSon30gun]       = useState({ talepler: 0, firmalar: 0, ilanlar: 0 });
+  const [topSehirler,    setTopSehirler]    = useState<{ sehir: string; count: number }[]>([]);
 
   useEffect(() => {
-    const u1 = onSnapshot(collection(db, 'ilanlar'), (s) =>
-      setCounts((p) => ({ ...p, ilanlar: s.size })));
+    const thirtyDaysAgo = Date.now() / 1000 - 30 * 86400;
+
+    const u1 = onSnapshot(collection(db, 'ilanlar'), (s) => {
+      const docs = s.docs.map((d) => d.data() as { fiyat?: number; kategori?: string; tarih?: { seconds: number } | null });
+      setCounts((p) => ({ ...p, ilanlar: s.size }));
+
+      /* Ortalama fiyat */
+      const withFiyat = docs.filter((d) => typeof d.fiyat === 'number' && (d.fiyat ?? 0) > 0);
+      setAvgFiyat(withFiyat.length
+        ? Math.round(withFiyat.reduce((sum, d) => sum + (d.fiyat ?? 0), 0) / withFiyat.length)
+        : 0,
+      );
+
+      /* Kategori dağılımı */
+      const catMap: Record<string, number> = {};
+      docs.forEach((d) => { const k = d.kategori || 'Diğer'; catMap[k] = (catMap[k] ?? 0) + 1; });
+      setKategoriDagilim(Object.entries(catMap).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count));
+
+      /* Son 30 gün ilanlar */
+      setSon30gun((p) => ({ ...p, ilanlar: docs.filter((d) => d.tarih && d.tarih.seconds > thirtyDaysAgo).length }));
+    });
+
     const u2 = onSnapshot(collection(db, 'firms'), (s) => {
-      const docs = s.docs.map((d) => d.data() as AdminFirm);
+      const docs = s.docs.map((d) => d.data() as AdminFirm & { createdAt?: { seconds: number } });
       setCounts((p) => ({
         ...p,
         approved: docs.filter((f) => f.status === 'approved').length,
         pending:  docs.filter((f) => f.status === 'pending').length,
         rejected: docs.filter((f) => f.status === 'rejected').length,
       }));
+      setSon30gun((p) => ({ ...p, firmalar: docs.filter((d) => d.createdAt && d.createdAt.seconds > thirtyDaysAgo).length }));
     });
-    const u3 = onSnapshot(collection(db, 'taleplar'), (s) =>
-      setCounts((p) => ({ ...p, talepler: s.size })));
+
+    const u3 = onSnapshot(collection(db, 'taleplar'), (s) => {
+      const docs = s.docs.map((d) => d.data() as { sehir?: string; tarih?: { seconds: number } | null });
+      setCounts((p) => ({ ...p, talepler: s.size }));
+
+      /* Son 30 gün talepler */
+      setSon30gun((p) => ({ ...p, talepler: docs.filter((d) => d.tarih && d.tarih.seconds > thirtyDaysAgo).length }));
+
+      /* Top 5 şehir */
+      const sehirMap: Record<string, number> = {};
+      docs.forEach((d) => { if (d.sehir) sehirMap[d.sehir] = (sehirMap[d.sehir] ?? 0) + 1; });
+      setTopSehirler(
+        Object.entries(sehirMap)
+          .map(([sehir, count]) => ({ sehir, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5),
+      );
+    });
+
     return () => { u1(); u2(); u3(); };
   }, []);
+
+  const fmtTL = (n: number) => new Intl.NumberFormat('tr-TR').format(n) + ' ₺';
 
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-800">Genel Bakış</h2>
+
+      {/* Ana sayaçlar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Toplam İlanlar"    value={counts.ilanlar}  color="text-emerald-600" sub="Firestore ilanlar" />
         <StatCard label="Onaylı Firmalar"   value={counts.approved} color="text-blue-600"    sub="Aktif firmalar" />
@@ -471,6 +535,82 @@ function OverviewTab() {
         <StatCard label="Gelen Talepler"    value={counts.talepler} color="text-purple-600"  sub="Müşteri talepleri" />
       </div>
 
+      {/* Ortalama ilan fiyatı */}
+      {avgFiyat > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
+          <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Banknote className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 font-medium mb-0.5">Ortalama İlan Fiyatı</p>
+            <p className="text-2xl font-extrabold text-gray-800">{fmtTL(avgFiyat)}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Kategori dağılımı + Top şehirler */}
+      <div className="grid sm:grid-cols-2 gap-4">
+
+        {/* Recharts BarChart — Kategori dağılımı */}
+        {kategoriDagilim.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <h3 className="font-semibold text-gray-700 text-sm mb-3">Kategori Dağılımı</h3>
+            <ResponsiveContainer width="100%" height={kategoriDagilim.length * 42 + 16}>
+              <BarChart data={kategoriDagilim} layout="vertical" margin={{ top: 0, right: 24, left: 4, bottom: 0 }}>
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="name" width={118} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v: unknown) => [v, 'İlan sayısı']} />
+                <Bar dataKey="count" fill="#059669" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Top 5 şehir */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 className="font-semibold text-gray-700 text-sm mb-3">En Çok Talep Gelen 5 Şehir</h3>
+          {topSehirler.length === 0 ? (
+            <p className="text-xs text-gray-400 py-2">Henüz talep verisi yok.</p>
+          ) : (
+            <ul className="space-y-2.5">
+              {topSehirler.map((item, i) => (
+                <li key={item.sehir} className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 flex items-center justify-between">
+                    <span className="text-sm text-gray-700">{item.sehir}</span>
+                    <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                      {item.count} talep
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {/* Son 30 gün aktivitesi */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 className="font-semibold text-gray-700 text-sm mb-4">Son 30 Gün Aktivitesi</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="text-center p-4 bg-purple-50 rounded-xl">
+            <p className="text-2xl font-extrabold text-purple-600">{son30gun.talepler}</p>
+            <p className="text-xs text-gray-500 mt-1">Yeni Talep</p>
+          </div>
+          <div className="text-center p-4 bg-blue-50 rounded-xl">
+            <p className="text-2xl font-extrabold text-blue-600">{son30gun.firmalar}</p>
+            <p className="text-xs text-gray-500 mt-1">Yeni Firma</p>
+          </div>
+          <div className="text-center p-4 bg-emerald-50 rounded-xl">
+            <p className="text-2xl font-extrabold text-emerald-600">{son30gun.ilanlar}</p>
+            <p className="text-xs text-gray-500 mt-1">Yeni İlan</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Hızlı işlemler */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <h3 className="font-semibold text-gray-700 mb-3 text-sm">Hızlı İşlemler</h3>
         <div className="flex flex-wrap gap-3">

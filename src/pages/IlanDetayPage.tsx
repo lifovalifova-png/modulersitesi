@@ -9,6 +9,7 @@ import { FLASH_DEALS } from '../data/flashDeals';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
 import SEOMeta from '../components/SEOMeta';
+import { trackEvent } from '../lib/analytics';
 import { sanitizeText } from '../utils/sanitize';
 import {
   MapPin, Tag, Calendar, ShieldCheck, Phone, ChevronLeft, ChevronRight,
@@ -312,6 +313,13 @@ export default function IlanDetayPage() {
       }
     })();
   }, [id]);
+
+  /* GA4 — ilan görüntülenince */
+  useEffect(() => {
+    if (ilan) {
+      trackEvent('ilan_goruntulendi', { kategori: ilan.kategori, firmaAdi: ilan.firmaAdi });
+    }
+  }, [ilan]);
 
   /* Benzer ilanlar (aynı kategori, Firestore) */
   const { ilanlar: allIlanlar } = useIlanlar(ilan?.kategoriSlug);

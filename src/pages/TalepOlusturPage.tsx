@@ -10,6 +10,7 @@ import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Disclaimer from '../components/Disclaimer';
+import { trackEvent } from '../lib/analytics';
 
 /* ─── Sabitler ────────────────────────────────────────────── */
 const CITIES = [
@@ -150,6 +151,7 @@ export default function TalepOlusturPage() {
         }),
       }).catch(() => { /* webhook hatası kullanıcıyı etkilemez */ });
 
+      trackEvent('talep_olusturuldu', { kategori: form.kategori, sehir: form.sehir });
       setDone(true);
     } catch {
       toast.error('Bir hata oluştu. Lütfen tekrar deneyin.');

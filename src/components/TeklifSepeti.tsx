@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { trackEvent } from '../lib/analytics';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
 import {
   X, Send, ShoppingBag, CheckCircle, AlertCircle, Loader2,
@@ -137,6 +138,7 @@ export default function TeklifSepeti() {
         status:    'pending',
         tarih:     serverTimestamp(),
       });
+      trackEvent('teklif_istendi', { firmaCount: firms.length });
       clearAll();
       setStep('success');
       setStatus('idle');

@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth, authErrorMessage } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { trackEvent } from '../lib/analytics';
 import logoSrc from '../assets/logo.svg';
 
 /* ── Google logosu ──────────────────────────────────────── */
@@ -56,6 +57,7 @@ export default function GirisPage() {
     setErrorMsg('');
     try {
       await login(form.email.trim(), form.password);
+      trackEvent('giris_yapildi', { method: 'email' });
       navigate(from, { replace: true });
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
@@ -69,6 +71,7 @@ export default function GirisPage() {
     setErrorMsg('');
     try {
       await loginWithGoogle();
+      trackEvent('giris_yapildi', { method: 'google' });
       navigate(from, { replace: true });
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';

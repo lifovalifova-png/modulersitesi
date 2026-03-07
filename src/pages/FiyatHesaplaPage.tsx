@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import Disclaimer from '../components/Disclaimer';
 import { Calculator, ChevronRight, MapPin, ArrowRight, Building2 } from 'lucide-react';
+import { trackEvent } from '../lib/analytics';
 
 /* ── Varsayılan m² birim fiyatlar (Firestore'dan override edilir) ── */
 const DEFAULT_PRICES: Record<string, number> = {
@@ -68,6 +69,7 @@ export default function FiyatHesaplaPage() {
     const max  = Math.round(base * 1.25 / 1000) * 1000;
     setTimeout(() => {
       setResult({ min, max, kalanKategoriSlug: kategori });
+      trackEvent('fiyat_hesaplandi', { yapiTipi: kategori, metrekare: m2 });
       setLoading(false);
     }, 400);
   }
