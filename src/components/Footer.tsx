@@ -25,16 +25,16 @@ export default function Footer() {
               {t('footer.desc')}
             </p>
             <div className="flex gap-3">
-              <a href="#" aria-label="Facebook" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
+              <a href="https://www.facebook.com/modulerpazar" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
                 <Facebook className="w-5 h-5" aria-hidden="true" />
               </a>
-              <a href="#" aria-label="Instagram" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
+              <a href="https://www.instagram.com/modulerpazar" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
                 <Instagram className="w-5 h-5" aria-hidden="true" />
               </a>
-              <a href="#" aria-label="Twitter / X" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
+              <a href="https://twitter.com/modulerpazar" target="_blank" rel="noopener noreferrer" aria-label="Twitter / X" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
                 <Twitter className="w-5 h-5" aria-hidden="true" />
               </a>
-              <a href="#" aria-label="LinkedIn" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
+              <a href="https://www.linkedin.com/company/modulerpazar" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
                 <Linkedin className="w-5 h-5" aria-hidden="true" />
               </a>
             </div>

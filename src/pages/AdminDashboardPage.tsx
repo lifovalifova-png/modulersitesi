@@ -28,8 +28,9 @@ import {
   LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle,
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
   Send, Eye, EyeOff, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
-  Inbox, BookOpen, BarChart2, Download,
+  Inbox, BookOpen, BarChart2, Download, Sliders,
 } from 'lucide-react';
+import { type FeatureFlags, DEFAULT_FLAGS } from '../hooks/useFeatureFlags';
 import logoSrc from '../assets/logo.svg';
 import { auth, db } from '../lib/firebase';
 import { seedFirestore, clearSeedData } from '../scripts/seedFirestore';
@@ -108,7 +109,7 @@ interface AdminIlan {
   status:            'aktif' | 'pasif';
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor';
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
@@ -175,6 +176,138 @@ function Badge({ status }: { status: AdminFirm['status'] }) {
     <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${map[status]}`}>
       {label[status]}
     </span>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FEATURE FLAGS — sabit tanımlar
+════════════════════════════════════════════════════════════ */
+interface FeatureDef {
+  key:         keyof FeatureFlags;
+  label:       string;
+  description: string;
+  tier:        'Ücretsiz' | 'Ücretli';
+}
+
+const FEATURE_DEFS: FeatureDef[] = [
+  {
+    key:         'aiAsistan',
+    label:       'AI Yapı Asistanı',
+    description: 'Ana sayfadaki yapay zeka chat widget\'ı.',
+    tier:        'Ücretsiz',
+  },
+  {
+    key:         'teklifSepeti',
+    label:       'Teklif Sepeti',
+    description: 'Kullanıcıların aynı anda 2 firmadan teklif alması.',
+    tier:        'Ücretsiz',
+  },
+  {
+    key:         'talepHavuzu',
+    label:       'Talep Havuzu',
+    description: 'Müşteri taleplerini onaylı firmalara iletme.',
+    tier:        'Ücretsiz',
+  },
+  {
+    key:         'onecikarIlan',
+    label:       'Öne Çıkar İlan',
+    description: 'Firma ilanını liste başına taşıma (ücretli özellik).',
+    tier:        'Ücretli',
+  },
+  {
+    key:         'sinirsizTalep',
+    label:       'Sınırsız Talep',
+    description: 'Günlük talep limitini kaldırma (ücretli özellik).',
+    tier:        'Ücretli',
+  },
+];
+
+/* ═══════════════════════════════════════════════════════════
+   TAB — FEATURES
+════════════════════════════════════════════════════════════ */
+function FeaturesTab() {
+  const [flags,   setFlags]   = useState<FeatureFlags>(DEFAULT_FLAGS);
+  const [loading, setLoading] = useState(true);
+  const [saving,  setSaving]  = useState(false);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'features'), (snap) => {
+      if (snap.exists()) {
+        setFlags({ ...DEFAULT_FLAGS, ...(snap.data() as Partial<FeatureFlags>) });
+      }
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  async function handleToggle(key: keyof FeatureFlags) {
+    const next = { ...flags, [key]: !flags[key] };
+    setFlags(next);
+    setSaving(true);
+    try {
+      await setDoc(doc(db, 'settings', 'features'), next);
+      toast.success('Özellik güncellendi');
+    } catch {
+      toast.error('Güncelleme başarısız');
+      setFlags(flags);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <div className="p-6 text-sm text-gray-500">Yükleniyor…</div>;
+
+  return (
+    <div className="p-6 max-w-2xl">
+      <h2 className="text-xl font-bold text-gray-800 mb-1">Özellik Yönetimi</h2>
+      <p className="text-sm text-gray-500 mb-6">
+        Platform özelliklerini açıp kapatın. Değişiklikler anında uygulanır.
+      </p>
+
+      <div className="space-y-3">
+        {FEATURE_DEFS.map((def) => {
+          const enabled = flags[def.key];
+          return (
+            <div
+              key={def.key}
+              className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4 hover:border-gray-300 transition"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="font-semibold text-gray-800 text-sm">{def.label}</p>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    def.tier === 'Ücretli'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    {def.tier}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500">{def.description}</p>
+              </div>
+
+              {/* Toggle switch */}
+              <button
+                onClick={() => handleToggle(def.key)}
+                disabled={saving}
+                aria-label={`${def.label} ${enabled ? 'kapat' : 'aç'}`}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-60 ${
+                  enabled ? 'bg-emerald-600' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    enabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {saving && <p className="text-xs text-gray-400 mt-4 text-center">Kaydediliyor…</p>}
+    </div>
   );
 }
 
@@ -1967,6 +2100,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'talepler',   label: 'Talepler',      icon: <Inbox className="w-4 h-4" /> },
   { key: 'blog',       label: 'Blog',          icon: <BookOpen   className="w-4 h-4" /> },
   { key: 'rapor',      label: 'Rapor',         icon: <BarChart2  className="w-4 h-4" /> },
+  { key: 'features',   label: 'Özellikler',    icon: <Sliders    className="w-4 h-4" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -2138,6 +2272,7 @@ export default function AdminDashboardPage() {
           {tab === 'talepler'   && <TaleplerTab />}
           {tab === 'blog'       && <BlogTab />}
           {tab === 'rapor'      && <RaporTab />}
+          {tab === 'features'   && <FeaturesTab />}
         </main>
       </div>
     </div>

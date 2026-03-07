@@ -4,6 +4,10 @@ const SERVICE_ID  = 'service_3hiixen';
 const TEMPLATE_ID = 'template_sdz7ml6';
 const PUBLIC_KEY  = '4egUQ3U8O6eFOn0aY';
 
+// TODO: info@modulerpazar.com aktif olunca EmailJS template'indeki
+//       "To Email" alanını lifovalifova@gmail.com → info@modulerpazar.com yap.
+//       Bakınız: src/docs/yandex-email-setup.md §6
+
 export async function sendTalepEmail(talep: {
   kategori: string;
   sehir:    string;
