@@ -127,7 +127,7 @@ interface AdminIlan {
   status:            'aktif' | 'pasif';
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar';
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
@@ -194,6 +194,96 @@ function Badge({ status }: { status: AdminFirm['status'] }) {
     <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${map[status]}`}>
       {label[status]}
     </span>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TAB — HAKKIMIZDA
+════════════════════════════════════════════════════════════ */
+const HAKKIMIZDA_DEFAULTS = {
+  hikaye:   'Modüler yapı almaya karar verdiğinizde önünüzde onlarca seçenek beliriyor...',
+  misyon:   'Modüler yapı alıcılarının doğru ve güvenilir seçim yapmasına yardımcı olmak.',
+  vizyon:   'Türkiye\'de modüler yapı sektöründe referans platform olmak.',
+  iletisim: 'Bir sorunuz mu var, bir şeylerin daha iyi olabileceğini mi düşünüyorsunuz? Dinlemekten memnuniyet duyarız.',
+};
+
+function HakkimizdaTab() {
+  const [form,    setForm]    = useState(HAKKIMIZDA_DEFAULTS);
+  const [loading, setLoading] = useState(true);
+  const [saving,  setSaving]  = useState(false);
+
+  useEffect(() => {
+    import('firebase/firestore').then(({ doc: fsDoc, getDoc: fsGetDoc }) => {
+      fsGetDoc(fsDoc(db, 'hakkimizda', 'icerik')).then((snap) => {
+        if (snap.exists()) {
+          setForm({ ...HAKKIMIZDA_DEFAULTS, ...(snap.data() as typeof HAKKIMIZDA_DEFAULTS) });
+        }
+      }).finally(() => setLoading(false));
+    });
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const { doc: fsDoc, setDoc: fsSetDoc } = await import('firebase/firestore');
+      await fsSetDoc(fsDoc(db, 'hakkimizda', 'icerik'), form, { merge: true });
+      toast.success('Hakkımızda içeriği kaydedildi.');
+    } catch {
+      toast.error('Kayıt sırasında hata oluştu.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const FIELDS: { key: keyof typeof HAKKIMIZDA_DEFAULTS; label: string; rows: number }[] = [
+    { key: 'hikaye',   label: 'Hikayemiz',    rows: 8  },
+    { key: 'misyon',   label: 'Misyonumuz',   rows: 5  },
+    { key: 'vizyon',   label: 'Vizyonumuz',   rows: 5  },
+    { key: 'iletisim', label: 'İletişim Metni', rows: 3 },
+  ];
+
+  return (
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
+      <h2 className="text-lg font-bold text-gray-800 mb-1">Hakkımızda İçeriği</h2>
+      <p className="text-sm text-gray-500 mb-6">
+        Buraya kaydettiğiniz metinler /hakkimizda sayfasında görünür. Boş bırakırsanız varsayılan içerik gösterilir.
+      </p>
+
+      {loading ? (
+        <div className="space-y-4">
+          {[80, 48, 48, 32].map((h, i) => (
+            <div key={i} className={`h-${h} bg-gray-100 rounded-xl animate-pulse`} />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {FIELDS.map(({ key, label, rows }) => (
+            <div key={key}>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
+              <textarea
+                value={form[key]}
+                onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                rows={rows}
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y"
+                placeholder={HAKKIMIZDA_DEFAULTS[key]}
+              />
+              <p className="text-xs text-gray-400 mt-0.5">
+                İki paragraf arası için boş satır bırakın.
+              </p>
+            </div>
+          ))}
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? 'Kaydediliyor…' : 'Kaydet'}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -2440,6 +2530,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'rapor',      label: 'Rapor',         icon: <BarChart2  className="w-4 h-4" /> },
   { key: 'features',   label: 'Özellikler',    icon: <Sliders    className="w-4 h-4" /> },
   { key: 'yorumlar',   label: 'Yorumlar',      icon: <ThumbsUp   className="w-4 h-4" /> },
+  { key: 'hakkimizda', label: 'Hakkımızda',    icon: <BookOpen   className="w-4 h-4" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -2613,6 +2704,7 @@ export default function AdminDashboardPage() {
           {tab === 'rapor'      && <RaporTab />}
           {tab === 'features'   && <FeaturesTab />}
           {tab === 'yorumlar'   && <YorumlarTab />}
+          {tab === 'hakkimizda' && <HakkimizdaTab />}
         </main>
       </div>
     </div>
