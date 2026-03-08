@@ -375,6 +375,13 @@ export default function Header() {
               Fiyat Hesapla
             </Link>
 
+            <Link
+              to="/hakkimizda"
+              className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+            >
+              Hakkımızda
+            </Link>
+
           </div>
         </div>
       </nav>
@@ -426,6 +433,13 @@ export default function Header() {
             >
               <Calculator className="w-5 h-5" aria-hidden="true" />
               Fiyat Hesapla
+            </Link>
+            <Link
+              to="/hakkimizda"
+              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Hakkımızda
             </Link>
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-400 mb-2 px-2">{t('header.categoriesLabel')}</p>

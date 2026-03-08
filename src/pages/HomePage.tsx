@@ -489,6 +489,51 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Hakkımızda (kısa) ────────────────────────────── */}
+        <section className="py-12 md:py-16 bg-emerald-50">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-14">
+              <div className="flex-1">
+                <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-2 block">
+                  Hakkımızda
+                </span>
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
+                  Türkiye'nin Modüler Yapı Pazarı
+                </h2>
+                <p className="text-gray-500 text-sm leading-relaxed mb-5">
+                  ModülerPazar, alıcıları ve üreticileri tek platformda buluşturan dijital
+                  pazaryeridir. Doğrulanmış firmalar, ücretsiz teklif alma ve yapay zeka
+                  destekli öneri sistemiyle modüler yapı sürecinizi kolaylaştırıyoruz.
+                </p>
+                <Link
+                  to="/hakkimizda"
+                  className="inline-flex items-center gap-1.5 text-emerald-600 font-semibold hover:underline text-sm"
+                >
+                  Daha fazla bilgi al <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="flex-1 grid grid-cols-2 gap-3 w-full">
+                {[
+                  { icon: ShieldCheck, text: 'Doğrulanmış Firmalar',  color: 'bg-emerald-100 text-emerald-600' },
+                  { icon: Tag,         text: 'Ücretsiz Teklif',        color: 'bg-blue-100 text-blue-600'       },
+                  { icon: Sparkles,    text: 'AI Destekli Öneri',      color: 'bg-amber-100 text-amber-600'     },
+                  { icon: Lock,        text: 'KVKK Uyumlu',            color: 'bg-purple-100 text-purple-600'   },
+                ].map(({ icon: Icon, text, color }) => (
+                  <div
+                    key={text}
+                    className="flex items-center gap-2 bg-white rounded-xl p-3 border border-gray-100 shadow-sm"
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── CTA — Firma ──────────────────────────────────── */}
         <section className="py-12 md:py-16 bg-gray-900 text-white">
           <div className="max-w-7xl mx-auto px-4 text-center">

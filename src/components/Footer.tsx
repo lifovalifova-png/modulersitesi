@@ -52,6 +52,7 @@ export default function Footer() {
               <li><Link to="/blog" className="hover:text-emerald-400 transition">{t('footer.blog')}</Link></li>
               <li><Link to="/sss" className="hover:text-emerald-400 transition">{t('footer.faq')}</Link></li>
               <li><Link to="/fiyat-hesapla" className="hover:text-emerald-400 transition">Fiyat Hesapla</Link></li>
+              <li><Link to="/hakkimizda" className="hover:text-emerald-400 transition">Hakkımızda</Link></li>
             </ul>
           </div>
 
