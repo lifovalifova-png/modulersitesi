@@ -1,45 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <!-- Background gradient -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#065f46"/>
-      <stop offset="100%" style="stop-color:#059669"/>
+      <stop offset="0%" stop-color="#15803d"/>
+      <stop offset="100%" stop-color="#059669"/>
     </linearGradient>
   </defs>
+
+  <!-- Background -->
   <rect width="1200" height="630" fill="url(#bg)"/>
 
-  <!-- Decorative circles -->
-  <circle cx="1080" cy="80"  r="220" fill="#047857" opacity="0.4"/>
-  <circle cx="120"  cy="560" r="180" fill="#047857" opacity="0.35"/>
-  <circle cx="600"  cy="630" r="120" fill="#10b981" opacity="0.2"/>
+  <!-- Subtle decorative circles -->
+  <circle cx="80"  cy="80"  r="120" fill="white" fill-opacity="0.04"/>
+  <circle cx="1120" cy="550" r="160" fill="white" fill-opacity="0.04"/>
+  <circle cx="1100" cy="80"  r="80"  fill="white" fill-opacity="0.04"/>
 
-  <!-- Top label -->
-  <rect x="480" y="120" width="240" height="40" rx="20" fill="#10b981" opacity="0.35"/>
-  <text x="600" y="146" font-family="system-ui,-apple-system,sans-serif" font-size="18" font-weight="600" fill="#a7f3d0" text-anchor="middle">Türkiye'nin #1 Modüler Yapı Pazarı</text>
+  <!-- Icon — white version, 5x scale, centered -->
+  <g transform="translate(510, 115) scale(5)">
+    <rect x="0"  y="0"  width="13" height="13" rx="2.5" fill="white" fill-opacity="0.85"/>
+    <rect x="15" y="0"  width="21" height="13" rx="2.5" fill="white"/>
+    <rect x="0"  y="15" width="21" height="13" rx="2.5" fill="white"/>
+    <rect x="23" y="15" width="13" height="13" rx="2.5" fill="white" fill-opacity="0.85"/>
+  </g>
 
-  <!-- Main logo text -->
-  <text x="600" y="290" font-family="system-ui,-apple-system,sans-serif" font-size="96" font-weight="800" fill="white" text-anchor="middle" letter-spacing="-2">Modüler<tspan fill="#6ee7b7">Pazar</tspan></text>
+  <!-- ModulerPazar text -->
+  <text
+    x="600"
+    y="368"
+    text-anchor="middle"
+    font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+    font-size="84"
+    font-weight="800"
+    fill="white"
+    letter-spacing="-1"
+  >Modüler<tspan fill="rgba(255,255,255,0.75)">Pazar</tspan></text>
 
-  <!-- Divider -->
-  <rect x="500" y="320" width="200" height="3" rx="2" fill="#6ee7b7" opacity="0.6"/>
-
-  <!-- Slogan -->
-  <text x="600" y="375" font-family="system-ui,-apple-system,sans-serif" font-size="28" fill="#d1fae5" text-anchor="middle">Prefabrik · Çelik Yapı · Konteyner · Tiny House</text>
-
-  <!-- Stats -->
-  <text x="240" y="470" font-family="system-ui,-apple-system,sans-serif" font-size="42" font-weight="700" fill="white" text-anchor="middle">2.500+</text>
-  <text x="240" y="505" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#a7f3d0" text-anchor="middle">Aktif İlan</text>
-
-  <text x="600" y="470" font-family="system-ui,-apple-system,sans-serif" font-size="42" font-weight="700" fill="white" text-anchor="middle">850+</text>
-  <text x="600" y="505" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#a7f3d0" text-anchor="middle">Kayıtlı Firma</text>
-
-  <text x="960" y="470" font-family="system-ui,-apple-system,sans-serif" font-size="42" font-weight="700" fill="white" text-anchor="middle">81 İl</text>
-  <text x="960" y="505" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#a7f3d0" text-anchor="middle">Türkiye Geneli</text>
-
-  <!-- Separator lines for stats -->
-  <rect x="390" y="455" width="2" height="60" fill="#6ee7b7" opacity="0.4"/>
-  <rect x="810" y="455" width="2" height="60" fill="#6ee7b7" opacity="0.4"/>
-
-  <!-- URL -->
-  <text x="600" y="590" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#6ee7b7" text-anchor="middle" opacity="0.8">modulersitesi.vercel.app</text>
+  <!-- Subtitle -->
+  <text
+    x="600"
+    y="438"
+    text-anchor="middle"
+    font-family="system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+    font-size="34"
+    font-weight="400"
+    fill="rgba(255,255,255,0.78)"
+  >Türkiye'nin Modüler Yapı Pazarı</text>
 </svg>
