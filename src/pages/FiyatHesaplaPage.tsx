@@ -141,7 +141,7 @@ export default function FiyatHesaplaPage() {
                       key={m}
                       type="button"
                       onClick={() => { setMetrekare(m); setResult(null); }}
-                      className={`border rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                      className={`border rounded-lg px-3 py-2.5 text-sm font-medium transition min-h-[44px] ${
                         metrekare === m
                           ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                           : 'border-gray-200 text-gray-600 hover:border-emerald-300'

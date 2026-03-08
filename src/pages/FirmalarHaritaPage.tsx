@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -56,10 +56,9 @@ export default function FirmalarHaritaPage() {
 
   /* Firestore'dan onaylı firmaları çek */
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'firms'), (snap) => {
-      const docs = snap.docs
-        .map((d) => ({ id: d.id, ...d.data() } as Firm))
-        .filter((f) => f.status === 'approved');
+    const q = query(collection(db, 'firms'), where('status', '==', 'approved'), limit(50));
+    const unsub = onSnapshot(q, (snap) => {
+      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Firm));
       setFirms(docs);
       setLoading(false);
     }, () => setLoading(false));

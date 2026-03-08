@@ -8,6 +8,26 @@ const PUBLIC_KEY  = '4egUQ3U8O6eFOn0aY';
 //       "To Email" alanını lifovalifova@gmail.com → info@modulerpazar.com yap.
 //       Bakınız: src/docs/yandex-email-setup.md §6
 
+export async function sendFirmaBasvuruEmail(firma: {
+  firmaAdi:    string;
+  eposta:      string;
+  telefon:     string;
+  sehir:       string;
+  kategoriler: string;
+}) {
+  return emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+    name:          firma.firmaAdi,
+    email:         firma.eposta,
+    telefon:       firma.telefon,
+    sehir:         firma.sehir,
+    kategoriler:   firma.kategoriler,
+    aciklama:      `Yeni firma başvurusu: ${firma.firmaAdi}`,
+    musteri_email: firma.eposta,
+    butce:         'Firma Başvurusu',
+    kategori:      firma.kategoriler,
+  }, PUBLIC_KEY);
+}
+
 export async function sendTalepEmail(talep: {
   kategori: string;
   sehir:    string;

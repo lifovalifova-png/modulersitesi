@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 /* ── Ilan veri modeli (Firestore "ilanlar" koleksiyonu) ─── */
@@ -44,8 +44,8 @@ export function useIlanlar(kategoriSlug?: string, sehir?: string) {
      * Kalan filtreler (status, sehir) küçük subset üzerinde client'ta uygulanır.
      */
     const fsQuery = kategoriSlug
-      ? query(collection(db, 'ilanlar'), where('kategoriSlug', '==', kategoriSlug))
-      : query(collection(db, 'ilanlar'), where('status', '==', 'aktif'));
+      ? query(collection(db, 'ilanlar'), where('kategoriSlug', '==', kategoriSlug), limit(20))
+      : query(collection(db, 'ilanlar'), where('status', '==', 'aktif'), limit(20));
 
     const unsub = onSnapshot(
       fsQuery,

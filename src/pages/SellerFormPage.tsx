@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -7,8 +7,10 @@ import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { sendFirmaBasvuruEmail } from '../lib/emailjs';
 import {
-  Factory, Store, Check, CheckCircle, AlertCircle, Loader2, Globe, MessageCircle,
+  Factory, Store, Check, CheckCircle, AlertCircle, Loader2,
+  Globe, MessageCircle, ChevronRight, ChevronLeft, MapPin,
 } from 'lucide-react';
 
 /* ─── Veri ───────────────────────────────────────────────────── */
@@ -45,14 +47,10 @@ interface FormState {
   website:         string;
   whatsapp:        string;
   sehir:           string;
-  ilce:            string;
-  mahalle:         string;
-  caddeSokak:      string;
-  binaNo:          string;
-  postaKodu:       string;
   kategoriler:     string[];
   hizmetBolgeleri: string[];
   tanitimMetni:    string;
+  gorselUrl:       string;
   kvkkOnay:        boolean;
   kullanimOnay:    boolean;
 }
@@ -62,14 +60,15 @@ type Errors = Partial<Record<keyof FormState | 'submit', string>>;
 const EMPTY: FormState = {
   firmaType: '', firmaAdi: '', vergiNo: '', firmaYapisi: '',
   telefon: '', eposta: '', website: '', whatsapp: '',
-  sehir: '', ilce: '', mahalle: '', caddeSokak: '', binaNo: '', postaKodu: '',
+  sehir: '',
   kategoriler: [], hizmetBolgeleri: [],
-  tanitimMetni: '', kvkkOnay: false, kullanimOnay: false,
+  tanitimMetni: '', gorselUrl: '',
+  kvkkOnay: false, kullanimOnay: false,
 };
 
 /* ─── Helpers ────────────────────────────────────────────────── */
 
-const inp = 'w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent';
+const inp = 'w-full px-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent';
 
 function Field({ label, required, error, hint, children }: {
   label: string; required?: boolean; error?: string; hint?: string;
@@ -84,30 +83,54 @@ function Field({ label, required, error, hint, children }: {
       {children}
       {error && (
         <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-          <AlertCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />{error}
+          <AlertCircle className="w-3 h-3 flex-shrink-0" />{error}
         </p>
       )}
     </div>
   );
 }
 
-function Divider() {
-  return <div className="border-t border-gray-100 -mx-6 md:-mx-8" />;
-}
-
-function SectionHead({ n, title }: { n: number; title: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="w-7 h-7 rounded-full bg-emerald-600 text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
-        {n}
-      </span>
-      <h2 className="text-base font-semibold text-gray-800">{title}</h2>
-    </div>
-  );
-}
-
 function toggle<T>(arr: T[], val: T): T[] {
   return arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
+}
+
+/* ─── Adım göstergesi ────────────────────────────────────────── */
+
+const STEPS = [
+  { n: 1, label: 'Firma Bilgileri' },
+  { n: 2, label: 'Kategori & Bölge' },
+  { n: 3, label: 'Tanıtım' },
+  { n: 4, label: 'Onay & Gönder' },
+];
+
+function StepBar({ current }: { current: number }) {
+  return (
+    <div className="flex items-center justify-center mb-8">
+      {STEPS.map((s, i) => (
+        <div key={s.n} className="flex items-center">
+          <div className="flex flex-col items-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+              current === s.n
+                ? 'bg-emerald-600 text-white'
+                : current > s.n
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-gray-100 text-gray-400'
+            }`}>
+              {current > s.n ? <Check className="w-4 h-4" /> : s.n}
+            </div>
+            <span className={`text-xs mt-1 hidden sm:block font-medium ${
+              current === s.n ? 'text-emerald-700' : current > s.n ? 'text-emerald-600' : 'text-gray-400'
+            }`}>{s.label}</span>
+          </div>
+          {i < STEPS.length - 1 && (
+            <div className={`h-0.5 w-10 sm:w-16 mx-1 mb-4 sm:mb-5 transition-colors ${
+              current > s.n ? 'bg-emerald-300' : 'bg-gray-200'
+            }`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 /* ─── Sayfa ──────────────────────────────────────────────────── */
@@ -117,18 +140,15 @@ export default function SellerFormPage() {
 
   const [form,   setForm]   = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
+  const [step,   setStep]   = useState(1);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
-
-  /* Debounced map URL */
-  const [mapUrl,   setMapUrl]  = useState('');
-  const mapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: val }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
-  /* ── Firestore'dan kayıt bilgilerini ön-doldur ────────────── */
+  /* Firestore'dan kayıtlı kullanıcı bilgilerini ön-doldur */
   useEffect(() => {
     if (!currentUser) return;
     getDoc(doc(db, 'users', currentUser.uid)).then((snap) => {
@@ -136,9 +156,9 @@ export default function SellerFormPage() {
       const d = snap.data();
       setForm((f) => ({
         ...f,
-        ...(d.firmaAdi  ? { firmaAdi: d.firmaAdi }  : {}),
-        ...(d.vergiNo   ? { vergiNo:  d.vergiNo  }  : {}),
-        ...(d.sehir     ? { sehir:    d.sehir    }  : {}),
+        ...(d.firmaAdi  ? { firmaAdi: d.firmaAdi } : {}),
+        ...(d.vergiNo   ? { vergiNo:  d.vergiNo  } : {}),
+        ...(d.sehir     ? { sehir:    d.sehir    } : {}),
         ...(d.saticiTipi === 'uretici' ? { firmaType: 'uretici' } :
             d.saticiTipi === 'bayi'    ? { firmaType: 'satici'  } : {}),
         ...(Array.isArray(d.kategoriler) && d.kategoriler.length > 0 ? {
@@ -147,51 +167,50 @@ export default function SellerFormPage() {
             .map((c) => c.slug),
         } : {}),
       }));
-    }).catch(() => {/* sessizce geç */});
+    }).catch(() => {});
   }, [currentUser]);
 
-  /* ── Debounced harita URL'si ───────────────────────────────── */
-  useEffect(() => {
-    if (!form.sehir) { setMapUrl(''); return; }
-    if (mapTimer.current) clearTimeout(mapTimer.current);
-    mapTimer.current = setTimeout(() => {
-      const parts = [form.mahalle, form.caddeSokak, form.ilce, form.sehir]
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const q = parts.join(', ') + ', Türkiye';
-      setMapUrl(`https://maps.google.com/maps?q=${encodeURIComponent(q)}&output=embed`);
-    }, 800);
-    return () => { if (mapTimer.current) clearTimeout(mapTimer.current); };
-  }, [form.sehir, form.ilce, form.mahalle, form.caddeSokak]);
+  /* ── Adım bazlı doğrulama ───────────────────────────────────── */
 
-  /* ── Doğrulama ─────────────────────────────────────────────── */
-
-  function validate(): boolean {
+  function validateStep(n: number): boolean {
     const e: Errors = {};
-    if (!form.firmaType)                            e.firmaType    = 'Firma türü seçiniz.';
-    if (!form.firmaAdi.trim())                      e.firmaAdi     = 'Firma adı zorunludur.';
-    if (!/^\d{10}$/.test(form.vergiNo))             e.vergiNo      = 'Tam olarak 10 rakam giriniz.';
-    if (!form.firmaYapisi)                          e.firmaYapisi  = 'Firma yapısı seçiniz.';
-    if (!/^[0-9+\s()\-]{10,}$/.test(form.telefon)) e.telefon      = 'Geçerli bir telefon giriniz.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.eposta)) e.eposta = 'Geçerli bir e-posta giriniz.';
-    if (!form.sehir)                                e.sehir        = 'Şehir seçimi zorunludur.';
-    if (form.kategoriler.length === 0)              e.kategoriler  = 'En az bir kategori seçiniz.';
-    if (!form.kvkkOnay)                             e.kvkkOnay     = 'KVKK metnini kabul etmelisiniz.';
-    if (!form.kullanimOnay)                         e.kullanimOnay = 'Kullanım koşullarını kabul etmelisiniz.';
+    if (n === 1) {
+      if (!form.firmaType)                            e.firmaType   = 'Firma türü seçiniz.';
+      if (!form.firmaAdi.trim())                      e.firmaAdi    = 'Firma adı zorunludur.';
+      if (!/^\d{10}$/.test(form.vergiNo))             e.vergiNo     = 'Tam olarak 10 rakam giriniz.';
+      if (!form.firmaYapisi)                          e.firmaYapisi = 'Firma yapısı seçiniz.';
+      if (!/^[0-9+\s()\-]{10,}$/.test(form.telefon)) e.telefon     = 'Geçerli bir telefon giriniz.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.eposta)) e.eposta = 'Geçerli bir e-posta giriniz.';
+      if (!form.sehir)                                e.sehir       = 'Şehir seçimi zorunludur.';
+    }
+    if (n === 2) {
+      if (form.kategoriler.length === 0) e.kategoriler = 'En az bir kategori seçiniz.';
+    }
+    if (n === 4) {
+      if (!form.kvkkOnay)     e.kvkkOnay     = 'KVKK metnini kabul etmelisiniz.';
+      if (!form.kullanimOnay) e.kullanimOnay = 'Kullanım koşullarını kabul etmelisiniz.';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
+  }
+
+  function handleNext() {
+    if (!validateStep(step)) return;
+    setStep((s) => s + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleBack() {
+    setStep((s) => s - 1);
+    setErrors({});
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /* ── Gönderim ──────────────────────────────────────────────── */
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validate()) {
-      setTimeout(() => {
-        document.querySelector('[data-error]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 50);
-      return;
-    }
+    if (!validateStep(4)) return;
     setStatus('loading');
     try {
       await addDoc(collection(db, 'firms'), {
@@ -205,19 +224,25 @@ export default function SellerFormPage() {
         website:         sanitizeUrl(form.website),
         whatsapp:        form.whatsapp.trim(),
         city:            form.sehir,
-        ilce:            sanitizeText(form.ilce, 100),
-        mahalle:         sanitizeText(form.mahalle, 100),
-        caddeSokak:      sanitizeText(form.caddeSokak, 150),
-        binaNo:          sanitizeText(form.binaNo, 20),
-        postaKodu:       form.postaKodu.trim(),
         category:        form.kategoriler[0] ?? '',
         kategoriler:     form.kategoriler,
         hizmetBolgeleri: form.hizmetBolgeleri,
         tanitimMetni:    sanitizeText(form.tanitimMetni, 2000),
+        gorselUrl:       sanitizeUrl(form.gorselUrl),
         status:          'pending',
         verified:        false,
         olusturmaTarihi: serverTimestamp(),
       });
+      /* Admin e-posta bildirimi — fire and forget */
+      sendFirmaBasvuruEmail({
+        firmaAdi:    form.firmaAdi,
+        eposta:      form.eposta,
+        telefon:     form.telefon,
+        sehir:       form.sehir,
+        kategoriler: form.kategoriler
+          .map((slug) => CATEGORIES.find((c) => c.slug === slug)?.name ?? slug)
+          .join(', '),
+      }).catch(() => {});
       setStatus('success');
     } catch {
       setErrors({ submit: 'Bir hata oluştu. Lütfen tekrar deneyin.' });
@@ -237,8 +262,9 @@ export default function SellerFormPage() {
               <CheckCircle className="w-10 h-10 text-emerald-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">Başvurunuz Alındı!</h1>
+            <p className="text-gray-500 mb-2">Firma kaydınız incelemeye alındı.</p>
             <p className="text-gray-500 mb-8">
-              Firma kaydınız incelemeye alındı. En kısa sürede{' '}
+              <strong className="text-gray-700">24 saat içinde</strong>{' '}
               <span className="font-medium text-gray-700">{form.eposta}</span>{' '}
               adresine dönüş yapılacaktır.
             </p>
@@ -255,7 +281,7 @@ export default function SellerFormPage() {
     );
   }
 
-  /* ── Form ──────────────────────────────────────────────────── */
+  /* ── Wizard ────────────────────────────────────────────────── */
 
   return (
     <>
@@ -263,7 +289,7 @@ export default function SellerFormPage() {
       <main className="bg-gray-50 min-h-screen py-10">
         <div className="max-w-2xl mx-auto px-4">
 
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">
               Ücretsiz Kayıt Ol
             </h1>
@@ -272,46 +298,40 @@ export default function SellerFormPage() {
             </p>
           </div>
 
+          <StepBar current={step} />
+
           <form onSubmit={handleSubmit} noValidate>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 space-y-7">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
 
-              {/* ══ 1. FİRMA TÜRÜ ═════════════════════════════════ */}
-              <section data-error={errors.firmaType ? '' : undefined}>
-                <SectionHead n={1} title="Firma Türü" />
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                  {([
-                    { value: 'uretici', label: 'Üretici',      Icon: Factory, desc: 'Kendi ürünlerini üretiyor' },
-                    { value: 'satici',  label: 'Satıcı / Bayi', Icon: Store,   desc: 'Distribütör ya da bayi'   },
-                  ] as const).map(({ value, label, Icon, desc }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => set('firmaType', value)}
-                      className={`flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition ${
-                        form.firmaType === value
-                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                      }`}
-                    >
-                      <Icon className="w-8 h-8" aria-hidden="true" />
-                      <span className="font-semibold text-sm">{label}</span>
-                      <span className="text-xs text-gray-400 leading-tight">{desc}</span>
-                    </button>
-                  ))}
-                </div>
-                {errors.firmaType && (
-                  <p className="mt-2 text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />{errors.firmaType}
-                  </p>
-                )}
-              </section>
+              {/* ══ ADIM 1: FİRMA BİLGİLERİ ══════════════════════ */}
+              {step === 1 && (
+                <div className="space-y-5">
+                  <h2 className="text-base font-semibold text-gray-800 mb-1">Firma Bilgileri</h2>
 
-              <Divider />
-
-              {/* ══ 2. FİRMA BİLGİLERİ ════════════════════════════ */}
-              <section>
-                <SectionHead n={2} title="Firma Bilgileri" />
-                <div className="mt-4 space-y-4">
+                  {/* Firma Türü */}
+                  <Field label="Firma Türü" required error={errors.firmaType}>
+                    <div className="grid grid-cols-2 gap-3 mt-1">
+                      {([
+                        { value: 'uretici', label: 'Üretici',       Icon: Factory, desc: 'Kendi ürünlerini üretiyor' },
+                        { value: 'satici',  label: 'Satıcı / Bayi', Icon: Store,   desc: 'Distribütör ya da bayi'   },
+                      ] as const).map(({ value, label, Icon, desc }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => set('firmaType', value)}
+                          className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 text-center transition ${
+                            form.firmaType === value
+                              ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                              : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                          }`}
+                        >
+                          <Icon className="w-7 h-7" />
+                          <span className="font-semibold text-sm">{label}</span>
+                          <span className="text-xs text-gray-400 leading-tight">{desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
 
                   <Field label="Firma Adı" required error={errors.firmaAdi}>
                     <input
@@ -320,7 +340,6 @@ export default function SellerFormPage() {
                       onChange={(e) => set('firmaAdi', e.target.value)}
                       placeholder="Örn: ABC Prefabrik Ltd. Şti."
                       className={inp}
-                      data-error={errors.firmaAdi ? '' : undefined}
                     />
                   </Field>
 
@@ -334,16 +353,13 @@ export default function SellerFormPage() {
                         onChange={(e) => set('vergiNo', e.target.value.replace(/\D/g, '').slice(0, 10))}
                         placeholder="1234567890"
                         className={inp}
-                        data-error={errors.vergiNo ? '' : undefined}
                       />
                     </Field>
-
                     <Field label="Firma Yapısı" required error={errors.firmaYapisi}>
                       <select
                         value={form.firmaYapisi}
                         onChange={(e) => set('firmaYapisi', e.target.value)}
                         className={inp + ' bg-white'}
-                        data-error={errors.firmaYapisi ? '' : undefined}
                       >
                         <option value="">Seçiniz…</option>
                         {FIRMA_YAPILARI.map((f) => (
@@ -361,10 +377,8 @@ export default function SellerFormPage() {
                         onChange={(e) => set('telefon', e.target.value)}
                         placeholder="05XX XXX XX XX"
                         className={inp}
-                        data-error={errors.telefon ? '' : undefined}
                       />
                     </Field>
-
                     <Field label="E-posta" required error={errors.eposta}>
                       <input
                         type="email"
@@ -372,7 +386,6 @@ export default function SellerFormPage() {
                         onChange={(e) => set('eposta', e.target.value)}
                         placeholder="firma@email.com"
                         className={inp}
-                        data-error={errors.eposta ? '' : undefined}
                       />
                     </Field>
                   </div>
@@ -390,7 +403,6 @@ export default function SellerFormPage() {
                         />
                       </div>
                     </Field>
-
                     <Field label="WhatsApp" hint="opsiyonel">
                       <div className="relative">
                         <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -404,121 +416,30 @@ export default function SellerFormPage() {
                       </div>
                     </Field>
                   </div>
-                </div>
-              </section>
 
-              <Divider />
-
-              {/* ══ 3. KONUM ══════════════════════════════════════ */}
-              <section>
-                <SectionHead n={3} title="Konum" />
-                <div className="mt-4 space-y-4">
-
-                  {/* Şehir + İlçe */}
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <Field label="Şehir" required error={errors.sehir}>
+                  <Field label="Şehir" required error={errors.sehir}>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                       <select
                         value={form.sehir}
                         onChange={(e) => set('sehir', e.target.value)}
-                        className={inp + ' bg-white'}
-                        data-error={errors.sehir ? '' : undefined}
+                        className={inp + ' pl-9 bg-white'}
                       >
                         <option value="">Şehir seçin…</option>
                         {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
-                    </Field>
-
-                    <Field label="İlçe">
-                      <input
-                        type="text"
-                        value={form.ilce}
-                        onChange={(e) => set('ilce', e.target.value)}
-                        placeholder="İlçe adı"
-                        className={inp}
-                      />
-                    </Field>
-                  </div>
-
-                  {/* Mahalle + Cadde/Sokak */}
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <Field label="Mahalle">
-                      <input
-                        type="text"
-                        value={form.mahalle}
-                        onChange={(e) => set('mahalle', e.target.value)}
-                        placeholder="Mahalle adı"
-                        className={inp}
-                      />
-                    </Field>
-
-                    <Field label="Cadde / Sokak">
-                      <input
-                        type="text"
-                        value={form.caddeSokak}
-                        onChange={(e) => set('caddeSokak', e.target.value)}
-                        placeholder="Cadde veya sokak adı"
-                        className={inp}
-                      />
-                    </Field>
-                  </div>
-
-                  {/* Bina No/Daire + Posta Kodu */}
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <Field label="Bina No / Daire">
-                      <input
-                        type="text"
-                        value={form.binaNo}
-                        onChange={(e) => set('binaNo', e.target.value)}
-                        placeholder="No: 12, Daire: 3"
-                        className={inp}
-                      />
-                    </Field>
-
-                    <Field label="Posta Kodu">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={5}
-                        value={form.postaKodu}
-                        onChange={(e) => set('postaKodu', e.target.value.replace(/\D/g, '').slice(0, 5))}
-                        placeholder="34000"
-                        className={inp}
-                      />
-                    </Field>
-                  </div>
-
-                  {/* Google Maps önizleme — debounced */}
-                  {mapUrl && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-1">Konum Önizlemesi</p>
-                      <div className="rounded-xl overflow-hidden border border-gray-200 h-64">
-                        <iframe
-                          key={mapUrl}
-                          src={mapUrl}
-                          width="100%"
-                          height="100%"
-                          style={{ border: 0 }}
-                          allowFullScreen
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                          title="Konum harita önizlemesi"
-                        />
-                      </div>
                     </div>
-                  )}
+                  </Field>
                 </div>
-              </section>
+              )}
 
-              <Divider />
+              {/* ══ ADIM 2: KATEGORİ VE HİZMET BÖLGESİ ═══════════ */}
+              {step === 2 && (
+                <div className="space-y-6">
+                  <h2 className="text-base font-semibold text-gray-800 mb-1">Kategori ve Hizmet Bölgesi</h2>
 
-              {/* ══ 4. ÜRÜN VE HİZMETLER ══════════════════════════ */}
-              <section>
-                <SectionHead n={4} title="Ürün ve Hizmetler" />
-                <div className="mt-4 space-y-5">
-
-                  {/* Kategoriler */}
                   <Field label="Ürün Kategorileri" required error={errors.kategoriler}>
-                    <div className="flex flex-wrap gap-2 mt-1" data-error={errors.kategoriler ? '' : undefined}>
+                    <div className="flex flex-wrap gap-2 mt-1">
                       {CATEGORIES.map((cat) => {
                         const sel = form.kategoriler.includes(cat.slug);
                         return (
@@ -526,13 +447,13 @@ export default function SellerFormPage() {
                             key={cat.slug}
                             type="button"
                             onClick={() => set('kategoriler', toggle(form.kategoriler, cat.slug))}
-                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm font-medium transition ${
+                            className={`inline-flex items-center gap-1 px-3 py-2 rounded-full border text-sm font-medium transition min-h-[36px] ${
                               sel
                                 ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                                 : 'border-gray-200 text-gray-600 hover:border-gray-300'
                             }`}
                           >
-                            {sel && <Check className="w-3 h-3" aria-hidden="true" />}
+                            {sel && <Check className="w-3 h-3" />}
                             {cat.name}
                           </button>
                         );
@@ -540,13 +461,12 @@ export default function SellerFormPage() {
                     </div>
                   </Field>
 
-                  {/* Hizmet bölgeleri */}
                   <div>
                     <p className="text-sm font-medium text-gray-700 mb-1">
                       Hizmet Verilen Bölgeler
                       <span className="text-gray-400 font-normal ml-1 text-xs">(birden fazla seçilebilir)</span>
                     </p>
-                    <div className="border border-gray-200 rounded-lg p-3 max-h-44 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5">
+                    <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5">
                       {CITIES.map((city) => {
                         const sel = form.hizmetBolgeleri.includes(city);
                         return (
@@ -555,7 +475,7 @@ export default function SellerFormPage() {
                               type="checkbox"
                               checked={sel}
                               onChange={() => set('hizmetBolgeleri', toggle(form.hizmetBolgeleri, city))}
-                              className="w-3.5 h-3.5 rounded text-emerald-600 border-gray-300 focus:ring-emerald-500"
+                              className="w-4 h-4 rounded text-emerald-600 border-gray-300 focus:ring-emerald-500"
                             />
                             <span className="text-sm text-gray-600">{city}</span>
                           </label>
@@ -566,30 +486,80 @@ export default function SellerFormPage() {
                       <p className="text-xs text-emerald-600 mt-1">{form.hizmetBolgeleri.length} il seçildi</p>
                     )}
                   </div>
+                </div>
+              )}
 
-                  {/* Tanıtım */}
-                  <Field label="Firma Tanıtım Metni">
+              {/* ══ ADIM 3: TANITIM ════════════════════════════════ */}
+              {step === 3 && (
+                <div className="space-y-5">
+                  <h2 className="text-base font-semibold text-gray-800 mb-1">Firma Tanıtımı</h2>
+
+                  <Field label="Tanıtım Metni" hint="opsiyonel">
                     <textarea
                       value={form.tanitimMetni}
                       onChange={(e) => set('tanitimMetni', e.target.value)}
-                      rows={4}
+                      rows={5}
                       maxLength={1000}
                       placeholder="Firmanızı ve sunduğunuz hizmetleri kısaca tanıtın…"
                       className={inp + ' resize-none'}
                     />
                     <p className="text-xs text-gray-400 mt-1 text-right">{form.tanitimMetni.length} / 1000</p>
                   </Field>
+
+                  <Field label="Firma Görsel URL" hint="opsiyonel">
+                    <input
+                      type="url"
+                      value={form.gorselUrl}
+                      onChange={(e) => set('gorselUrl', e.target.value)}
+                      placeholder="https://example.com/gorsel.jpg"
+                      className={inp}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Firmanızı temsil eden bir görsel URL'si ekleyebilirsiniz.
+                    </p>
+                  </Field>
+
+                  {form.gorselUrl && (
+                    <div className="rounded-xl overflow-hidden border border-gray-200">
+                      <img
+                        src={form.gorselUrl}
+                        alt="Firma görseli önizleme"
+                        className="w-full h-48 object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </div>
+                  )}
                 </div>
-              </section>
+              )}
 
-              <Divider />
+              {/* ══ ADIM 4: ONAYLAR ════════════════════════════════ */}
+              {step === 4 && (
+                <div className="space-y-5">
+                  <h2 className="text-base font-semibold text-gray-800 mb-1">Onay ve Gönder</h2>
 
-              {/* ══ 5. ONAYLAR ════════════════════════════════════ */}
-              <section>
-                <SectionHead n={5} title="Onaylar" />
-                <div className="mt-4 space-y-3">
+                  {/* Özet */}
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="font-semibold text-gray-700 mb-3 text-sm">Başvuru Özeti</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-gray-600">
+                      <span className="text-gray-400">Firma Adı</span>
+                      <span className="font-medium text-gray-800">{form.firmaAdi}</span>
+                      <span className="text-gray-400">E-posta</span>
+                      <span className="font-medium text-gray-800">{form.eposta}</span>
+                      <span className="text-gray-400">Telefon</span>
+                      <span className="font-medium text-gray-800">{form.telefon}</span>
+                      <span className="text-gray-400">Şehir</span>
+                      <span className="font-medium text-gray-800">{form.sehir}</span>
+                      <span className="text-gray-400">Kategoriler</span>
+                      <span className="font-medium text-gray-800">
+                        {form.kategoriler
+                          .map((slug) => CATEGORIES.find((c) => c.slug === slug)?.name ?? slug)
+                          .join(', ')}
+                      </span>
+                    </div>
+                  </div>
 
-                  <div data-error={errors.kvkkOnay ? '' : undefined}>
+                  {/* KVKK */}
+                  <div>
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
@@ -612,7 +582,8 @@ export default function SellerFormPage() {
                     )}
                   </div>
 
-                  <div data-error={errors.kullanimOnay ? '' : undefined}>
+                  {/* Kullanım Koşulları */}
+                  <div>
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
@@ -641,22 +612,44 @@ export default function SellerFormPage() {
                     </div>
                   )}
                 </div>
-              </section>
-
-            </div>{/* /card */}
-
-            <button
-              type="submit"
-              disabled={status === 'loading'}
-              className="mt-5 w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {status === 'loading' ? (
-                <><Loader2 className="w-4 h-4 animate-spin" />Gönderiliyor…</>
-              ) : (
-                <><CheckCircle className="w-4 h-4" />Başvuruyu Gönder</>
               )}
-            </button>
 
+            </div>
+
+            {/* ── Navigasyon butonları ─────────────────────────── */}
+            <div className="flex gap-3 mt-5">
+              {step > 1 && (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+                >
+                  <ChevronLeft className="w-4 h-4" />Geri
+                </button>
+              )}
+
+              {step < 4 ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition"
+                >
+                  İleri <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {status === 'loading' ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" />Gönderiliyor…</>
+                  ) : (
+                    <><CheckCircle className="w-4 h-4" />Başvuruyu Gönder</>
+                  )}
+                </button>
+              )}
+            </div>
           </form>
         </div>
       </main>
