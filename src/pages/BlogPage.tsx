@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Clock, Calendar, ChevronRight } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import { BLOG_POSTS, type BlogKategori } from '../data/blogPosts';
 
 /* ── Kategori renkleri ──────────────────────────────────────── */
@@ -50,6 +51,11 @@ export default function BlogPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="Blog — Modüler Yapı Rehberi | ModülerPazar"
+        description="Prefabrik ev, çelik yapı, konteyner ev ve tiny house hakkında uzman içerikler. Fiyatlar, ruhsatlar, karşılaştırmalar ve daha fazlası."
+        url="/blog"
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50">

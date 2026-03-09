@@ -4,8 +4,9 @@ import { Toaster } from 'sonner';
 import { AuthProvider }        from './context/AuthContext';
 import { TeklifSepetProvider } from './context/TeklifSepetContext';
 import { LanguageProvider }    from './context/LanguageContext';
-import AdminRoute   from './components/AdminRoute';
-import TeklifSepeti from './components/TeklifSepeti';
+import AdminRoute      from './components/AdminRoute';
+import TeklifSepeti   from './components/TeklifSepeti';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './App.css';
 
 /* ── Lazy page imports (her sayfa ayrı chunk) ─────────────── */
@@ -51,6 +52,7 @@ function App() {
           <Router>
             <Toaster position="top-right" richColors />
             <TeklifSepeti />
+            <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/"                  element={<HomePage />} />
@@ -83,6 +85,7 @@ function App() {
                 } />
               </Routes>
             </Suspense>
+            </ErrorBoundary>
           </Router>
         </TeklifSepetProvider>
       </AuthProvider>

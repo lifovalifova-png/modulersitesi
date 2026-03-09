@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
 import { CATEGORIES } from '../data/categories';
 import { useLanguage } from '../context/LanguageContext';
@@ -178,6 +179,11 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="ModülerPazar — Türkiye'nin En Büyük Modüler Yapı Pazarı"
+        description="Prefabrik ev, çelik yapı, konteyner ev, tiny house ilanları. Türkiye genelinde 2500+ ilan, 850+ firma. Aynı anda 2 firmadan ücretsiz teklif alın."
+        url="/"
+      />
       <Header />
 
       <main className="flex-1">

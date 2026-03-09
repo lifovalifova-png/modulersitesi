@@ -177,7 +177,6 @@ export default function KayitPage() {
       navigate(getRedirect(), { replace: true });
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
-      console.error('[Google Auth]', code, err);
       setErrorMsg(authErrorMessage(code));
       setStatus('idle');
     }

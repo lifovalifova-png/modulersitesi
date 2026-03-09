@@ -327,8 +327,30 @@ export default function IlanDetayPage() {
 
   /* Galeri state */
   const [activeImg, setActiveImg] = useState(0);
-  /* Telefon göster/gizle */
+  /* Firma iletişim bilgisi */
   const [showPhone, setShowPhone] = useState(false);
+  const [firmaContact, setFirmaContact] = useState<{ phone?: string; eposta?: string; whatsapp?: string } | null>(null);
+  const [contactLoading, setContactLoading] = useState(false);
+
+  async function handleShowContact() {
+    if (showPhone) { setShowPhone(false); return; }
+    setShowPhone(true);
+    if (firmaContact !== null || !ilan?.firmaId) return;
+    setContactLoading(true);
+    try {
+      const snap = await getDoc(doc(db, 'firms', ilan.firmaId));
+      if (snap.exists()) {
+        const d = snap.data() as { phone?: string; eposta?: string; whatsapp?: string };
+        setFirmaContact({ phone: d.phone, eposta: d.eposta, whatsapp: d.whatsapp });
+      } else {
+        setFirmaContact({});
+      }
+    } catch {
+      setFirmaContact({});
+    } finally {
+      setContactLoading(false);
+    }
+  }
   /* Teklif modalı */
   const [modal, setModal] = useState<{ open: boolean; type: 'primary' | 'secondary' }>({ open: false, type: 'primary' });
   /* Benzer ilan modalı */
@@ -550,22 +572,40 @@ export default function IlanDetayPage() {
                   </Link>
                 )}
 
-                {/* Telefon (opsiyonel - Ilan tipinde yok, firma datasından gelir) */}
-                {showPhone ? (
-                  <a href="#" className="flex items-center justify-center gap-2 w-full border border-emerald-300 text-emerald-700 bg-emerald-50 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition mb-1">
-                    <Phone className="w-4 h-4" /> Firma ile iletişime geçin
-                  </a>
-                ) : (
-                  <button onClick={() => setShowPhone(true)}
+                {/* Firma iletişim bilgileri */}
+                {!showPhone ? (
+                  <button onClick={handleShowContact}
                     className="flex items-center justify-center gap-2 w-full border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:border-gray-300 hover:bg-gray-50 transition mb-1">
                     <Eye className="w-4 h-4" /> İletişim Bilgilerini Göster
                   </button>
-                )}
-                {showPhone && (
-                  <button onClick={() => setShowPhone(false)}
-                    className="flex items-center justify-center gap-1 w-full text-xs text-gray-400 hover:text-gray-600 transition mt-1">
-                    <EyeOff className="w-3 h-3" /> Gizle
-                  </button>
+                ) : contactLoading ? (
+                  <div className="flex items-center justify-center gap-2 w-full border border-gray-200 py-2.5 rounded-xl text-sm text-gray-400 mb-1">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Yükleniyor…
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 mb-1">
+                    {firmaContact?.phone && (
+                      <a href={`tel:${firmaContact.phone}`}
+                        className="flex items-center justify-center gap-2 w-full border border-emerald-300 text-emerald-700 bg-emerald-50 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition">
+                        <Phone className="w-4 h-4" /> {firmaContact.phone}
+                      </a>
+                    )}
+                    {firmaContact?.eposta && (
+                      <a href={`mailto:${firmaContact.eposta}`}
+                        className="flex items-center justify-center gap-2 w-full border border-blue-200 text-blue-700 bg-blue-50 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-100 transition">
+                        {firmaContact.eposta}
+                      </a>
+                    )}
+                    {!firmaContact?.phone && !firmaContact?.eposta && (
+                      <p className="text-center text-xs text-gray-400 py-2">
+                        İletişim bilgisi bulunamadı. Teklif formu üzerinden ulaşabilirsiniz.
+                      </p>
+                    )}
+                    <button onClick={() => setShowPhone(false)}
+                      className="flex items-center justify-center gap-1 w-full text-xs text-gray-400 hover:text-gray-600 transition">
+                      <EyeOff className="w-3 h-3" /> Gizle
+                    </button>
+                  </div>
                 )}
               </div>
 

@@ -21,7 +21,14 @@ export function TeklifSepetProvider({ children }: { children: ReactNode }) {
   const [firms, setFirms] = useState<Ilan[]>(() => {
     try {
       const s = localStorage.getItem('teklifSepeti');
-      return s ? JSON.parse(s) : [];
+      if (!s) return [];
+      const parsed = JSON.parse(s);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((f: unknown) =>
+        f !== null && typeof f === 'object' &&
+        typeof (f as Record<string, unknown>).id === 'string' &&
+        typeof (f as Record<string, unknown>).firmaAdi === 'string',
+      ) as Ilan[];
     } catch {
       return [];
     }

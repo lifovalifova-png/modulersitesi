@@ -7,6 +7,7 @@ import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import { sendFirmaBasvuruEmail } from '../lib/emailjs';
 import {
   Factory, Store, Check, CheckCircle, AlertCircle, Loader2,
@@ -285,6 +286,11 @@ export default function SellerFormPage() {
 
   return (
     <>
+      <SEOMeta
+        title="Satıcı Kaydı — Firmanızı Listeleyin | ModülerPazar"
+        description="ModülerPazar'da firmanızı ücretsiz listeleyin. Binlerce alıcıya ulaşın, teklif alın. Prefabrik, çelik yapı, konteyner ve tiny house üreticileri için."
+        url="/satici-formu"
+      />
       <Header />
       <main className="bg-gray-50 min-h-screen py-10">
         <div className="max-w-2xl mx-auto px-4">

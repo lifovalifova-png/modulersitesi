@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import { SITE_CONFIG, LEGAL_LINKS } from '../config/site';
 
 /* ─── Yardımcı bileşenler ─────────────────────────────────── */
@@ -96,6 +97,11 @@ const ADMIN_MEASURES = [
 export default function GizlilikPage() {
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="Gizlilik Politikası — ModülerPazar"
+        description="ModülerPazar gizlilik politikası: verilerinizin nasıl toplandığı, kullanıldığı ve korunduğu hakkında bilgi."
+        url="/gizlilik"
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50 py-12">

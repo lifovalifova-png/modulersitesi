@@ -38,28 +38,9 @@ export default function QuickQuoteModal({ isOpen, onClose, listing, onSuccess }:
     setStatus('loading');
     setErrorMessage('');
 
-    // Prepare JSON payload
-    const payload = {
-      productName: listing.title,
-      productId: listing.id,
-      location: listing.location,
-      price: listing.price,
-      category: listing.category,
-      customerName: formData.name,
-      customerPhone: formData.phone,
-      customerEmail: formData.email,
-      message: formData.message,
-      timestamp: new Date().toISOString(),
-      source: 'ModulerPazar-QuickQuote'
-    };
-
     try {
-      // Webhook URL - Replace with your actual webhook URL
-      // In production, this would send to the actual webhook
-      // For demo purposes, we'll simulate a successful response
-      console.log('Sending payload to webhook:', payload);
-
-      // Simulate API call
+      // Simüle API çağrısı — gerçek webhook entegrasyonu yapılacak
+      // payload: { productName, productId, location, price, category, customerName, customerPhone, customerEmail, message, timestamp, source }
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Uncomment below for actual webhook call:
@@ -67,10 +48,8 @@ export default function QuickQuoteModal({ isOpen, onClose, listing, onSuccess }:
       const webhookUrl = 'https://webhook.site/your-webhook-id';
       const response = await fetch(webhookUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productName: listing.title, ... }),
       });
 
       if (!response.ok) {

@@ -9,6 +9,7 @@ import { sendTalepEmail } from '../lib/emailjs';
 import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import Disclaimer from '../components/Disclaimer';
 import { trackEvent } from '../lib/analytics';
 
@@ -131,8 +132,8 @@ export default function TalepOlusturPage() {
           telefon:  form.telefon.trim(),
           email:    form.email.trim().toLowerCase(),
         });
-      } catch (err) {
-        console.error('Email gönderilemedi:', err);
+      } catch {
+        // Email bildirimi gönderilemedi — talep yine de kaydedildi
       }
 
       /* Google Sheets webhook — fire & forget, hata oluşursa sessizce geç */
@@ -207,6 +208,11 @@ export default function TalepOlusturPage() {
   /* ── Form ─────────────────────────────────────────────── */
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="Ücretsiz Teklif Al — Modüler Yapı | ModülerPazar"
+        description="Modüler yapı talebi oluşturun, doğrulanmış firmalardan ücretsiz teklif alın. Prefabrik, çelik yapı, konteyner ev ve daha fazlası."
+        url="/talep-olustur"
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50 py-10">

@@ -47,7 +47,7 @@ function renderIcerik(icerik: string) {
     if (isUl) {
       return (
         <ul key={i} className="list-disc list-inside space-y-1.5 text-gray-700 text-sm leading-relaxed">
-          {lines.map((l, j) => <li key={j}>{l.slice(2)}</li>)}
+          {lines.map((l) => <li key={l}>{l.slice(2)}</li>)}
         </ul>
       );
     }

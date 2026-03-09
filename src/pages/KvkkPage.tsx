@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import { SITE_CONFIG, LEGAL_LINKS } from '../config/site';
 
 /* ═══════════════════════════════════════════════════════════
@@ -282,6 +283,11 @@ const RIGHTS = [
 export default function KvkkPage() {
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="KVKK Aydınlatma Metni — ModülerPazar"
+        description="ModülerPazar kişisel verilerin korunması kanunu (KVKK) kapsamında aydınlatma metni."
+        url="/kvkk"
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50 py-12">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 
 /* ── Types ──────────────────────────────────────────────────── */
 interface SSSItem {
@@ -185,6 +186,11 @@ export default function SSSPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="Sık Sorulan Sorular — ModülerPazar"
+        description="Modüler yapı alım sürecine dair merak edilenlerin cevapları. Teklif alma, firma seçimi, ödeme ve garanti konularında SSS."
+        url="/sss"
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50">

@@ -1627,12 +1627,6 @@ function TaleplerTab() {
       // Tüm onaylı firmalar — userId olmayanlar eşleşmeye dahil, bildirime dahil değil
       const approved = firms.filter((f) => f.status === 'approved');
 
-      console.log(
-        `[ilet] toplam firms: ${firms.length}`,
-        `| onaylı: ${approved.length}`,
-        `| status değerleri:`, [...new Set(firms.map((f) => f.status))],
-      );
-
       if (approved.length === 0) {
         toast.warning('Sistemde onaylı firma bulunamadı.');
         return;
@@ -1659,8 +1653,6 @@ function TaleplerTab() {
         matching = approved;
         matchDesc = 'tüm onaylı firmalar';
       }
-
-      console.log(`[ilet] eşleşme: "${matchDesc}" → ${matching.length} firma`);
 
       // userId olan firmalar bildirim alır; olmayanlar sadece iletildi sayısına girer
       const newIds = matching
@@ -2238,7 +2230,7 @@ function RaporTab() {
 
         setRecentTalepler(talepler);
       } catch (err) {
-        console.error('[RaporTab] Veri yüklenemedi:', err);
+        void err;
       } finally {
         setLoading(false);
       }
@@ -2542,15 +2534,12 @@ export default function AdminDashboardPage() {
   const [clearBusy, setClearBusy] = useState(false);
 
   async function handleSeed() {
-    console.log('[seed] Seed başlatıldı (admin)');
     toast.info('10 firma, 30 ilan, 15 talep, 10 teklif eklenecek…');
     setSeedBusy(true);
     try {
       await seedFirestore();
       toast.success('Test verisi başarıyla eklendi! (10 firma, 30 ilan, 15 talep, 10 teklif)');
-      console.log('[seed] Başarıyla tamamlandı');
-    } catch (e) {
-      console.error('[seed] HATA:', e);
+    } catch {
       toast.error('Test verisi eklenirken hata oluştu.');
     } finally {
       setSeedBusy(false);
@@ -2559,14 +2548,11 @@ export default function AdminDashboardPage() {
 
   async function handleClear() {
     if (!window.confirm('Tüm test verisi silinecek. Devam edilsin mi?')) return;
-    console.log('[clear] Temizleme başlatıldı (admin)');
     setClearBusy(true);
     try {
       await clearSeedData();
       toast.success('Test verisi temizlendi.');
-      console.log('[clear] Başarıyla tamamlandı');
-    } catch (e) {
-      console.error('[clear] HATA:', e);
+    } catch {
       toast.error('Temizleme sırasında hata oluştu.');
     } finally {
       setClearBusy(false);

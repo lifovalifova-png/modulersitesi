@@ -75,7 +75,6 @@ export default function GirisPage() {
       navigate(from, { replace: true });
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
-      console.error('[Google Auth]', code, err);
       setErrorMsg(authErrorMessage(code));
       setStatus('idle');
     }

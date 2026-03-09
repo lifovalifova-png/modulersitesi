@@ -4,6 +4,7 @@ import { collection, onSnapshot, query, where, limit } from 'firebase/firestore'
 import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import { CATEGORIES } from '../data/categories';
 import { ShieldCheck, MapPin, Tag, ChevronDown, Building2, Star } from 'lucide-react';
 
@@ -97,6 +98,11 @@ export default function FirmalarHaritaPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="Modüler Yapı Firmaları — Türkiye Geneli | ModülerPazar"
+        description="Türkiye'nin dört bir yanındaki doğrulanmış prefabrik, çelik yapı, konteyner ev ve tiny house firmalarını listeleyin, karşılaştırın."
+        url="/firmalar-harita"
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50">

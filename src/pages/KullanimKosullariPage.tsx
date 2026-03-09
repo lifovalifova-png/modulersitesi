@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import { SITE_CONFIG, LEGAL_LINKS } from '../config/site';
 
 /* ─── Yardımcı bileşenler ─────────────────────────────────── */
@@ -93,6 +94,11 @@ const LIABILITY_LIMITS = [
 export default function KullanimKosullariPage() {
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="Kullanım Koşulları — ModülerPazar"
+        description="ModülerPazar platformunu kullanım koşulları ve kullanıcı sözleşmesi."
+        url="/kullanim-kosullari"
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50 py-12">
