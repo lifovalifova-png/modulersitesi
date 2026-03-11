@@ -5,7 +5,7 @@ import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBqz1_0_jWBmtHr5o3cw77G9swzaV31hVk",
-  authDomain: "modulerpazar.com",
+  authDomain: "modulerpazar.firebaseapp.com",
   projectId: "modulerpazar",
   storageBucket: "modulerpazar.firebasestorage.app",
   messagingSenderId: "1066643691849",
