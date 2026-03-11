@@ -211,7 +211,7 @@ export default function Header() {
             <UserMenu />
           </div>
 
-          {/* Mobile: Search toggle + Hamburger */}
+          {/* Mobile: Search toggle + Auth Buttons + Hamburger */}
           <div className="md:hidden flex items-center gap-2">
             <button
               onClick={() => setSearchOpen((v) => !v)}
@@ -221,6 +221,22 @@ export default function Header() {
             >
               {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
             </button>
+            {!currentUser && (
+              <>
+                <Link
+                  to="/giris"
+                  className="border border-emerald-600 text-emerald-600 px-3 py-1.5 rounded-lg font-medium text-sm hover:bg-emerald-50 transition"
+                >
+                  {t('auth.login')}
+                </Link>
+                <Link
+                  to="/kayit"
+                  className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-medium text-sm hover:bg-emerald-700 transition"
+                >
+                  {t('auth.register')}
+                </Link>
+              </>
+            )}
             <button
               onClick={() => setMobileMenuOpen((v) => !v)}
               aria-label="Menüyü aç"
