@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   User, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2,
@@ -54,9 +54,10 @@ function FieldError({ msg }: { msg?: string }) {
 export default function KayitPage() {
   const { currentUser, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const googleInProgress = useRef(false);
 
   useEffect(() => {
-    if (currentUser) navigate('/', { replace: true });
+    if (currentUser && !googleInProgress.current) navigate('/', { replace: true });
   }, [currentUser, navigate]);
 
   /* ── Temel form ─────────────────────────────────────────── */
@@ -166,16 +167,20 @@ export default function KayitPage() {
 
   /* ── Google kayıt ───────────────────────────────────────── */
   async function handleGoogle() {
+    googleInProgress.current = true;
     setStatus('google');
     setErrorMsg('');
     try {
       const user = await loginWithGoogle();
       await setDoc(doc(db, 'users', user.uid), {
         role: userType === 'satici' ? 'seller' : 'buyer',
+        displayName: user.displayName ?? '',
+        email: user.email ?? '',
         olusturmaTarihi: serverTimestamp(),
       });
       navigate(getRedirect(), { replace: true });
     } catch (err: unknown) {
+      googleInProgress.current = false;
       const code = (err as { code?: string }).code ?? '';
       setErrorMsg(authErrorMessage(code));
       setStatus('idle');

@@ -8,8 +8,7 @@ import {
   signOut,
   sendPasswordResetEmail,
   GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   updateProfile,
   onAuthStateChanged,
 } from 'firebase/auth';
@@ -62,9 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function loginWithGoogle(): Promise<User> {
     const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
-    const cred = await getRedirectResult(auth);
-    return cred!.user;
+    const cred = await signInWithPopup(auth, provider);
+    return cred.user;
   }
 
   async function logout() {
