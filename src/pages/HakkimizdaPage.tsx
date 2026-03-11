@@ -280,6 +280,9 @@ export default function HakkimizdaPage() {
                 Ücretsiz Teklif Al <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
+            <p className="text-emerald-200 text-xs mt-4">
+              Teknik sorunlar 3-5 iş günü içinde çözülür.
+            </p>
           </div>
         </section>
 

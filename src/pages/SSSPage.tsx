@@ -37,7 +37,7 @@ const KATEGORILER: SSSKategori[] = [
       },
       {
         soru: 'Müşteri desteği nasıl alırım?',
-        cevap: 'Destek için info@modulerpazar.com adresine e-posta gönderebilir ya da 0850 123 45 67 numaralı hattımızı arayabilirsiniz. Hafta içi 09:00–18:00 saatleri arasında yanıt veriyoruz. Acil konular için platform üzerinden canlı sohbet desteği de mevcuttur.',
+        cevap: 'Destek için modulerpazar@yandex.com adresine e-posta gönderebilirsiniz. Teknik sorunlar 3-5 iş günü içinde çözülür. Genel sorular hafta içi 09:00–18:00 saatleri arasında yanıtlanmaktadır.',
       },
       {
         soru: 'Bir firma hakkında şikâyette bulunabilir miyim?',
@@ -251,7 +251,7 @@ export default function SSSPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href="mailto:info@modulerpazar.com"
+                href="mailto:modulerpazar@yandex.com"
                 className="inline-flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:bg-emerald-700 transition"
               >
                 E-posta Gönder

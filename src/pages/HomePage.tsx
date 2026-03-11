@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { collection, query, where, getCountFromServer } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import {
   ArrowRight, Building, Container, Home, Hammer, TreePine, Recycle, Star,
   Zap, Search, CheckSquare, FileText, BarChart2,
@@ -85,12 +87,26 @@ export default function HomePage() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'customer' | 'producer'>('customer');
 
+  /* ─── Firestore gerçek sayılar ───────────────────────────── */
+  const [ilanCount,  setIlanCount]  = useState(0);
+  const [firmaCount, setFirmaCount] = useState(0);
+
+  useEffect(() => {
+    Promise.all([
+      getCountFromServer(query(collection(db, 'ilanlar'), where('status', '==', 'aktif'))),
+      getCountFromServer(query(collection(db, 'firms'),   where('status', '==', 'approved'))),
+    ]).then(([ilanSnap, firmaSnap]) => {
+      setIlanCount(ilanSnap.data().count);
+      setFirmaCount(firmaSnap.data().count);
+    }).catch(() => { /* silent — StatCounter'da 0 kalır */ });
+  }, []);
+
   /* ─── Translated data arrays ────────────────────────────── */
   const STATS = [
-    { label: t('stats.activeAds'),       target: 2500,  suffix: '+' },
-    { label: t('stats.registeredFirms'), target: 850,   suffix: '+' },
-    { label: t('stats.happyCustomers'),  target: 12000, suffix: '+' },
-    { label: t('stats.cities'),          target: 81,    suffix: ''  },
+    { label: t('stats.activeAds'),       target: ilanCount,  suffix: '+' },
+    { label: t('stats.registeredFirms'), target: firmaCount, suffix: '+' },
+    { label: t('stats.happyCustomers'),  target: 12000,      suffix: '+' },
+    { label: t('stats.cities'),          target: 81,         suffix: ''  },
   ];
 
   const [statsActive, setStatsActive] = useState(false);

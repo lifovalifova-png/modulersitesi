@@ -34,6 +34,7 @@ const FirmaProfilPage       = lazy(() => import('./pages/FirmaProfilPage'));
 const ProfilPage            = lazy(() => import('./pages/ProfilPage'));
 const FiyatHesaplaPage      = lazy(() => import('./pages/FiyatHesaplaPage'));
 const HakkimizdaPage        = lazy(() => import('./pages/HakkimizdaPage'));
+const NotFoundPage          = lazy(() => import('./pages/NotFoundPage'));
 
 /* ── Sayfa yüklenirken gösterilecek spinner ───────────────── */
 function PageLoader() {
@@ -83,6 +84,7 @@ function App() {
                     <AdminDashboardPage />
                   </AdminRoute>
                 } />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
             </ErrorBoundary>

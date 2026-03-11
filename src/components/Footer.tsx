@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Building2, Mail, Phone, MapPin, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { Building2, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { SITE_CONFIG, LEGAL_LINKS } from '../config/site';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -77,12 +77,6 @@ export default function Footer() {
                 <span>{SITE_CONFIG.address}</span>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-emerald-500 flex-shrink-0" aria-hidden="true" />
-                <a href={`tel:${SITE_CONFIG.phone.replace(/\s/g, '')}`} className="hover:text-emerald-400 transition">
-                  {SITE_CONFIG.phone}
-                </a>
-              </li>
-              <li className="flex items-center gap-2">
                 <Mail className="w-5 h-5 text-emerald-500 flex-shrink-0" aria-hidden="true" />
                 <a href={`mailto:${SITE_CONFIG.email}`} className="hover:text-emerald-400 transition">
                   {SITE_CONFIG.email}
@@ -119,7 +113,6 @@ export default function Footer() {
           description: 'Türkiye\'nin en büyük modüler yapı pazarı. Prefabrik ev, çelik yapı, konteyner ev, tiny house fiyatları ve firmaları.',
           contactPoint: {
             '@type': 'ContactPoint',
-            telephone: SITE_CONFIG.phone,
             email: SITE_CONFIG.email,
             contactType: 'customer service',
             availableLanguage: 'Turkish',

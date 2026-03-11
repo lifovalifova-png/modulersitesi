@@ -44,6 +44,7 @@ const SORT_OPTIONS = [
 ];
 
 const FEATURE_FILTERS = [
+  { id: 'acilSatis',      label: '🔴 Acil Satılık' },
   { id: 'acil',           label: 'Acil Satış' },
   { id: 'indirimli',      label: 'İndirimli' },
   { id: 'sifir',          label: 'Sıfır' },
@@ -68,6 +69,7 @@ const ITEMS_PER_PAGE = 6;
 
 function matchesFeature(ilan: Ilan, id: string): boolean {
   switch (id) {
+    case 'acilSatis':     return ilan.acilSatis === true;
     case 'acil':          return ilan.acil;
     case 'indirimli':     return ilan.indirimli;
     case 'sifir':         return ilan.aciklama.toLowerCase().includes('sıfır');
@@ -226,7 +228,12 @@ const GridCard = memo(function GridCard({ ilan }: { ilan: Ilan }) {
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">🏠</div>
           )}
-          {ilan.acil && (
+          {ilan.acilSatis && (
+            <span className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 animate-pulse">
+              🔴 ACİL SATILIK
+            </span>
+          )}
+          {!ilan.acilSatis && ilan.acil && (
             <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1">
               <Zap className="w-2.5 h-2.5" />ACİL
             </span>
@@ -254,8 +261,8 @@ const GridCard = memo(function GridCard({ ilan }: { ilan: Ilan }) {
         </Link>
 
         <div className="flex items-end justify-between mb-3">
-          <p className="text-emerald-600 font-extrabold text-lg leading-none">
-            {formatFiyat(ilan.fiyat)}
+          <p className={`font-extrabold text-lg leading-none ${ilan.acilSatis ? 'text-red-600' : 'text-emerald-600'}`}>
+            {ilan.acilSatis && ilan.acilSatisFiyat ? formatFiyat(ilan.acilSatisFiyat) : formatFiyat(ilan.fiyat)}
           </p>
           <span className="text-[10px] text-gray-400 flex items-center gap-1">
             <Calendar className="w-2.5 h-2.5" />{formatTarih(ilan.tarih)}
@@ -290,7 +297,12 @@ const ListCard = memo(function ListCard({ ilan }: { ilan: Ilan }) {
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300 text-3xl">🏠</div>
           )}
-          {ilan.acil && (
+          {ilan.acilSatis && (
+            <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 animate-pulse">
+              🔴 ACİL SATILIK
+            </span>
+          )}
+          {!ilan.acilSatis && ilan.acil && (
             <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
               <Zap className="w-2.5 h-2.5" />ACİL
             </span>
@@ -322,8 +334,8 @@ const ListCard = memo(function ListCard({ ilan }: { ilan: Ilan }) {
         </Link>
 
         <div className="flex flex-wrap items-center gap-3 mt-auto pt-3 border-t border-gray-100">
-          <p className="text-emerald-600 font-extrabold text-xl leading-none">
-            {formatFiyat(ilan.fiyat)}
+          <p className={`font-extrabold text-xl leading-none ${ilan.acilSatis ? 'text-red-600' : 'text-emerald-600'}`}>
+            {ilan.acilSatis && ilan.acilSatisFiyat ? formatFiyat(ilan.acilSatisFiyat) : formatFiyat(ilan.fiyat)}
           </p>
           <div className="flex items-center gap-1 ml-auto">
             <span className="text-xs text-gray-500 hidden sm:block truncate max-w-[120px]">{ilan.firmaAdi}</span>
@@ -413,7 +425,7 @@ export default function CategoryPage() {
   const [page,        setPage]        = useState(1);
 
   /* Firestore — kategori slug hook'a verilir, şehir client-side filtre */
-  const { ilanlar, loading, error } = useIlanlar(slug ?? undefined);
+  const { ilanlar, loading, error, hasMore, loadingMore, loadMore } = useIlanlar(slug ?? undefined);
 
   /* Sayfa sıfırla */
   useEffect(() => { setPage(1); }, [slug, city, priceMin, priceMax, sort, features]);
@@ -444,6 +456,8 @@ export default function CategoryPage() {
       case 'urgent_first': result = [...result].sort((a, b) => (b.acil ? 1 : 0) - (a.acil ? 1 : 0)); break;
       default:             result = [...result].sort((a, b) => (b.tarih?.seconds ?? 0) - (a.tarih?.seconds ?? 0));
     }
+    // acilSatis olanları en üste taşı (tüm sort'lardan sonra)
+    result.sort((a, b) => (b.acilSatis ? 1 : 0) - (a.acilSatis ? 1 : 0));
     return result;
   }, [ilanlar, city, priceMin, priceMax, sort, features]);
 
@@ -588,8 +602,18 @@ export default function CategoryPage() {
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-gray-700 mb-1">Henüz ilan yok</p>
-                      <p className="text-sm text-gray-400">Bu kategoride henüz aktif ilan bulunmuyor.</p>
+                      <p className="text-5xl mb-4">🏗️</p>
+                      <p className="font-semibold text-gray-700 mb-1 text-lg">Bu kategoride henüz ilan yok</p>
+                      <p className="text-sm text-gray-400 mb-6 max-w-xs mx-auto">
+                        Siz de projenizi paylaşın, firmalar size teklif versin.
+                      </p>
+                      <Link
+                        to="/talep-olustur"
+                        className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition"
+                      >
+                        İlk teklif isteyen siz olun
+                        <ChevronRight className="w-4 h-4" />
+                      </Link>
                     </>
                   )}
                 </div>
@@ -610,6 +634,26 @@ export default function CategoryPage() {
                     <p className="text-center text-xs text-gray-400 mt-4">
                       {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} / {filtered.length} ilan gösteriliyor
                     </p>
+                  )}
+
+                  {/* Daha fazla Firestore sayfası var mı? */}
+                  {hasMore && (
+                    <div className="flex justify-center mt-6">
+                      <button
+                        onClick={loadMore}
+                        disabled={loadingMore}
+                        className="flex items-center gap-2 border border-emerald-300 text-emerald-700 bg-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-emerald-50 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {loadingMore ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Yükleniyor…
+                          </>
+                        ) : (
+                          'Daha Fazla İlan Yükle'
+                        )}
+                      </button>
+                    </div>
                   )}
                 </>
               )}

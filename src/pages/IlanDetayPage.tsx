@@ -435,7 +435,12 @@ export default function IlanDetayPage() {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300 text-6xl">🏠</div>
                   )}
-                  {ilan.acil && (
+                  {ilan.acilSatis && (
+                    <span className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow animate-pulse">
+                      🔴 ACİL SATILIK
+                    </span>
+                  )}
+                  {!ilan.acilSatis && ilan.acil && (
                     <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow">ACİL</span>
                   )}
                   {ilan.indirimli && (
@@ -490,12 +495,35 @@ export default function IlanDetayPage() {
                   )}
                 </div>
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 leading-snug">{ilan.baslik}</h1>
-                <div className="flex items-end gap-3">
-                  <span className="text-3xl font-extrabold text-emerald-600">{formatFiyat(ilan.fiyat)}</span>
-                  {ilan.indirimli && (
-                    <span className="text-sm font-bold text-white bg-amber-500 px-2 py-0.5 rounded-lg">İndirimli</span>
-                  )}
-                </div>
+                {ilan.acilSatis && ilan.acilSatisFiyat ? (
+                  <>
+                    <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-red-700 font-bold text-sm">🔴 ACİL SATILIK</span>
+                        {ilan.acilSatisBitis && (() => {
+                          const d = Math.ceil((ilan.acilSatisBitis.seconds * 1000 - Date.now()) / 86400000);
+                          return (
+                            <span className="text-xs text-red-500">
+                              ⏳ {d > 0 ? `${d} gün kaldı` : 'Süresi doldu'}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                      <p className="text-xs text-red-500 mt-1">⚠️ Bu fiyat geçici olup acil satış süresince geçerlidir.</p>
+                    </div>
+                    <div className="flex items-end gap-3">
+                      <span className="text-3xl font-extrabold text-red-600">{formatFiyat(ilan.acilSatisFiyat)}</span>
+                      <span className="text-lg text-gray-400 line-through">{formatFiyat(ilan.fiyat)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-end gap-3">
+                    <span className="text-3xl font-extrabold text-emerald-600">{formatFiyat(ilan.fiyat)}</span>
+                    {ilan.indirimli && (
+                      <span className="text-sm font-bold text-white bg-amber-500 px-2 py-0.5 rounded-lg">İndirimli</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Açıklama */}

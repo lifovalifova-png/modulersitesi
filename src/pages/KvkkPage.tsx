@@ -334,12 +334,7 @@ export default function KvkkPage() {
                   {SITE_CONFIG.email}
                 </a>
               </p>
-              <p>
-                <span className="font-semibold text-gray-700">Telefon:</span>{' '}
-                <a href={`tel:${SITE_CONFIG.phone.replace(/\s/g, '')}`} className="text-emerald-600 hover:underline">
-                  {SITE_CONFIG.phone}
-                </a>
-              </p>
+              <p className="text-xs text-gray-400">Teknik sorunlar 3-5 iş günü içinde çözülür.</p>
               <p><span className="font-semibold text-gray-700">KEP Adresi:</span>{' '}modulerpazar@hs01.kep.tr</p>
               <p><span className="font-semibold text-gray-700">Veri Koruma Sorumlusu:</span>{' '}kvkk@modulerpazar.com</p>
             </div>
@@ -734,7 +729,7 @@ export default function KvkkPage() {
                 <a href={`mailto:${SITE_CONFIG.email}`} className="text-emerald-600 hover:underline">
                   {SITE_CONFIG.email}
                 </a>
-                <p className="text-xs text-gray-500 mt-1">{SITE_CONFIG.phone}</p>
+                <p className="text-xs text-gray-500 mt-1">Teknik sorunlar 3-5 iş günü içinde çözülür.</p>
               </div>
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm">
                 <p className="font-semibold text-gray-700 mb-1">Yazılı Başvuru Adresi</p>

@@ -2,13 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   collection, query, where, onSnapshot,
-  updateDoc, doc, getDoc, arrayUnion,
+  updateDoc, doc, getDoc, arrayUnion, Timestamp,
 } from 'firebase/firestore';
 import { toast } from 'sonner';
 import {
   Building2, Bell, CheckCircle, XCircle, Phone, Mail,
   MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp, User,
+  Package, AlertTriangle,
 } from 'lucide-react';
+import { type Ilan, formatFiyat } from '../hooks/useIlanlar';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { CATEGORIES } from '../data/categories';
@@ -52,6 +54,14 @@ interface BildirimWithTalep {
 
 type FilterTab = 'beklemede' | 'kabul' | 'red';
 
+/* ─── Acil Satış form state (per-ilan) ───────────────────── */
+interface AcilForm {
+  enabled: boolean;
+  fiyat: string;
+  bitis: string;
+  neden: string;
+}
+
 /* ─── Sayfa ───────────────────────────────────────────────── */
 export default function FirmaPaneliPage() {
   const navigate                    = useNavigate();
@@ -65,12 +75,44 @@ export default function FirmaPaneliPage() {
      yeniden Firestore'a gitmez — N+1 sorguyu O(yeni) okumaya düşürür. */
   const talepCache = useRef<Record<string, TalepData>>({});
 
+  /* İlanlarım */
+  const [firmaIlanlar,  setFirmaIlanlar]  = useState<Ilan[]>([]);
+  const [acilForms,     setAcilForms]     = useState<Record<string, AcilForm>>({});
+  const [acilSaving,    setAcilSaving]    = useState<string | null>(null);
+
   /* ── Auth guard ─────────────────────────────────────────── */
   useEffect(() => {
     if (!loading && role !== 'seller') {
       navigate('/', { replace: true });
     }
   }, [role, loading, navigate]);
+
+  /* ── Firma ilanları ──────────────────────────────────────── */
+  useEffect(() => {
+    if (!currentUser || role !== 'seller') return;
+    const q = query(collection(db, 'ilanlar'), where('firmaId', '==', currentUser.uid));
+    const unsub = onSnapshot(q, (snap) => {
+      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Ilan));
+      setFirmaIlanlar(docs);
+      setAcilForms((prev) => {
+        const next = { ...prev };
+        docs.forEach((ilan) => {
+          if (!next[ilan.id]) {
+            next[ilan.id] = {
+              enabled: ilan.acilSatis ?? false,
+              fiyat:   ilan.acilSatisFiyat ? String(ilan.acilSatisFiyat) : '',
+              bitis:   ilan.acilSatisBitis
+                ? new Date(ilan.acilSatisBitis.seconds * 1000).toISOString().slice(0, 10)
+                : '',
+              neden:   ilan.acilSatisNedeni ?? '',
+            };
+          }
+        });
+        return next;
+      });
+    });
+    return unsub;
+  }, [currentUser, role]);
 
   /* ── Bildirimler ─────────────────────────────────────────── */
   useEffect(() => {
@@ -137,6 +179,53 @@ export default function FirmaPaneliPage() {
       toast.error('İşlem sırasında hata oluştu.');
     } finally {
       setProcessing(null);
+    }
+  };
+
+  /* ── Acil Satış kaydet ───────────────────────────────────── */
+  const handleAcilSave = async (ilan: Ilan) => {
+    const form = acilForms[ilan.id];
+    if (!form) return;
+    const fiyat = Number(form.fiyat);
+    if (!form.bitis) { toast.error('Bitiş tarihi zorunludur.'); return; }
+    if (!fiyat || fiyat <= 0) { toast.error('Geçerli bir fiyat girin.'); return; }
+    if (fiyat >= ilan.fiyat) { toast.error('Acil satış fiyatı normal fiyattan düşük olmalıdır.'); return; }
+    const bitisDate = new Date(form.bitis + 'T23:59:59');
+    if (bitisDate <= new Date()) { toast.error('Bitiş tarihi gelecekte olmalıdır.'); return; }
+    setAcilSaving(ilan.id);
+    try {
+      await updateDoc(doc(db, 'ilanlar', ilan.id), {
+        acilSatis:       true,
+        acilSatisFiyat:  fiyat,
+        acilSatisBitis:  Timestamp.fromDate(bitisDate),
+        acilSatisNedeni: form.neden || null,
+      });
+      toast.success('Acil satış aktifleştirildi.');
+    } catch {
+      toast.error('Kayıt sırasında hata oluştu.');
+    } finally {
+      setAcilSaving(null);
+    }
+  };
+
+  const handleAcilKaldir = async (ilanId: string) => {
+    setAcilSaving(ilanId);
+    try {
+      await updateDoc(doc(db, 'ilanlar', ilanId), {
+        acilSatis:       false,
+        acilSatisFiyat:  null,
+        acilSatisBitis:  null,
+        acilSatisNedeni: null,
+      });
+      setAcilForms((prev) => ({
+        ...prev,
+        [ilanId]: { enabled: false, fiyat: '', bitis: '', neden: '' },
+      }));
+      toast.info('Acil satış kaldırıldı.');
+    } catch {
+      toast.error('İşlem sırasında hata oluştu.');
+    } finally {
+      setAcilSaving(null);
     }
   };
 
@@ -210,6 +299,123 @@ export default function FirmaPaneliPage() {
               </div>
             ))}
           </div>
+
+          {/* ── İlanlarım ─────────────────────────────────── */}
+          {firmaIlanlar.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                <Package className="w-4 h-4 text-emerald-600" />
+                <h2 className="font-semibold text-gray-800 text-sm">İlanlarım</h2>
+                <span className="ml-auto text-xs text-gray-400">{firmaIlanlar.length} ilan</span>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {firmaIlanlar.map((ilan) => {
+                  const form   = acilForms[ilan.id] ?? { enabled: false, fiyat: '', bitis: '', neden: '' };
+                  const isBusy = acilSaving === ilan.id;
+                  const today  = new Date().toISOString().slice(0, 10);
+
+                  return (
+                    <div key={ilan.id} className="p-4">
+                      {/* Başlık satırı */}
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-800 text-sm leading-snug truncate max-w-xs">{ilan.baslik}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{formatFiyat(ilan.fiyat)}</p>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={form.enabled}
+                            onChange={(e) => {
+                              const enabled = e.target.checked;
+                              setAcilForms((prev) => ({
+                                ...prev,
+                                [ilan.id]: { ...form, enabled },
+                              }));
+                              if (!enabled) handleAcilKaldir(ilan.id);
+                            }}
+                            className="w-4 h-4 rounded text-red-600 border-gray-300 focus:ring-red-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">Acil Satılık</span>
+                        </label>
+                      </div>
+
+                      {/* Acil form — sadece enabled ise */}
+                      {form.enabled && (
+                        <div className="mt-3 bg-red-50 border border-red-100 rounded-xl p-4 space-y-3">
+                          {/* Önizleme badge */}
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md animate-pulse">
+                              🔴 ACİL SATILIK
+                              {form.fiyat && ` — ${Number(form.fiyat).toLocaleString('tr-TR')} ₺`}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Acil fiyat */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Acil Satış Fiyatı (₺) <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={ilan.fiyat - 1}
+                                value={form.fiyat}
+                                onChange={(e) => setAcilForms((prev) => ({ ...prev, [ilan.id]: { ...form, fiyat: e.target.value } }))}
+                                placeholder={`Normal: ${ilan.fiyat.toLocaleString('tr-TR')} ₺`}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+                              />
+                            </div>
+                            {/* Bitiş tarihi */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Geçerlilik Tarihi <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="date"
+                                min={today}
+                                value={form.bitis}
+                                onChange={(e) => setAcilForms((prev) => ({ ...prev, [ilan.id]: { ...form, bitis: e.target.value } }))}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Neden */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Neden acil? (opsiyonel)</label>
+                            <input
+                              type="text"
+                              value={form.neden}
+                              onChange={(e) => setAcilForms((prev) => ({ ...prev, [ilan.id]: { ...form, neden: e.target.value } }))}
+                              placeholder="Örn: Stok erken tükenecek, fiyat artmadan alın"
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              onClick={() => handleAcilSave(ilan)}
+                              disabled={isBusy}
+                              className="flex items-center gap-1.5 bg-red-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-60 font-medium"
+                            >
+                              {isBusy
+                                ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                : <AlertTriangle className="w-3.5 h-3.5" />
+                              }
+                              Kaydet
+                            </button>
+                            <p className="text-xs text-gray-400">Normal fiyat: {formatFiyat(ilan.fiyat)}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Filtre sekmeleri */}
           <div className="flex gap-2 mb-4">

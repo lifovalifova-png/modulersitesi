@@ -155,9 +155,7 @@ export default function KullanimKosullariPage() {
                   <p><span className="font-semibold text-gray-700">E-posta:</span>{' '}
                     <a href={`mailto:${SITE_CONFIG.email}`} className="text-emerald-600 hover:underline">{SITE_CONFIG.email}</a>
                   </p>
-                  <p><span className="font-semibold text-gray-700">Telefon:</span>{' '}
-                    <a href={`tel:${SITE_CONFIG.phone.replace(/\s/g, '')}`} className="text-emerald-600 hover:underline">{SITE_CONFIG.phone}</a>
-                  </p>
+                  <p className="text-xs text-gray-400">Teknik sorunlar 3-5 iş günü içinde çözülür.</p>
                 </div>
               </div>
 
@@ -510,11 +508,8 @@ export default function KullanimKosullariPage() {
                 </p>
                 <p><strong>KEP:</strong> modulerpazar@hs01.kep.tr</p>
                 <p><strong>Adres:</strong> {SITE_CONFIG.address}</p>
-                <p><strong>Telefon:</strong>{' '}
-                  <a href={`tel:${SITE_CONFIG.phone.replace(/\s/g, '')}`} className="text-emerald-600 hover:underline">{SITE_CONFIG.phone}</a>
-                </p>
                 <p className="text-xs text-gray-400 pt-1">
-                  Yanıt süresi iş günlerinde en geç 5 (beş) iş günüdür.
+                  Teknik sorunlar 3-5 iş günü içinde çözülür.
                 </p>
               </div>
             </section>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, Phone, Map, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, Mail, Map, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 import { CATEGORIES } from '../data/categories';
 import { SITE_CONFIG } from '../config/site';
@@ -125,8 +125,9 @@ export default function Header() {
       <div className="bg-emerald-700 text-white py-2 px-4 text-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <span className="flex items-center gap-2">
-            <Phone className="w-4 h-4" aria-hidden="true" />
-            <span className="hidden sm:inline">{t('header.support')}:</span> {SITE_CONFIG.phone}
+            <Mail className="w-4 h-4" aria-hidden="true" />
+            <span className="hidden sm:inline">{t('header.support')}:</span>{' '}
+            <a href={`mailto:${SITE_CONFIG.email}`} className="hover:underline">{SITE_CONFIG.email}</a>
           </span>
           <div className="flex items-center gap-3">
             <button onClick={handleIlanVer} className="hover:underline">

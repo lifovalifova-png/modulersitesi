@@ -28,7 +28,7 @@ import {
   LogOut, Plus, Pencil, Trash2, CheckCircle, XCircle,
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
   Send, Eye, EyeOff, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
-  Inbox, BookOpen, BarChart2, Download, Sliders, Star, ThumbsUp,
+  Inbox, BookOpen, BarChart2, Download, Sliders, Star, ThumbsUp, Flame,
 } from 'lucide-react';
 import { type FeatureFlags, DEFAULT_FLAGS } from '../hooks/useFeatureFlags';
 import logoSrc from '../assets/logo.svg';
@@ -57,11 +57,11 @@ const ResponsiveContainer = _ResponsiveContainer as any;
    TYPES
 ════════════════════════════════════════════════════════════ */
 interface SiteSettings {
-  name:     string;
-  tagline:  string;
-  phone:    string;
-  email:    string;
-  logoUrl:  string;
+  name:         string;
+  tagline:      string;
+  email:        string;
+  destekSuresi: string;
+  logoUrl:      string;
 }
 
 interface AdminFlashDeal {
@@ -125,9 +125,13 @@ interface AdminIlan {
   acil:              boolean;
   indirimli:         boolean;
   status:            'aktif' | 'pasif';
+  acilSatis?:        boolean;
+  acilSatisFiyat?:   number;
+  acilSatisNedeni?:  string;
+  acilSatisBitis?:   { seconds: number; nanoseconds: number } | null;
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda';
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda' | 'acilIlanlar';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
@@ -165,7 +169,7 @@ const EMPTY_ILAN: Omit<AdminIlan, 'id'> = {
 
 const DEFAULT_SETTINGS: SiteSettings = {
   name: 'ModülerPazar', tagline: 'Türkiye\'nin En Büyük Modüler Yapı Pazarı',
-  phone: '0850 123 45 67', email: 'info@modulerpazar.com', logoUrl: '',
+  email: 'modulerpazar@yandex.com', destekSuresi: '3-5 iş günü', logoUrl: '',
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -816,9 +820,9 @@ function SettingsTab() {
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
         <h3 className="font-semibold text-gray-700 text-sm">Platform Bilgileri</h3>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Site Adı" id="siteName"  value={settings.name}  onChange={(v) => setSettings((p) => ({ ...p, name: v }))} />
-          <Field label="Telefon"  id="sitePhone" value={settings.phone} onChange={(v) => setSettings((p) => ({ ...p, phone: v }))} />
-          <Field label="E-posta"  id="siteEmail" value={settings.email} onChange={(v) => setSettings((p) => ({ ...p, email: v }))} type="email" />
+          <Field label="Site Adı"      id="siteName"        value={settings.name}         onChange={(v) => setSettings((p) => ({ ...p, name: v }))} />
+          <Field label="E-posta"       id="siteEmail"       value={settings.email}        onChange={(v) => setSettings((p) => ({ ...p, email: v }))} type="email" />
+          <Field label="Destek Süresi" id="siteDestekSuresi" value={settings.destekSuresi} onChange={(v) => setSettings((p) => ({ ...p, destekSuresi: v }))} placeholder="Örn: 3-5 iş günü" />
         </div>
         <Field
           label="Slogan / Alt Başlık"
@@ -2511,6 +2515,122 @@ function RaporTab() {
 /* ═══════════════════════════════════════════════════════════
    MAIN — ADMIN DASHBOARD
 ════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   TAB — ACİL İLANLAR
+════════════════════════════════════════════════════════════ */
+function AcilIlanlarTab() {
+  const [ilanlar, setIlanlar] = useState<AdminIlan[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(collection(db, 'ilanlar'), where('acilSatis', '==', true));
+    const unsub = onSnapshot(q, async (snap) => {
+      const now = Date.now();
+      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminIlan));
+
+      // Süresi dolmuş → otomatik normal ilana çevir
+      const expired = docs.filter((d) => d.acilSatisBitis && d.acilSatisBitis.seconds * 1000 < now);
+      if (expired.length > 0) {
+        await Promise.all(expired.map((d) =>
+          updateDoc(doc(db, 'ilanlar', d.id!), { acilSatis: false, acilSatisFiyat: null, acilSatisBitis: null })
+        ));
+      }
+
+      setIlanlar(docs.filter((d) => !expired.some((e) => e.id === d.id)));
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  const handleKaldir = async (id: string) => {
+    await updateDoc(doc(db, 'ilanlar', id), {
+      acilSatis: false, acilSatisFiyat: null, acilSatisBitis: null,
+    });
+    toast.info('Acil satış kaldırıldı.');
+  };
+
+  const fmtDate = (ts: { seconds: number } | null | undefined) => {
+    if (!ts) return '—';
+    return new Date(ts.seconds * 1000).toLocaleDateString('tr-TR');
+  };
+
+  const daysLeft = (ts: { seconds: number } | null | undefined) => {
+    if (!ts) return '—';
+    const d = Math.ceil((ts.seconds * 1000 - Date.now()) / 86400000);
+    return d > 0 ? `${d} gün` : 'Doldu';
+  };
+
+  return (
+    <div className="p-4 sm:p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Flame className="w-5 h-5 text-red-500" />
+        <h2 className="text-lg font-bold text-gray-800">Acil Satış İlanları</h2>
+        <span className="ml-auto text-sm text-gray-400">{ilanlar.length} aktif</span>
+      </div>
+
+      {loading ? (
+        <div className="py-16 text-center">
+          <div className="w-8 h-8 border-4 border-red-200 border-t-red-600 rounded-full animate-spin mx-auto" />
+        </div>
+      ) : ilanlar.length === 0 ? (
+        <div className="py-16 text-center text-gray-400 text-sm">
+          <Flame className="w-10 h-10 mx-auto mb-3 opacity-20" />
+          Şu anda aktif acil satış ilanı yok.
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
+                <th className="px-4 py-3 text-left">Başlık</th>
+                <th className="px-4 py-3 text-right">Normal Fiyat</th>
+                <th className="px-4 py-3 text-right">Acil Fiyat</th>
+                <th className="px-4 py-3 text-center">Bitiş</th>
+                <th className="px-4 py-3 text-center">Kalan</th>
+                <th className="px-4 py-3 text-center">İşlem</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {ilanlar.map((ilan) => (
+                <tr key={ilan.id} className="hover:bg-gray-50 transition">
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-gray-800 max-w-[200px] truncate">{ilan.baslik}</p>
+                    <p className="text-xs text-gray-400">{ilan.sehir} · {ilan.firmaAdi}</p>
+                  </td>
+                  <td className="px-4 py-3 text-right text-gray-500 line-through">
+                    {new Intl.NumberFormat('tr-TR').format(ilan.fiyat)} ₺
+                  </td>
+                  <td className="px-4 py-3 text-right font-bold text-red-600">
+                    {ilan.acilSatisFiyat ? new Intl.NumberFormat('tr-TR').format(ilan.acilSatisFiyat) + ' ₺' : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-center text-gray-600">
+                    {fmtDate(ilan.acilSatisBitis)}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`text-xs font-semibold ${
+                      daysLeft(ilan.acilSatisBitis) === 'Doldu' ? 'text-red-500' : 'text-emerald-600'
+                    }`}>
+                      {daysLeft(ilan.acilSatisBitis)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => handleKaldir(ilan.id!)}
+                      className="text-xs text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition"
+                    >
+                      Acil Satışı Kaldır
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'overview',   label: 'Genel Bakış',   icon: <LayoutDashboard className="w-4 h-4" /> },
   { key: 'settings',   label: 'Site Ayarları', icon: <Settings className="w-4 h-4" /> },
@@ -2523,6 +2643,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'features',   label: 'Özellikler',    icon: <Sliders    className="w-4 h-4" /> },
   { key: 'yorumlar',   label: 'Yorumlar',      icon: <ThumbsUp   className="w-4 h-4" /> },
   { key: 'hakkimizda', label: 'Hakkımızda',    icon: <BookOpen   className="w-4 h-4" /> },
+  { key: 'acilIlanlar', label: 'Acil İlanlar', icon: <Flame className="w-4 h-4 text-red-500" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -2691,6 +2812,7 @@ export default function AdminDashboardPage() {
           {tab === 'features'   && <FeaturesTab />}
           {tab === 'yorumlar'   && <YorumlarTab />}
           {tab === 'hakkimizda' && <HakkimizdaTab />}
+          {tab === 'acilIlanlar' && <AcilIlanlarTab />}
         </main>
       </div>
     </div>

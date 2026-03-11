@@ -18,19 +18,32 @@ interface CarouselItem {
   urgent:        boolean;
   indirimli:     boolean;
   href:          string;
+  acilSatis?:    boolean;
+  daysLeft?:     number;
 }
 
 function ilanToItem(d: Ilan): CarouselItem {
+  const isAcil = !!d.acilSatis && !!d.acilSatisFiyat && !!d.acilSatisBitis;
+  const daysLeft = isAcil
+    ? Math.ceil((d.acilSatisBitis!.seconds * 1000 - Date.now()) / 86400000)
+    : undefined;
   return {
-    id:        d.id,
-    title:     d.baslik,
-    location:  d.sehir,
-    price:     new Intl.NumberFormat('tr-TR').format(d.fiyat) + ' ₺',
-    image:     d.gorseller?.[0] ?? '',
-    category:  d.kategori,
-    urgent:    d.acil,
-    indirimli: d.indirimli,
-    href:      `/ilan/${d.id}`,
+    id:            d.id,
+    title:         d.baslik,
+    location:      d.sehir,
+    price:         isAcil
+      ? new Intl.NumberFormat('tr-TR').format(d.acilSatisFiyat!) + ' ₺'
+      : new Intl.NumberFormat('tr-TR').format(d.fiyat) + ' ₺',
+    originalPrice: isAcil
+      ? new Intl.NumberFormat('tr-TR').format(d.fiyat) + ' ₺'
+      : undefined,
+    image:         d.gorseller?.[0] ?? '',
+    category:      d.kategori,
+    urgent:        d.acil,
+    indirimli:     d.indirimli,
+    href:          `/ilan/${d.id}`,
+    acilSatis:     isAcil,
+    daysLeft:      daysLeft && daysLeft > 0 ? daysLeft : undefined,
   };
 }
 
@@ -75,7 +88,7 @@ export default function FlashDealsCarousel() {
     const unsub = onSnapshot(collection(db, 'ilanlar'), (snap) => {
       const docs = snap.docs
         .map((d) => ({ id: d.id, ...d.data() } as Ilan))
-        .filter((d) => d.status === 'aktif' && (d.acil || d.indirimli))
+        .filter((d) => d.status === 'aktif' && (d.acil || d.indirimli || d.acilSatis))
         .map(ilanToItem);
       setFirestoreItems(docs.length > 0 ? docs : null);
     });
@@ -210,7 +223,12 @@ export default function FlashDealsCarousel() {
                           <Flame className="w-10 h-10 text-gray-300" />
                         </div>
                       )}
-                      {item.urgent && (
+                      {item.acilSatis && (
+                        <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded animate-pulse">
+                          🔴 ACİL SATILIK
+                        </div>
+                      )}
+                      {!item.acilSatis && item.urgent && (
                         <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
                           ACİL
                         </div>
@@ -246,9 +264,12 @@ export default function FlashDealsCarousel() {
 
                     <div className="flex items-center justify-between mb-4 mt-auto">
                       <div>
-                        <div className="text-lg font-bold text-emerald-600">{item.price}</div>
+                        <div className={`text-lg font-bold ${item.acilSatis ? 'text-red-600' : 'text-emerald-600'}`}>{item.price}</div>
                         {item.originalPrice && (
                           <div className="text-sm text-gray-400 line-through">{item.originalPrice}</div>
+                        )}
+                        {item.daysLeft !== undefined && (
+                          <div className="text-xs text-red-500 mt-0.5">⏳ {item.daysLeft} gün kaldı</div>
                         )}
                       </div>
                     </div>

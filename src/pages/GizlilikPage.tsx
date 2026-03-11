@@ -326,9 +326,7 @@ export default function GizlilikPage() {
                 </p>
                 <p><strong>KEP:</strong> modulerpazar@hs01.kep.tr</p>
                 <p><strong>Adres:</strong> {SITE_CONFIG.address}</p>
-                <p><strong>Telefon:</strong>{' '}
-                  <a href={`tel:${SITE_CONFIG.phone.replace(/\s/g, '')}`} className="text-emerald-600 hover:underline">{SITE_CONFIG.phone}</a>
-                </p>
+                <p className="text-xs text-gray-400">Teknik sorunlar 3-5 iş günü içinde çözülür.</p>
                 <p className="text-xs text-gray-400 pt-1">
                   Başvurularınız en geç 30 gün içinde sonuçlandırılır. Kimlik doğrulama belgesi
                   eklenmesi gereklidir.
