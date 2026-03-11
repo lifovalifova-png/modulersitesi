@@ -79,6 +79,7 @@ export default function FirmaPaneliPage() {
   const [firmaIlanlar,  setFirmaIlanlar]  = useState<Ilan[]>([]);
   const [acilForms,     setAcilForms]     = useState<Record<string, AcilForm>>({});
   const [acilSaving,    setAcilSaving]    = useState<string | null>(null);
+  const [ilanLimit,     setIlanLimit]     = useState(3);
 
   /* ── Auth guard ─────────────────────────────────────────── */
   useEffect(() => {
@@ -152,6 +153,17 @@ export default function FirmaPaneliPage() {
 
     return unsub;
   }, [currentUser, role]);
+
+  /* ── İlan limiti ─────────────────────────────────────────── */
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'limits'), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data() as { ilanLimit?: number };
+        if (data.ilanLimit) setIlanLimit(data.ilanLimit);
+      }
+    });
+    return unsub;
+  }, []);
 
   /* ── Kabul Et ───────────────────────────────────────────── */
   const handleKabul = async (bildirim: BildirimWithTalep) => {
@@ -303,11 +315,41 @@ export default function FirmaPaneliPage() {
           {/* ── İlanlarım ─────────────────────────────────── */}
           {firmaIlanlar.length > 0 && (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2 flex-wrap">
                 <Package className="w-4 h-4 text-emerald-600" />
                 <h2 className="font-semibold text-gray-800 text-sm">İlanlarım</h2>
-                <span className="ml-auto text-xs text-gray-400">{firmaIlanlar.length} ilan</span>
+                <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full ${
+                  firmaIlanlar.length >= ilanLimit
+                    ? 'bg-red-100 text-red-600'
+                    : 'bg-gray-100 text-gray-400'
+                }`}>
+                  {firmaIlanlar.length} / {ilanLimit} ilan
+                </span>
+                {firmaIlanlar.length < ilanLimit ? (
+                  <Link
+                    to="/satici-formu"
+                    className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition font-medium flex items-center gap-1"
+                  >
+                    <span>+</span> Yeni İlan
+                  </Link>
+                ) : (
+                  <span
+                    title="İlan limitinize ulaştınız"
+                    className="text-xs bg-gray-200 text-gray-400 px-3 py-1.5 rounded-lg cursor-not-allowed font-medium flex items-center gap-1"
+                  >
+                    + Yeni İlan
+                  </span>
+                )}
               </div>
+              {firmaIlanlar.length >= ilanLimit && (
+                <div className="mx-5 mt-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
+                  <p className="font-semibold text-amber-800">İlan limitinize ulaştınız</p>
+                  <p className="text-amber-700 text-xs mt-0.5">
+                    Ücretsiz planda en fazla {ilanLimit} ilan yayınlayabilirsiniz.
+                    Daha fazla ilan için yakında gelecek ücretli planlarımıza göz atın.
+                  </p>
+                </div>
+              )}
               <div className="divide-y divide-gray-100">
                 {firmaIlanlar.map((ilan) => {
                   const form   = acilForms[ilan.id] ?? { enabled: false, fiyat: '', bitis: '', neden: '' };

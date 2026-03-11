@@ -756,6 +756,8 @@ function SettingsTab() {
   const [saving,         setSaving]         = useState(false);
   const [fiyatlar,       setFiyatlar]       = useState<Record<string, number>>(DEFAULT_FIYATLAR);
   const [fiyatlarSaving, setFiyatlarSaving] = useState(false);
+  const [limits,         setLimits]         = useState({ ilanLimit: 3, gunlukTeklifLimit: 1, aiSorguLimit: 5 });
+  const [limitsSaving,   setLimitsSaving]   = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'settings', 'site'), (snap) => {
@@ -770,6 +772,25 @@ function SettingsTab() {
     });
     return unsub;
   }, []);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'limits'), (snap) => {
+      if (snap.exists()) setLimits((prev) => ({ ...prev, ...(snap.data() as typeof prev) }));
+    });
+    return unsub;
+  }, []);
+
+  const handleLimitsSave = async () => {
+    setLimitsSaving(true);
+    try {
+      await setDoc(doc(db, 'settings', 'limits'), limits);
+      toast.success('Limitler kaydedildi.');
+    } catch {
+      toast.error('Limit kaydetme hatası.');
+    } finally {
+      setLimitsSaving(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -907,6 +928,58 @@ function SettingsTab() {
           {fiyatlarSaving
             ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor…</>
             : <><Save className="w-4 h-4" /> Fiyatları Kaydet</>
+          }
+        </button>
+      </div>
+
+      {/* Kullanım Limitleri */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <div>
+          <h3 className="font-semibold text-gray-700 text-sm">Kullanım Limitleri</h3>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Ücretsiz plan limitleri. Değişiklikler anında tüm kullanıcılara yansır.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Satıcı İlan Limiti</label>
+            <input
+              type="number" min={1} max={100}
+              value={limits.ilanLimit}
+              onChange={(e) => setLimits((p) => ({ ...p, ilanLimit: Number(e.target.value) }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">Ücretsiz satıcı başına maks. ilan</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Günlük Teklif Talebi</label>
+            <input
+              type="number" min={1} max={100}
+              value={limits.gunlukTeklifLimit}
+              onChange={(e) => setLimits((p) => ({ ...p, gunlukTeklifLimit: Number(e.target.value) }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">Alıcı başına günlük maks. talep</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">AI Sorgu Limiti</label>
+            <input
+              type="number" min={1} max={100}
+              value={limits.aiSorguLimit}
+              onChange={(e) => setLimits((p) => ({ ...p, aiSorguLimit: Number(e.target.value) }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">Kullanıcı başına günlük maks. AI sorgu</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLimitsSave}
+          disabled={limitsSaving}
+          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {limitsSaving
+            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor…</>
+            : <><Save className="w-4 h-4" /> Limitleri Kaydet</>
           }
         </button>
       </div>

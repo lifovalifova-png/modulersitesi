@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { CheckCircle, Lock, ImageIcon, CalendarDays, MapPin } from 'lucide-react';
 import { CATEGORIES } from '../data/categories';
@@ -65,12 +65,31 @@ const EMPTY: FormState = {
 };
 
 /* ─── Sayfa ───────────────────────────────────────────────── */
+const TODAY = new Date().toISOString().slice(0, 10);
+const LS_KEY = `talepLimit_${TODAY}`;
+
 export default function TalepOlusturPage() {
   const navigate = useNavigate();
-  const [form,       setForm]       = useState<FormState>(EMPTY);
-  const [done,       setDone]       = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [errors,     setErrors]     = useState<Errors>({});
+  const [form,             setForm]             = useState<FormState>(EMPTY);
+  const [done,             setDone]             = useState(false);
+  const [submitting,       setSubmitting]       = useState(false);
+  const [errors,           setErrors]           = useState<Errors>({});
+  const [gunlukLimit,      setGunlukLimit]      = useState(1);
+  const [limitAsimi,       setLimitAsimi]       = useState(false);
+
+  useEffect(() => {
+    const count = Number(localStorage.getItem(LS_KEY) ?? 0);
+    // Günlük limit'i Firestore'dan oku, ardından karşılaştır
+    getDoc(doc(db, 'settings', 'limits')).then((snap) => {
+      const limit = snap.exists()
+        ? (snap.data() as { gunlukTeklifLimit?: number }).gunlukTeklifLimit ?? 1
+        : 1;
+      setGunlukLimit(limit);
+      if (count >= limit) setLimitAsimi(true);
+    }).catch(() => {
+      if (count >= 1) setLimitAsimi(true);
+    });
+  }, []);
 
   const set = (field: keyof FormState, val: string | boolean) =>
     setForm((p) => ({ ...p, [field]: val }));
@@ -94,6 +113,10 @@ export default function TalepOlusturPage() {
   /* ── Gönder ───────────────────────────────────────────── */
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
+    if (limitAsimi) {
+      toast.error('Günlük teklif talebi limitinizi kullandınız. Yarın tekrar deneyin.');
+      return;
+    }
     if (!validate()) {
       toast.error('Lütfen zorunlu alanları doldurunuz.');
       return;
@@ -153,6 +176,10 @@ export default function TalepOlusturPage() {
       }).catch(() => { /* webhook hatası kullanıcıyı etkilemez */ });
 
       trackEvent('talep_olusturuldu', { kategori: form.kategori, sehir: form.sehir });
+      // Günlük sayacı güncelle
+      const prev = Number(localStorage.getItem(LS_KEY) ?? 0);
+      localStorage.setItem(LS_KEY, String(prev + 1));
+      if (prev + 1 >= gunlukLimit) setLimitAsimi(true);
       setDone(true);
     } catch {
       toast.error('Bir hata oluştu. Lütfen tekrar deneyin.');
@@ -234,6 +261,17 @@ export default function TalepOlusturPage() {
           <div className="mb-8">
             <Disclaimer />
           </div>
+
+          {limitAsimi && (
+            <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-4 py-4 text-sm">
+              <p className="font-semibold text-amber-800">Günlük teklif talebi limitinizi kullandınız</p>
+              <p className="text-amber-700 text-xs mt-1 leading-relaxed">
+                Bugün için {gunlukLimit} teklif talebi hakkınızı kullandınız.
+                Yarın tekrar teklif talep edebilirsiniz.
+                Daha fazla talep için yakında gelecek ücretli planlarımıza göz atın.
+              </p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-6">
 
@@ -463,12 +501,14 @@ export default function TalepOlusturPage() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || limitAsimi}
               className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {submitting
                 ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Gönderiliyor…</>
-                : 'Teklif İste →'
+                : limitAsimi
+                  ? 'Günlük Limit Doldu'
+                  : 'Teklif İste →'
               }
             </button>
           </form>
