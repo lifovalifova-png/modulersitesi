@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   User, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2,
   Building2, ShoppingBag, Hash, MapPin, Factory, Store, CheckSquare, Square,
@@ -54,6 +54,7 @@ function FieldError({ msg }: { msg?: string }) {
 export default function KayitPage() {
   const { currentUser, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const googleInProgress = useRef(false);
 
   useEffect(() => {
@@ -64,7 +65,9 @@ export default function KayitPage() {
   const [form, setForm] = useState({
     displayName: '', email: '', password: '', passwordCnf: '', kvkk: false,
   });
-  const [userType, setUserType] = useState<UserType>('alici');
+  const [userType, setUserType] = useState<UserType>(
+    searchParams.get('tip') === 'satici' ? 'satici' : 'alici',
+  );
 
   /* ── Satıcı ek alanları ─────────────────────────────────── */
   const [seller, setSeller] = useState({

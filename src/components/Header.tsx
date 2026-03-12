@@ -37,9 +37,9 @@ export default function Header() {
   }
 
   function handleIlanVer() {
-    if (!currentUser) { navigate('/giris'); return; }
+    if (!currentUser) { navigate('/kayit?tip=satici'); return; }
     if (role === 'seller') { navigate('/firma-paneli'); return; }
-    navigate('/kayit');
+    navigate('/kayit?tip=satici');
   }
 
   /* state */
