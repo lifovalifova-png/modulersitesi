@@ -8,6 +8,8 @@ import {
   doc,
   writeBatch,
   getDocs,
+  query,
+  where,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -434,16 +436,15 @@ export async function clearSeedData(): Promise<void> {
 
   const colls = ['firms', 'ilanlar', 'taleplar', 'quotes', 'blog'] as const;
   for (const coll of colls) {
-    const snap     = await getDocs(collection(db, coll));
-    const toDelete = snap.docs.filter((d) => d.id.startsWith('seed_'));
-    if (toDelete.length === 0) {
+    const snap = await getDocs(query(collection(db, coll), where('_seed', '==', true)));
+    if (snap.empty) {
       console.log(`[clear] ${coll}: silinecek doküman yok`);
       continue;
     }
     const batch = writeBatch(db);
-    toDelete.forEach((d) => batch.delete(d.ref));
+    snap.docs.forEach((d) => batch.delete(d.ref));
     await batch.commit();
-    console.log(`[clear] ${coll} temizlendi (${toDelete.length} adet)`);
+    console.log(`[clear] ${coll} temizlendi (${snap.size} adet)`);
   }
 
   console.log('[clear] Tamamlandı ✓');

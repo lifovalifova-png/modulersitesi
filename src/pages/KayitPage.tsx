@@ -183,10 +183,11 @@ export default function KayitPage() {
       });
       navigate(getRedirect(), { replace: true });
     } catch (err: unknown) {
-      googleInProgress.current = false;
       const code = (err as { code?: string }).code ?? '';
       setErrorMsg(authErrorMessage(code));
       setStatus('idle');
+    } finally {
+      googleInProgress.current = false;
     }
   }
 

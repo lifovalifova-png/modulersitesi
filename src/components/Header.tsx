@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, Search, Mail, Map, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
-import { toast } from 'sonner';
 import { CATEGORIES } from '../data/categories';
 import { SITE_CONFIG } from '../config/site';
 import { useAuth } from '../context/AuthContext';

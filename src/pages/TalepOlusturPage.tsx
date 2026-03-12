@@ -75,7 +75,10 @@ export default function TalepOlusturPage() {
   const [submitting,       setSubmitting]       = useState(false);
   const [errors,           setErrors]           = useState<Errors>({});
   const [gunlukLimit,      setGunlukLimit]      = useState(1);
-  const [limitAsimi,       setLimitAsimi]       = useState(false);
+  // Senkron başlangıç: localStorage sayacı >= 1 ise hemen kilitli göster, flicker olmaz
+  const [limitAsimi,       setLimitAsimi]       = useState(
+    () => Number(localStorage.getItem(LS_KEY) ?? 0) >= 1,
+  );
 
   useEffect(() => {
     const count = Number(localStorage.getItem(LS_KEY) ?? 0);
@@ -85,9 +88,9 @@ export default function TalepOlusturPage() {
         ? (snap.data() as { gunlukTeklifLimit?: number }).gunlukTeklifLimit ?? 1
         : 1;
       setGunlukLimit(limit);
-      if (count >= limit) setLimitAsimi(true);
+      setLimitAsimi(count >= limit);
     }).catch(() => {
-      if (count >= 1) setLimitAsimi(true);
+      setLimitAsimi(count >= 1);
     });
   }, []);
 

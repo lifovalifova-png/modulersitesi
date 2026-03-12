@@ -156,13 +156,12 @@ export default function FirmaPaneliPage() {
 
   /* ── İlan limiti ─────────────────────────────────────────── */
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'settings', 'limits'), (snap) => {
+    getDoc(doc(db, 'settings', 'limits')).then((snap) => {
       if (snap.exists()) {
         const data = snap.data() as { ilanLimit?: number };
         if (data.ilanLimit) setIlanLimit(data.ilanLimit);
       }
-    });
-    return unsub;
+    }).catch(() => { /* varsayılan 3 kullan */ });
   }, []);
 
   /* ── Kabul Et ───────────────────────────────────────────── */
@@ -313,8 +312,7 @@ export default function FirmaPaneliPage() {
           </div>
 
           {/* ── İlanlarım ─────────────────────────────────── */}
-          {firmaIlanlar.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2 flex-wrap">
                 <Package className="w-4 h-4 text-emerald-600" />
                 <h2 className="font-semibold text-gray-800 text-sm">İlanlarım</h2>
@@ -327,7 +325,7 @@ export default function FirmaPaneliPage() {
                 </span>
                 {firmaIlanlar.length < ilanLimit ? (
                   <Link
-                    to="/satici-formu"
+                    to="/ilan-olustur"
                     className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition font-medium flex items-center gap-1"
                   >
                     <span>+</span> Yeni İlan
@@ -348,6 +346,12 @@ export default function FirmaPaneliPage() {
                     Ücretsiz planda en fazla {ilanLimit} ilan yayınlayabilirsiniz.
                     Daha fazla ilan için yakında gelecek ücretli planlarımıza göz atın.
                   </p>
+                </div>
+              )}
+              {firmaIlanlar.length === 0 && (
+                <div className="py-10 text-center text-sm text-gray-400">
+                  <Package className="w-8 h-8 mx-auto mb-2 text-gray-200" />
+                  Henüz ilan yayınlamadınız.
                 </div>
               )}
               <div className="divide-y divide-gray-100">
@@ -457,7 +461,6 @@ export default function FirmaPaneliPage() {
                 })}
               </div>
             </div>
-          )}
 
           {/* Filtre sekmeleri */}
           <div className="flex gap-2 mb-4">
