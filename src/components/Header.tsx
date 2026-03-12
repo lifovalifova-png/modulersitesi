@@ -38,12 +38,8 @@ export default function Header() {
 
   function handleIlanVer() {
     if (!currentUser) { navigate('/giris'); return; }
-    if (role === 'seller') { navigate('/satici-formu'); return; }
-    toast('İlan vermek için satıcı hesabı gereklidir.', {
-      description: 'Firma hesabı açarak ücretsiz ilan verebilirsiniz.',
-      action: { label: 'Satıcı Hesabı Aç', onClick: () => navigate('/kayit') },
-      duration: 6000,
-    });
+    if (role === 'seller') { navigate('/firma-paneli'); return; }
+    navigate('/kayit');
   }
 
   /* state */
