@@ -135,6 +135,13 @@ type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'ta
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
+interface PendingCounts {
+  talepler: number;
+  firms:    number;
+  yorumlar: number;
+  quotes:   number;
+}
+
 /* ═══════════════════════════════════════════════════════════
    SHARED LOOKUP MAPS
 ════════════════════════════════════════════════════════════ */
@@ -553,7 +560,7 @@ function FeaturesTab() {
 /* ═══════════════════════════════════════════════════════════
    TAB 1 — OVERVIEW
 ════════════════════════════════════════════════════════════ */
-function OverviewTab() {
+function OverviewTab({ pendingCounts }: { pendingCounts: PendingCounts }) {
   const [counts,         setCounts]         = useState({ ilanlar: 0, approved: 0, pending: 0, rejected: 0, talepler: 0 });
   const [avgFiyat,       setAvgFiyat]       = useState(0);
   const [kategoriDagilim, setKategoriDagilim] = useState<{ name: string; count: number }[]>([]);
@@ -620,6 +627,44 @@ function OverviewTab() {
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-800">Genel Bakış</h2>
+
+      {/* ── Bekleyen işlem uyarıları ──────────────────────── */}
+      {(pendingCounts.talepler > 0 || pendingCounts.firms > 0 || pendingCounts.yorumlar > 0 || pendingCounts.quotes > 0) && (
+        <div className="space-y-2">
+          {pendingCounts.talepler > 0 && (
+            <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <p className="text-sm text-amber-800">
+                <strong>{pendingCounts.talepler} adet</strong> onay bekleyen proje talebi var.
+              </p>
+            </div>
+          )}
+          {pendingCounts.firms > 0 && (
+            <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+              <BuildingIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
+              <p className="text-sm text-blue-800">
+                <strong>{pendingCounts.firms} adet</strong> onay bekleyen firma başvurusu var.
+              </p>
+            </div>
+          )}
+          {pendingCounts.yorumlar > 0 && (
+            <div className="flex items-center gap-3 bg-purple-50 border border-purple-200 rounded-xl px-4 py-3">
+              <ThumbsUp className="w-4 h-4 text-purple-500 flex-shrink-0" />
+              <p className="text-sm text-purple-800">
+                <strong>{pendingCounts.yorumlar} adet</strong> onay bekleyen müşteri yorumu var.
+              </p>
+            </div>
+          )}
+          {pendingCounts.quotes > 0 && (
+            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+              <Inbox className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <p className="text-sm text-emerald-800">
+                <strong>{pendingCounts.quotes} adet</strong> cevaplanmamış fiyat teklif talebi var.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Ana sayaçlar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -2724,8 +2769,9 @@ export default function AdminDashboardPage() {
   const [user, setUser]     = useState<User | null>(null);
   const [tab,  setTab]      = useState<TabKey>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [seedBusy,  setSeedBusy]  = useState(false);
-  const [clearBusy, setClearBusy] = useState(false);
+  const [seedBusy,      setSeedBusy]      = useState(false);
+  const [clearBusy,     setClearBusy]     = useState(false);
+  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ talepler: 0, firms: 0, yorumlar: 0, quotes: 0 });
 
   async function handleSeed() {
     toast.info('10 firma, 30 ilan, 15 talep, 10 teklif eklenecek…');
@@ -2760,6 +2806,28 @@ export default function AdminDashboardPage() {
     });
     return unsub;
   }, [navigate]);
+
+  /* ── Bekleyen işlem sayıları — real-time ────────────────── */
+  useEffect(() => {
+    if (!user) return;
+    const u1 = onSnapshot(
+      query(collection(db, 'taleplar'), where('status', '==', 'beklemede')),
+      (s) => setPendingCounts((p) => ({ ...p, talepler: s.size })),
+    );
+    const u2 = onSnapshot(
+      query(collection(db, 'firms'), where('status', '==', 'pending')),
+      (s) => setPendingCounts((p) => ({ ...p, firms: s.size })),
+    );
+    const u3 = onSnapshot(
+      query(collection(db, 'yorumlar'), where('onaylandi', '==', false)),
+      (s) => setPendingCounts((p) => ({ ...p, yorumlar: s.size })),
+    );
+    const u4 = onSnapshot(
+      query(collection(db, 'quotes'), where('durum', '==', 'beklemede')),
+      (s) => setPendingCounts((p) => ({ ...p, quotes: s.size })),
+    );
+    return () => { u1(); u2(); u3(); u4(); };
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -2819,20 +2887,31 @@ export default function AdminDashboardPage() {
           flex flex-col pt-16 sm:pt-0 px-4 sm:px-0
         `}>
           <nav className="space-y-1">
-            {TABS.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => { setTab(t.key); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
-                  tab === t.key
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-                }`}
-              >
-                {t.icon}
-                {t.label}
-              </button>
-            ))}
+            {TABS.map((t) => {
+              const badge =
+                t.key === 'talepler' ? pendingCounts.talepler :
+                t.key === 'firms'    ? pendingCounts.firms    :
+                t.key === 'yorumlar' ? pendingCounts.yorumlar : 0;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => { setTab(t.key); setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
+                    tab === t.key
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                  }`}
+                >
+                  {t.icon}
+                  <span className="flex-1 text-left">{t.label}</span>
+                  {badge > 0 && (
+                    <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
+                      {badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
 
           {/* Sidebar footer */}
@@ -2874,7 +2953,7 @@ export default function AdminDashboardPage() {
 
         {/* ── Main content ──────────────────────────────── */}
         <main className="flex-1 min-w-0">
-          {tab === 'overview'   && <OverviewTab />}
+          {tab === 'overview'   && <OverviewTab pendingCounts={pendingCounts} />}
           {tab === 'settings'   && <SettingsTab />}
           {tab === 'flashDeals' && <FlashDealsTab />}
           {tab === 'ilanlar'   && <IlanlarTab />}
