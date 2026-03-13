@@ -2587,7 +2587,8 @@ function RaporTab() {
           </button>
         </div>
 
-        {/* Kurulum kılavuzu */}
+        {/* Kurulum kılavuzu — webhook ayarlıysa gizle */}
+        {!import.meta.env.VITE_SHEETS_WEBHOOK_URL && (
         <details className="border border-dashed border-gray-200 rounded-xl overflow-hidden">
           <summary className="px-4 py-3 text-xs font-medium text-emerald-700 cursor-pointer hover:bg-emerald-50 transition select-none">
             📋 Google Apps Script Kurulum Kılavuzu (adım adım)
@@ -2619,7 +2620,7 @@ function RaporTab() {
             <p>
               <strong>6.</strong> Yeni değişken ekleyin:
               <br />
-              Key: <code className="bg-gray-200 px-1 rounded font-mono">SHEETS_WEBHOOK_URL</code>
+              Key: <code className="bg-gray-200 px-1 rounded font-mono">VITE_SHEETS_WEBHOOK_URL</code>
               <br />
               Value: 4. adımda kopyaladığınız URL
             </p>
@@ -2632,6 +2633,7 @@ function RaporTab() {
             </p>
           </div>
         </details>
+        )}
       </div>
     </div>
   );
@@ -2799,8 +2801,8 @@ export default function AdminDashboardPage() {
     try {
       await clearSeedData();
       toast.success('Test verisi temizlendi.');
-    } catch {
-      toast.error('Temizleme sırasında hata oluştu.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Temizleme sırasında hata oluştu.');
     } finally {
       setClearBusy(false);
     }
