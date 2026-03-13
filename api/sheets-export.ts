@@ -31,8 +31,20 @@ export default async function handler(req: Request) {
     return json({ error: 'Yalnızca POST desteklenmektedir.' }, 405);
   }
 
-  /* Webhook URL kontrolü — VITE_SHEETS_WEBHOOK_URL veya SHEETS_WEBHOOK_URL */
-  const webhookUrl = process.env.VITE_SHEETS_WEBHOOK_URL ?? process.env.SHEETS_WEBHOOK_URL;
+  /* Body parse */
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json() as Record<string, unknown>;
+  } catch {
+    return json({ error: 'Geçersiz JSON gövdesi.' }, 400);
+  }
+
+  /* Webhook URL: önce client'tan gelen body.webhookUrl, sonra server env */
+  const webhookUrl =
+    (typeof body.webhookUrl === 'string' && body.webhookUrl) ||
+    process.env.VITE_SHEETS_WEBHOOK_URL ||
+    process.env.SHEETS_WEBHOOK_URL;
+
   if (!webhookUrl) {
     return json({
       error: 'VITE_SHEETS_WEBHOOK_URL ortam değişkeni tanımlı değil.',
@@ -40,21 +52,15 @@ export default async function handler(req: Request) {
     }, 503);
   }
 
-  /* Body parse */
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return json({ error: 'Geçersiz JSON gövdesi.' }, 400);
-  }
-
-  /* Google Apps Script'e yönlendir */
+  /* Google Apps Script'e yönlendir (webhookUrl alanını çıkar) */
+  const { webhookUrl: _url, ...payload } = body;
+  void _url;
   try {
     const resp = await fetch(webhookUrl, {
       method:  'POST',
       // GAS'ın CORS preflight gerektirmemesi için text/plain kullanılır
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body:    JSON.stringify(body),
+      body:    JSON.stringify(payload),
     });
 
     const text = await resp.text();

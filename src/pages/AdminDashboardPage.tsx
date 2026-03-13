@@ -2387,7 +2387,9 @@ function RaporTab() {
 
   /* Google Sheets aktar */
   async function handleExport() {
-    if (!import.meta.env.VITE_SHEETS_WEBHOOK_URL) {
+    const webhookUrl = import.meta.env.VITE_SHEETS_WEBHOOK_URL as string | undefined;
+    console.log('[sheets] VITE_SHEETS_WEBHOOK_URL:', webhookUrl ?? '(tanımsız)');
+    if (!webhookUrl) {
       toast.error('Google Sheets bağlantısı kurulmamış, lütfen Vercel\'de VITE_SHEETS_WEBHOOK_URL ayarlayın');
       return;
     }
@@ -2405,10 +2407,11 @@ function RaporTab() {
         email:    t.email,
       }));
 
+      /* webhookUrl client'tan gönderilir — Edge Function'da process.env erişemeyebilir */
       const resp = await fetch('/api/sheets-export', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ rows }),
+        body:    JSON.stringify({ rows, webhookUrl }),
       });
 
       if (resp.ok) {
