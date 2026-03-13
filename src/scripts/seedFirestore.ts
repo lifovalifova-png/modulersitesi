@@ -436,15 +436,21 @@ export async function clearSeedData(): Promise<void> {
 
   const colls = ['firms', 'ilanlar', 'taleplar', 'quotes', 'blog'] as const;
   for (const coll of colls) {
-    const snap = await getDocs(query(collection(db, coll), where('_seed', '==', true)));
-    if (snap.empty) {
-      console.log(`[clear] ${coll}: silinecek doküman yok`);
-      continue;
+    try {
+      const snap = await getDocs(query(collection(db, coll), where('_seed', '==', true)));
+      if (snap.empty) {
+        console.log(`[clear] ${coll}: silinecek doküman yok`);
+        continue;
+      }
+      const batch = writeBatch(db);
+      snap.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+      console.log(`[clear] ${coll} temizlendi (${snap.size} adet)`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[clear] ${coll} HATA:`, msg);
+      throw new Error(`${coll} temizlenemedi: ${msg}`);
     }
-    const batch = writeBatch(db);
-    snap.docs.forEach((d) => batch.delete(d.ref));
-    await batch.commit();
-    console.log(`[clear] ${coll} temizlendi (${snap.size} adet)`);
   }
 
   console.log('[clear] Tamamlandı ✓');

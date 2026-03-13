@@ -2387,6 +2387,10 @@ function RaporTab() {
 
   /* Google Sheets aktar */
   async function handleExport() {
+    if (!import.meta.env.VITE_SHEETS_WEBHOOK_URL) {
+      toast.error('Google Sheets bağlantısı kurulmamış, lütfen Vercel\'de VITE_SHEETS_WEBHOOK_URL ayarlayın');
+      return;
+    }
     if (recentTalepler.length === 0) return;
     setExporting(true);
     try {
@@ -2412,7 +2416,7 @@ function RaporTab() {
       } else {
         const data = await resp.json() as { error?: string };
         if (resp.status === 503) {
-          toast.error('SHEETS_WEBHOOK_URL ayarlı değil. Kurulum kılavuzuna bakın.');
+          toast.error('Google Sheets bağlantısı kurulmamış, lütfen Vercel\'de VITE_SHEETS_WEBHOOK_URL ayarlayın');
         } else {
           toast.error(`Aktarma başarısız: ${data.error ?? resp.statusText}`);
         }

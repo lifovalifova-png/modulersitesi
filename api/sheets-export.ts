@@ -31,12 +31,12 @@ export default async function handler(req: Request) {
     return json({ error: 'Yalnızca POST desteklenmektedir.' }, 405);
   }
 
-  /* Webhook URL kontrolü */
-  const webhookUrl = process.env.SHEETS_WEBHOOK_URL;
+  /* Webhook URL kontrolü — VITE_SHEETS_WEBHOOK_URL veya SHEETS_WEBHOOK_URL */
+  const webhookUrl = process.env.VITE_SHEETS_WEBHOOK_URL ?? process.env.SHEETS_WEBHOOK_URL;
   if (!webhookUrl) {
     return json({
-      error: 'SHEETS_WEBHOOK_URL ortam değişkeni tanımlı değil.',
-      hint: 'Vercel Dashboard → Settings → Environment Variables adresinden ekleyin.',
+      error: 'VITE_SHEETS_WEBHOOK_URL ortam değişkeni tanımlı değil.',
+      hint: 'Vercel Dashboard → Settings → Environment Variables → VITE_SHEETS_WEBHOOK_URL ekleyin.',
     }, 503);
   }
 
