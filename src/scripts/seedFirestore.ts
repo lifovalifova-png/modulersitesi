@@ -8,11 +8,12 @@ import {
   doc,
   writeBatch,
   getDocs,
+  getDoc,
   query,
   where,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { BLOG_POSTS } from '../data/blogPosts';
 import { BLOG_ICERIK } from '../data/blogIcerik';
 
@@ -433,6 +434,23 @@ export async function seedFirestore(): Promise<void> {
 ══════════════════════════════════════════════════════════ */
 export async function clearSeedData(): Promise<void> {
   console.log('[clear] Temizleme başladı...');
+
+  // Mevcut kullanıcı UID'ini logla
+  const currentUser = auth.currentUser;
+  console.log('[clear] Firebase Auth currentUser:', currentUser
+    ? { uid: currentUser.uid, email: currentUser.email }
+    : null,
+  );
+
+  // Admins koleksiyonundaki dokümanı kontrol et
+  if (currentUser) {
+    const adminDocRef = doc(db, 'admins', currentUser.uid);
+    const adminSnap = await getDoc(adminDocRef);
+    console.log('[clear] admins/' + currentUser.uid + ' exists:', adminSnap.exists());
+    if (adminSnap.exists()) {
+      console.log('[clear] admins dokümanı:', adminSnap.data());
+    }
+  }
 
   const colls = ['firms', 'ilanlar', 'taleplar', 'quotes', 'blog'] as const;
   for (const coll of colls) {
