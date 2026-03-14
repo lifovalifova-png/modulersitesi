@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   collection, query, where, limit,
-  getDocs, addDoc, serverTimestamp,
+  getDocs, addDoc, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { toast } from 'sonner';
@@ -58,6 +58,12 @@ export default function IlanOlusturPage() {
   const [aciklama,     setAciklama]     = useState('');
   const [errors,       setErrors]       = useState<Record<string, string>>({});
   const [submitting,   setSubmitting]   = useState(false);
+
+  /* Acil satış */
+  const [acilSatis,       setAcilSatis]       = useState(false);
+  const [acilSatisFiyat,  setAcilSatisFiyat]  = useState('');
+  const [acilSatisBitis,  setAcilSatisBitis]  = useState('');
+  const [acilSatisNedeni, setAcilSatisNedeni] = useState('');
 
   /* Görseller */
   const [images,   setImages]   = useState<UploadItem[]>([]);
@@ -176,6 +182,13 @@ export default function IlanOlusturPage() {
     const fiyatNum = Number(fiyatStr.replace(/\./g, '').replace(',', '.'));
     if (!fiyatStr || fiyatNum <= 0) e.fiyat = 'Geçerli bir fiyat giriniz.';
     if (!images.some((i) => i.status === 'done')) e.gorseller = 'En az 1 görsel yükleyiniz.';
+    if (acilSatis) {
+      const afiyat = Number(acilSatisFiyat.replace(/\./g, '').replace(',', '.'));
+      if (!acilSatisFiyat || afiyat <= 0) e.acilSatisFiyat = 'Geçerli bir acil satış fiyatı giriniz.';
+      else if (fiyatNum > 0 && afiyat >= fiyatNum) e.acilSatisFiyat = 'Acil satış fiyatı normal fiyattan düşük olmalıdır.';
+      if (!acilSatisBitis) e.acilSatisBitis = 'Bitiş tarihi zorunludur.';
+      else if (new Date(acilSatisBitis) <= new Date()) e.acilSatisBitis = 'Bitiş tarihi gelecekte olmalıdır.';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -209,7 +222,14 @@ export default function IlanOlusturPage() {
         ozellikler:       {},
         acil:             false,
         indirimli:        false,
-        acilSatis:        false,
+        acilSatis:        acilSatis,
+        acilSatisFiyat:   acilSatis
+          ? Number(acilSatisFiyat.replace(/\./g, '').replace(',', '.'))
+          : null,
+        acilSatisBitis:   acilSatis
+          ? Timestamp.fromDate(new Date(acilSatisBitis + 'T23:59:59'))
+          : null,
+        acilSatisNedeni:  acilSatis ? (acilSatisNedeni.trim() || null) : null,
         status:           'aktif',
         tarih:            serverTimestamp(),
       });
@@ -364,6 +384,113 @@ export default function IlanOlusturPage() {
                 />
                 <p className="text-xs text-gray-400 mt-1 text-right">{aciklama.length} / 2000</p>
               </div>
+            </div>
+
+            {/* ── Acil Satılık ────────────────────────────── */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-gray-800 text-sm">Acil Satış</h2>
+                {acilSatis && (
+                  <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                    🔴 ACİL SATILIK
+                  </span>
+                )}
+              </div>
+
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={acilSatis}
+                  onChange={(e) => {
+                    setAcilSatis(e.target.checked);
+                    if (!e.target.checked) {
+                      setAcilSatisFiyat('');
+                      setAcilSatisBitis('');
+                      setAcilSatisNedeni('');
+                      setErrors((p) => ({ ...p, acilSatisFiyat: '', acilSatisBitis: '' }));
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+                <span className="text-sm text-gray-700">Bu ilanı "Acil Satılık" olarak işaretle</span>
+              </label>
+
+              {acilSatis && (
+                <div className="space-y-4 border-t border-red-100 pt-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Acil Satış Fiyatı (₺) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={acilSatisFiyat}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '');
+                          setAcilSatisFiyat(digits ? Number(digits).toLocaleString('tr-TR') : '');
+                          setErrors((p) => ({ ...p, acilSatisFiyat: '' }));
+                        }}
+                        placeholder="Örn: 280.000"
+                        className={inp('acilSatisFiyat')}
+                      />
+                      <Err f="acilSatisFiyat" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Bitiş Tarihi <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={acilSatisBitis}
+                        min={new Date().toISOString().slice(0, 10)}
+                        onChange={(e) => {
+                          setAcilSatisBitis(e.target.value);
+                          setErrors((p) => ({ ...p, acilSatisBitis: '' }));
+                        }}
+                        className={inp('acilSatisBitis')}
+                      />
+                      <Err f="acilSatisBitis" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Acil Satış Nedeni{' '}
+                      <span className="text-gray-400 text-xs font-normal">(isteğe bağlı)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={acilSatisNedeni}
+                      onChange={(e) => setAcilSatisNedeni(e.target.value)}
+                      placeholder="Örn: Acil nakit ihtiyacı, taşınma"
+                      maxLength={200}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+
+                  {/* Önizleme badge */}
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+                    <span className="text-2xl">🔴</span>
+                    <div>
+                      <p className="text-red-700 font-bold text-sm">ACİL SATILIK</p>
+                      {acilSatisFiyat && (
+                        <p className="text-red-600 text-xs mt-0.5">
+                          Acil fiyat: <span className="font-semibold">{acilSatisFiyat} ₺</span>
+                          {fiyatStr && (
+                            <span className="text-gray-400 line-through ml-2">{fiyatStr} ₺</span>
+                          )}
+                        </p>
+                      )}
+                      {acilSatisBitis && (
+                        <p className="text-gray-500 text-xs mt-0.5">
+                          Bitiş: {new Date(acilSatisBitis).toLocaleDateString('tr-TR')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ── Görsel Yükleme ──────────────────────────── */}
