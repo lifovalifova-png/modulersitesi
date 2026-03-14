@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   collection, query, where, onSnapshot,
-  updateDoc, doc, getDoc, arrayUnion, Timestamp,
+  updateDoc, doc, getDoc, arrayUnion, Timestamp, increment,
 } from 'firebase/firestore';
 import { toast } from 'sonner';
 import {
@@ -79,6 +79,7 @@ export default function FirmaPaneliPage() {
   const [firmaIlanlar,  setFirmaIlanlar]  = useState<Ilan[]>([]);
   const [acilForms,     setAcilForms]     = useState<Record<string, AcilForm>>({});
   const [acilSaving,    setAcilSaving]    = useState<string | null>(null);
+  const [yenileSaving,  setYenileSaving]  = useState<string | null>(null);
   const [ilanLimit,     setIlanLimit]     = useState(3);
 
   /* ── Auth guard ─────────────────────────────────────────── */
@@ -240,6 +241,23 @@ export default function FirmaPaneliPage() {
     }
   };
 
+  /* ── İlan Yenile ────────────────────────────────────────── */
+  const handleYenile = async (ilanId: string) => {
+    setYenileSaving(ilanId);
+    try {
+      await updateDoc(doc(db, 'ilanlar', ilanId), {
+        ilanBitis:       Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+        yenilenmeSayisi: increment(1),
+        aktif:           true,
+      });
+      toast.success('İlan 30 gün uzatıldı.');
+    } catch {
+      toast.error('Yenileme sırasında hata oluştu.');
+    } finally {
+      setYenileSaving(null);
+    }
+  };
+
   /* ── Expand toggle ──────────────────────────────────────── */
   const toggleExpand = (id: string) =>
     setExpanded((prev) => {
@@ -360,14 +378,43 @@ export default function FirmaPaneliPage() {
                   const isBusy = acilSaving === ilan.id;
                   const today  = new Date().toISOString().slice(0, 10);
 
+                  const ilanBitisDays = ilan.ilanBitis
+                    ? Math.ceil((ilan.ilanBitis.seconds * 1000 - Date.now()) / 86400000)
+                    : null;
+
                   return (
                     <div key={ilan.id} className="p-4">
                       {/* Başlık satırı */}
                       <div className="flex items-start justify-between gap-3 flex-wrap">
                         <div className="min-w-0">
                           <p className="font-medium text-gray-800 text-sm leading-snug truncate max-w-xs">{ilan.baslik}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{formatFiyat(ilan.fiyat)}</p>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <p className="text-xs text-gray-400">{formatFiyat(ilan.fiyat)}</p>
+                            {ilanBitisDays !== null && (
+                              ilanBitisDays <= 0
+                                ? <span className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">Süresi Doldu</span>
+                                : ilanBitisDays <= 7
+                                ? <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">⚠️ {ilanBitisDays} gün kaldı</span>
+                                : <span className="text-xs text-gray-400">{ilanBitisDays} gün kaldı</span>
+                            )}
+                          </div>
                         </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {/* Yenile butonu */}
+                          {ilanBitisDays !== null && (
+                            <button
+                              onClick={() => handleYenile(ilan.id)}
+                              disabled={yenileSaving === ilan.id}
+                              className="text-xs border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition disabled:opacity-60 flex items-center gap-1"
+                              title="İlan süresini 30 gün uzat"
+                            >
+                              {yenileSaving === ilan.id
+                                ? <span className="w-3 h-3 border border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                                : '🔄'
+                              }
+                              Yenile
+                            </button>
+                          )}
                         <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
                           <input
                             type="checkbox"
@@ -384,6 +431,7 @@ export default function FirmaPaneliPage() {
                           />
                           <span className="text-sm font-medium text-gray-700">Acil Satılık</span>
                         </label>
+                        </div>
                       </div>
 
                       {/* Acil form — sadece enabled ise */}

@@ -222,6 +222,9 @@ export default function IlanOlusturPage() {
         ozellikler:       {},
         acil:             false,
         indirimli:        false,
+        ilanBitis:        Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+        yenilenmeSayisi:  0,
+        aktif:            true,
         acilSatis:        acilSatis,
         acilSatisFiyat:   acilSatis
           ? Number(acilSatisFiyat.replace(/\./g, '').replace(',', '.'))

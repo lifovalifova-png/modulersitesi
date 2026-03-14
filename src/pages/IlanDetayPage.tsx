@@ -396,6 +396,10 @@ export default function IlanDetayPage() {
   const features = ozelliklerToArray(ilan.ozellikler);
   const images   = ilan.gorseller.length > 0 ? ilan.gorseller : [''];
 
+  const ilanBitisDays = ilan.ilanBitis
+    ? Math.ceil((ilan.ilanBitis.seconds * 1000 - Date.now()) / 86400000)
+    : null;
+
   const prevImg = () => setActiveImg((i) => (i - 1 + images.length) % images.length);
   const nextImg = () => setActiveImg((i) => (i + 1) % images.length);
 
@@ -411,6 +415,17 @@ export default function IlanDetayPage() {
 
       <main className="bg-gray-50 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 py-8">
+
+          {/* Süresi doldu banner */}
+          {ilan.aktif === false && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
+              <span className="text-red-500 text-lg">⚠️</span>
+              <div>
+                <p className="text-red-700 font-semibold text-sm">Bu ilanın yayın süresi dolmuştur.</p>
+                <p className="text-red-500 text-xs mt-0.5">İlan sahibiyle iletişime geçebilirsiniz ancak ilan artık aktif listede görünmüyor.</p>
+              </div>
+            </div>
+          )}
 
           {/* Breadcrumb */}
           <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5 flex-wrap">
@@ -553,6 +568,24 @@ export default function IlanDetayPage() {
 
             {/* ════ Sağ Sidebar ═════════════════════════════ */}
             <div className="w-full lg:w-80 flex-shrink-0 space-y-4">
+
+              {/* İlan Süresi */}
+              {ilanBitisDays !== null && (
+                <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
+                  ilanBitisDays <= 0
+                    ? 'bg-red-50 border-red-200'
+                    : ilanBitisDays <= 7
+                    ? 'bg-amber-50 border-amber-200'
+                    : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <span className="text-xs text-gray-500">İlan geçerlilik süresi</span>
+                  <span className={`text-xs font-bold ${
+                    ilanBitisDays <= 0 ? 'text-red-600' : ilanBitisDays <= 7 ? 'text-amber-600' : 'text-gray-700'
+                  }`}>
+                    {ilanBitisDays <= 0 ? 'Süresi doldu' : `${ilanBitisDays} gün kaldı`}
+                  </span>
+                </div>
+              )}
 
               {/* Firma Kartı */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">

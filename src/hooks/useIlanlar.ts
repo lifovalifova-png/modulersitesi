@@ -32,6 +32,9 @@ export interface Ilan {
   acilSatisFiyat?: number;
   acilSatisNedeni?: string;
   acilSatisBitis?: { seconds: number; nanoseconds: number } | null;
+  ilanBitis?: { seconds: number; nanoseconds: number } | null;
+  yenilenmeSayisi?: number;
+  aktif?: boolean;
 }
 
 const PAGE_SIZE = 20;
@@ -69,7 +72,7 @@ export function useIlanlar(kategoriSlug?: string, sehir?: string) {
       (snap) => {
         let docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Ilan));
         /* status filtresi (kategoriSlug modunda sunucudan pasifler gelebilir) */
-        docs = docs.filter((d) => d.status === 'aktif');
+        docs = docs.filter((d) => d.status === 'aktif' && d.aktif !== false);
         /* opsiyonel şehir filtresi — küçük subset, client OK */
         if (sehir) docs = docs.filter((d) => d.sehir === sehir);
         setIlanlar(docs);
@@ -97,7 +100,7 @@ export function useIlanlar(kategoriSlug?: string, sehir?: string) {
 
       const snap = await getDocs(fsQuery);
       let docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Ilan));
-      docs = docs.filter((d) => d.status === 'aktif');
+      docs = docs.filter((d) => d.status === 'aktif' && d.aktif !== false);
       if (sehir) docs = docs.filter((d) => d.sehir === sehir);
 
       setIlanlar((prev) => {

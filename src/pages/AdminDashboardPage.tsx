@@ -19,6 +19,7 @@ import {
   query,
   where,
   Timestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { CATEGORIES } from '../data/categories';
 import { BLOG_POSTS, type BlogPost } from '../data/blogPosts';
@@ -129,6 +130,9 @@ interface AdminIlan {
   acilSatisFiyat?:   number;
   acilSatisNedeni?:  string;
   acilSatisBitis?:   { seconds: number; nanoseconds: number } | null;
+  ilanBitis?:        { seconds: number; nanoseconds: number } | null;
+  yenilenmeSayisi?:  number;
+  aktif?:            boolean;
 }
 
 type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda' | 'acilIlanlar';
@@ -801,7 +805,7 @@ function SettingsTab() {
   const [saving,         setSaving]         = useState(false);
   const [fiyatlar,       setFiyatlar]       = useState<Record<string, number>>(DEFAULT_FIYATLAR);
   const [fiyatlarSaving, setFiyatlarSaving] = useState(false);
-  const [limits,         setLimits]         = useState({ ilanLimit: 3, gunlukTeklifLimit: 1, aiSorguLimit: 5 });
+  const [limits,         setLimits]         = useState({ ilanLimit: 3, gunlukTeklifLimit: 1, aiSorguLimit: 5, ilanSuresiGun: 30, maxYenilemeSayisi: 3 });
   const [limitsSaving,   setLimitsSaving]   = useState(false);
 
   useEffect(() => {
@@ -985,7 +989,7 @@ function SettingsTab() {
             Ücretsiz plan limitleri. Değişiklikler anında tüm kullanıcılara yansır.
           </p>
         </div>
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-3 xl:grid-cols-5 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Satıcı İlan Limiti</label>
             <input
@@ -1015,6 +1019,26 @@ function SettingsTab() {
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <p className="text-xs text-gray-400 mt-1">Kullanıcı başına günlük maks. AI sorgu</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">İlan Süresi (Gün)</label>
+            <input
+              type="number" min={1} max={365}
+              value={limits.ilanSuresiGun}
+              onChange={(e) => setLimits((p) => ({ ...p, ilanSuresiGun: Number(e.target.value) }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">Yeni ilanın aktif kalacağı gün sayısı</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Maks. Yenileme Sayısı</label>
+            <input
+              type="number" min={0} max={100}
+              value={limits.maxYenilemeSayisi}
+              onChange={(e) => setLimits((p) => ({ ...p, maxYenilemeSayisi: Number(e.target.value) }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">Satıcı başına ücretsiz ilan yenileme</p>
           </div>
         </div>
         <button
@@ -1332,6 +1356,18 @@ function IlanlarTab() {
     }
   };
 
+  const extendIlan = async (id: string) => {
+    try {
+      await updateDoc(doc(db, 'ilanlar', id), {
+        ilanBitis: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+        aktif: true,
+      });
+      toast.success('İlan süresi 30 gün uzatıldı.');
+    } catch {
+      toast.error('Süre uzatma başarısız.');
+    }
+  };
+
   const upd = (patch: Partial<Omit<AdminIlan, 'id'>>) =>
     setForm((p) => ({ ...p, ...patch }));
 
@@ -1402,6 +1438,14 @@ function IlanlarTab() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => extendIlan(ilan.id!)}
+                          aria-label="Süreyi 30 gün uzat"
+                          title="Süreyi +30 gün uzat"
+                          className="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition text-xs"
+                        >
+                          +30g
+                        </button>
                         <button
                           onClick={() => toggleStatus(ilan)}
                           aria-label={ilan.status === 'aktif' ? 'Pasife al' : 'Aktif et'}
@@ -2815,6 +2859,28 @@ export default function AdminDashboardPage() {
     });
     return unsub;
   }, [navigate]);
+
+  /* ── Süresi dolan ilanları otomatik kapat ───────────────── */
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'ilanlar'), where('status', '==', 'aktif')));
+        const now  = Date.now();
+        const expired = snap.docs.filter((d) => {
+          const data = d.data();
+          return data.ilanBitis && data.aktif !== false && data.ilanBitis.seconds * 1000 < now;
+        });
+        if (expired.length === 0) return;
+        const batch = writeBatch(db);
+        expired.forEach((d) => batch.update(doc(db, 'ilanlar', d.id), { aktif: false }));
+        await batch.commit();
+        console.log(`[admin] ${expired.length} süresi dolan ilan pasife alındı.`);
+      } catch (err) {
+        console.warn('[admin] expire check hatası:', err);
+      }
+    })();
+  }, [user]);
 
   /* ── Bekleyen işlem sayıları — real-time ────────────────── */
   useEffect(() => {
