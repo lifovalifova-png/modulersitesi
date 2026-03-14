@@ -309,89 +309,55 @@ interface AdminYorum {
   id: string;
   firmaId: string;
   userId: string;
-  userName: string;
+  userName?: string;
   puan: number;
-  yorum: string;
+  aciklama?: string;
   tarih: { seconds: number } | null;
-  onaylandi: boolean;
 }
 
 function YorumlarTab() {
   const [yorumlar, setYorumlar] = useState<AdminYorum[]>([]);
   const [loading,  setLoading]  = useState(true);
-  const [filter,   setFilter]   = useState<'bekleyen' | 'onaylanan' | 'hepsi'>('bekleyen');
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'yorumlar'), (snap) => {
-      setYorumlar(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminYorum)));
+      setYorumlar(
+        snap.docs
+          .map((d) => ({ id: d.id, ...d.data() } as AdminYorum))
+          .sort((a, b) => (b.tarih?.seconds ?? 0) - (a.tarih?.seconds ?? 0)),
+      );
       setLoading(false);
     });
     return unsub;
   }, []);
 
-  async function onayla(id: string) {
-    await updateDoc(doc(db, 'yorumlar', id), { onaylandi: true });
-    toast.success('Yorum onaylandı');
-  }
-
-  async function reddet(id: string) {
+  async function silPuan(id: string) {
     await deleteDoc(doc(db, 'yorumlar', id));
-    toast.success('Yorum silindi');
+    toast.success('Puan silindi');
   }
-
-  const filtered = yorumlar.filter((y) =>
-    filter === 'hepsi'     ? true :
-    filter === 'bekleyen'  ? !y.onaylandi :
-    y.onaylandi
-  ).sort((a, b) => (b.tarih?.seconds ?? 0) - (a.tarih?.seconds ?? 0));
 
   if (loading) return <div className="p-6 text-sm text-gray-500">Yükleniyor…</div>;
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Müşteri Yorumları</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {yorumlar.filter((y) => !y.onaylandi).length} bekleyen · {yorumlar.filter((y) => y.onaylandi).length} onaylı
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {(['bekleyen', 'onaylanan', 'hepsi'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition ${
-                filter === f ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {f === 'bekleyen' ? 'Bekleyen' : f === 'onaylanan' ? 'Onaylanan' : 'Hepsi'}
-            </button>
-          ))}
-        </div>
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-gray-800">Müşteri Puanları</h2>
+        <p className="text-sm text-gray-500 mt-0.5">{yorumlar.length} değerlendirme</p>
       </div>
 
-      {filtered.length === 0 ? (
+      {yorumlar.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
           <ThumbsUp className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">Bu filtrede yorum yok.</p>
+          <p className="text-gray-400 text-sm">Henüz değerlendirme yok.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((y) => (
-            <div
-              key={y.id}
-              className={`bg-white rounded-xl border p-4 ${y.onaylandi ? 'border-emerald-100' : 'border-amber-200'}`}
-            >
+          {yorumlar.map((y) => (
+            <div key={y.id} className="bg-white rounded-xl border border-gray-100 p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-sm text-gray-800">{y.userName}</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      y.onaylandi ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {y.onaylandi ? 'Onaylı' : 'Bekliyor'}
-                    </span>
+                    <p className="font-semibold text-sm text-gray-800">{y.userName || 'Kullanıcı'}</p>
                     <div className="flex gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className={`w-3 h-3 ${i < y.puan ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />
@@ -402,24 +368,16 @@ function YorumlarTab() {
                     Firma ID: {y.firmaId} ·{' '}
                     {y.tarih ? new Date(y.tarih.seconds * 1000).toLocaleDateString('tr-TR') : ''}
                   </p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{y.yorum}</p>
+                  {y.aciklama && (
+                    <p className="text-sm text-gray-700 leading-relaxed">{y.aciklama}</p>
+                  )}
                 </div>
-                {!y.onaylandi && (
-                  <div className="flex flex-col gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => onayla(y.id)}
-                      className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"
-                    >
-                      <CheckCircle className="w-3.5 h-3.5" /> Onayla
-                    </button>
-                    <button
-                      onClick={() => reddet(y.id)}
-                      className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold px-3 py-1.5 rounded-lg transition"
-                    >
-                      <XCircle className="w-3.5 h-3.5" /> Reddet
-                    </button>
-                  </div>
-                )}
+                <button
+                  onClick={() => silPuan(y.id)}
+                  className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold px-3 py-1.5 rounded-lg transition flex-shrink-0"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Sil
+                </button>
               </div>
             </div>
           ))}
@@ -469,6 +427,12 @@ const FEATURE_DEFS: FeatureDef[] = [
     label:       'Sınırsız Talep',
     description: 'Günlük talep limitini kaldırma (ücretli özellik).',
     tier:        'Ücretli',
+  },
+  {
+    key:         'puanlamaSistemi',
+    label:       'Puanlama Sistemi',
+    description: 'Onaylı müşterilerin firmaları 1–5 yıldızla değerlendirmesi.',
+    tier:        'Ücretsiz',
   },
 ];
 
@@ -633,7 +597,7 @@ function OverviewTab({ pendingCounts }: { pendingCounts: PendingCounts }) {
       <h2 className="text-lg font-semibold text-gray-800">Genel Bakış</h2>
 
       {/* ── Bekleyen işlem uyarıları ──────────────────────── */}
-      {(pendingCounts.talepler > 0 || pendingCounts.firms > 0 || pendingCounts.yorumlar > 0 || pendingCounts.quotes > 0) && (
+      {(pendingCounts.talepler > 0 || pendingCounts.firms > 0 || pendingCounts.quotes > 0) && (
         <div className="space-y-2">
           {pendingCounts.talepler > 0 && (
             <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
@@ -648,14 +612,6 @@ function OverviewTab({ pendingCounts }: { pendingCounts: PendingCounts }) {
               <BuildingIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
               <p className="text-sm text-blue-800">
                 <strong>{pendingCounts.firms} adet</strong> onay bekleyen firma başvurusu var.
-              </p>
-            </div>
-          )}
-          {pendingCounts.yorumlar > 0 && (
-            <div className="flex items-center gap-3 bg-purple-50 border border-purple-200 rounded-xl px-4 py-3">
-              <ThumbsUp className="w-4 h-4 text-purple-500 flex-shrink-0" />
-              <p className="text-sm text-purple-800">
-                <strong>{pendingCounts.yorumlar} adet</strong> onay bekleyen müşteri yorumu var.
               </p>
             </div>
           )}
@@ -2812,7 +2768,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'blog',       label: 'Blog',          icon: <BookOpen   className="w-4 h-4" /> },
   { key: 'rapor',      label: 'Rapor',         icon: <BarChart2  className="w-4 h-4" /> },
   { key: 'features',   label: 'Özellikler',    icon: <Sliders    className="w-4 h-4" /> },
-  { key: 'yorumlar',   label: 'Yorumlar',      icon: <ThumbsUp   className="w-4 h-4" /> },
+  { key: 'yorumlar',   label: 'Puanlar',       icon: <ThumbsUp   className="w-4 h-4" /> },
   { key: 'hakkimizda', label: 'Hakkımızda',    icon: <BookOpen   className="w-4 h-4" /> },
   { key: 'acilIlanlar', label: 'Acil İlanlar', icon: <Flame className="w-4 h-4 text-red-500" /> },
 ];
@@ -2894,14 +2850,10 @@ export default function AdminDashboardPage() {
       (s) => setPendingCounts((p) => ({ ...p, firms: s.size })),
     );
     const u3 = onSnapshot(
-      query(collection(db, 'yorumlar'), where('onaylandi', '==', false)),
-      (s) => setPendingCounts((p) => ({ ...p, yorumlar: s.size })),
-    );
-    const u4 = onSnapshot(
       query(collection(db, 'quotes'), where('durum', '==', 'beklemede')),
       (s) => setPendingCounts((p) => ({ ...p, quotes: s.size })),
     );
-    return () => { u1(); u2(); u3(); u4(); };
+    return () => { u1(); u2(); u3(); };
   }, [user]);
 
   const handleSignOut = async () => {
@@ -2965,8 +2917,7 @@ export default function AdminDashboardPage() {
             {TABS.map((t) => {
               const badge =
                 t.key === 'talepler' ? pendingCounts.talepler :
-                t.key === 'firms'    ? pendingCounts.firms    :
-                t.key === 'yorumlar' ? pendingCounts.yorumlar : 0;
+                t.key === 'firms'    ? pendingCounts.firms    : 0;
               return (
                 <button
                   key={t.key}

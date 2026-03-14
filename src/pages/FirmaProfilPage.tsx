@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -8,6 +8,7 @@ import { CATEGORIES } from '../data/categories';
 import { formatFiyat, type Ilan } from '../hooks/useIlanlar';
 import SEOMeta from '../components/SEOMeta';
 import { useAuth } from '../context/AuthContext';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { toast } from 'sonner';
 import {
   ShieldCheck, MapPin, Tag, Star, Send, Building2, Globe,
@@ -38,16 +39,15 @@ interface Firma {
   olusturmaTarihi?: { seconds: number } | null;
 }
 
-/* ── Yorum tipi ──────────────────────────────────────────────── */
+/* ── Puan tipi ───────────────────────────────────────────────── */
 interface Yorum {
   id: string;
   firmaId: string;
   userId: string;
-  userName: string;
+  userName?: string;
   puan: number;
-  yorum: string;
+  aciklama?: string;
   tarih: { seconds: number; nanoseconds: number } | null;
-  onaylandi: boolean;
 }
 
 /* ── Helpers ─────────────────────────────────────────────────── */
@@ -80,7 +80,7 @@ function Stars({ rating, count }: { rating: number; count: number }) {
         />
       ))}
       <span className="ml-1.5 text-sm font-semibold text-white/90">
-        {count > 0 ? `${rating.toFixed(1)} (${count} yorum)` : 'Henüz yorum yok'}
+        {count > 0 ? `${rating.toFixed(1)} (${count} değerlendirme)` : 'Henüz değerlendirme yok'}
       </span>
     </div>
   );
@@ -169,17 +169,19 @@ function IlanCard({ ilan }: { ilan: Ilan }) {
 export default function FirmaProfilPage() {
   const { id } = useParams<{ id: string }>();
   const { currentUser } = useAuth();
+  const { flags } = useFeatureFlags();
 
   const [firma,    setFirma]    = useState<Firma | null>(null);
   const [ilanlar,  setIlanlar]  = useState<Ilan[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  /* Yorum state */
-  const [yorumlar,    setYorumlar]    = useState<Yorum[]>([]);
-  const [puan,        setPuan]        = useState(0);
-  const [yorumMetni,  setYorumMetni]  = useState('');
-  const [yorumLoading, setYorumLoading] = useState(false);
+  /* Puan state */
+  const [yorumlar,      setYorumlar]      = useState<Yorum[]>([]);
+  const [puan,          setPuan]          = useState(0);
+  const [aciklama,      setAciklama]      = useState('');
+  const [yorumLoading,  setYorumLoading]  = useState(false);
+  const [onayliMusteri, setOnayliMusteri] = useState<boolean | null>(null);
 
 
   /* Firma verisini çek */
@@ -210,7 +212,7 @@ export default function FirmaProfilPage() {
     return unsub;
   }, [id]);
 
-  /* Bu firmaya ait yorumları çek */
+  /* Bu firmaya ait puanları çek */
   useEffect(() => {
     if (!id) return;
     const q = query(collection(db, 'yorumlar'), where('firmaId', '==', id));
@@ -220,28 +222,44 @@ export default function FirmaProfilPage() {
     return unsub;
   }, [id]);
 
-  /* Yorum gönder */
-  async function handleYorumGonder(e: React.FormEvent) {
+  /* Onaylı müşteri kontrolü */
+  useEffect(() => {
+    if (!currentUser || !id) { setOnayliMusteri(null); return; }
+    setOnayliMusteri(null);
+    const q = query(collection(db, 'taleplar'), where('email', '==', currentUser.email ?? ''));
+    getDocs(q).then((snap) => {
+      const found = snap.docs.some((d) => {
+        const data = d.data();
+        return Array.isArray(data.firmaGonderilenler) && data.firmaGonderilenler.includes(id);
+      });
+      setOnayliMusteri(found);
+    }).catch(() => setOnayliMusteri(false));
+  }, [currentUser, id]);
+
+  /* Puan gönder */
+  async function handlePuanGonder(e: React.FormEvent) {
     e.preventDefault();
-    if (!currentUser) { toast.error('Yorum yazmak için giriş yapınız.'); return; }
+    if (!currentUser) { toast.error('Puan vermek için giriş yapınız.'); return; }
     if (puan === 0) { toast.error('Lütfen puan seçiniz.'); return; }
-    if (yorumMetni.trim().length < 10) { toast.error('Yorum en az 10 karakter olmalıdır.'); return; }
+    if (puan === 1 && aciklama.trim().length < 100) {
+      toast.error('1 yıldız için en az 100 karakter açıklama zorunludur.');
+      return;
+    }
     setYorumLoading(true);
     try {
       await addDoc(collection(db, 'yorumlar'), {
-        firmaId:   id,
-        userId:    currentUser.uid,
-        userName:  currentUser.displayName || currentUser.email?.split('@')[0] || 'Kullanıcı',
+        firmaId:  id,
+        userId:   currentUser.uid,
+        userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Kullanıcı',
         puan,
-        yorum:     yorumMetni.trim(),
-        tarih:     serverTimestamp(),
-        onaylandi: false,
+        aciklama: aciklama.trim() || null,
+        tarih:    serverTimestamp(),
       });
       setPuan(0);
-      setYorumMetni('');
-      toast.success('Yorumunuz alındı! Onaylandıktan sonra yayınlanacak.');
+      setAciklama('');
+      toast.success('Puanınız kaydedildi. Teşekkürler!');
     } catch {
-      toast.error('Yorum gönderilemedi. Lütfen tekrar deneyin.');
+      toast.error('Puan gönderilemedi. Lütfen tekrar deneyin.');
     } finally {
       setYorumLoading(false);
     }
@@ -284,13 +302,19 @@ export default function FirmaProfilPage() {
   }
 
   /* ── Hesaplanan değerler ──────────────────────────────────── */
-  const onayliYorumlar = yorumlar.filter((y) => y.onaylandi);
-  const avgPuan = onayliYorumlar.length > 0
-    ? onayliYorumlar.reduce((s, y) => s + y.puan, 0) / onayliYorumlar.length
+  const avgPuan = yorumlar.length > 0
+    ? yorumlar.reduce((s, y) => s + y.puan, 0) / yorumlar.length
     : 0;
-  const kullaniciYorumYapti = currentUser
+  const kullaniciPuanVerdi = currentUser
     ? yorumlar.some((y) => y.userId === currentUser.uid)
     : false;
+  const kullanicininPuani = currentUser
+    ? (yorumlar.find((y) => y.userId === currentUser.uid)?.puan ?? 0)
+    : 0;
+  const dagilim = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: yorumlar.filter((y) => y.puan === star).length,
+  }));
 
   const firmaAdi    = firma.name || 'İsimsiz Firma';
   const firmaHarfi  = firmaAdi.charAt(0).toUpperCase();
@@ -366,7 +390,7 @@ export default function FirmaProfilPage() {
                   )}
                 </div>
 
-                <Stars rating={avgPuan} count={onayliYorumlar.length} />
+                <Stars rating={avgPuan} count={yorumlar.length} />
               </div>
 
               {/* Teklif İste */}
@@ -472,86 +496,100 @@ export default function FirmaProfilPage() {
                 )}
               </div>
 
-              {/* Yorumlar & Değerlendirmeler */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <ThumbsUp className="w-4 h-4 text-emerald-600" />
-                  Müşteri Değerlendirmeleri
-                  {onayliYorumlar.length > 0 && (
-                    <span className="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                      {avgPuan.toFixed(1)} / 5
-                    </span>
-                  )}
-                </h2>
+              {/* Puanlar & Değerlendirmeler */}
+              {flags.puanlamaSistemi && (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <ThumbsUp className="w-4 h-4 text-emerald-600" />
+                    Müşteri Puanları
+                    {yorumlar.length > 0 && (
+                      <span className="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                        {avgPuan.toFixed(1)} / 5
+                      </span>
+                    )}
+                  </h2>
 
-                {/* Onaylı yorum listesi */}
-                {onayliYorumlar.length === 0 ? (
-                  <p className="text-sm text-gray-400 italic mb-4">Henüz onaylı değerlendirme yok.</p>
-                ) : (
-                  <div className="space-y-4 mb-6">
-                    {onayliYorumlar
-                      .slice()
-                      .sort((a, b) => (b.tarih?.seconds ?? 0) - (a.tarih?.seconds ?? 0))
-                      .map((y) => (
-                        <div key={y.id} className="border border-gray-100 rounded-xl p-4">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-sm font-semibold text-gray-800">{y.userName}</p>
-                            <p className="text-xs text-gray-400">
-                              {y.tarih
-                                ? new Date(y.tarih.seconds * 1000).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })
-                                : ''}
-                            </p>
-                          </div>
-                          <StarsLight rating={y.puan} count={0} />
-                          <p className="text-sm text-gray-600 mt-2 leading-relaxed">{y.yorum}</p>
-                        </div>
-                      ))}
-                  </div>
-                )}
-
-                {/* Yorum formu */}
-                {currentUser ? (
-                  kullaniciYorumYapti ? (
-                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-700 font-medium">
-                      Değerlendirmeniz alındı, onay bekliyor. Teşekkürler!
+                  {/* Ortalama + dağılım */}
+                  {yorumlar.length > 0 ? (
+                    <div className="flex gap-6 mb-6">
+                      <div className="text-center flex-shrink-0">
+                        <p className="text-4xl font-bold text-gray-800">{avgPuan.toFixed(1)}</p>
+                        <StarsLight rating={avgPuan} count={0} />
+                        <p className="text-xs text-gray-400 mt-1">{yorumlar.length} değerlendirme</p>
+                      </div>
+                      <div className="flex-1 space-y-1.5 self-center">
+                        {dagilim.map(({ star, count }) => {
+                          const pct = yorumlar.length > 0 ? (count / yorumlar.length) * 100 : 0;
+                          return (
+                            <div key={star} className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500 w-3 text-right">{star}</span>
+                              <Star className="w-3 h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
+                              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }} />
+                              </div>
+                              <span className="text-xs text-gray-400 w-5">{count}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   ) : (
-                    <form onSubmit={handleYorumGonder} className="border-t border-gray-100 pt-4">
-                      <p className="text-sm font-semibold text-gray-700 mb-3">Değerlendirme Yaz</p>
+                    <p className="text-sm text-gray-400 italic mb-4">Henüz değerlendirme yok.</p>
+                  )}
+
+                  {/* Form durumu */}
+                  {!currentUser ? (
+                    <div className="border-t border-gray-100 pt-4">
+                      <Link
+                        to="/giris"
+                        className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium"
+                      >
+                        Puan vermek için giriş yapın →
+                      </Link>
+                    </div>
+                  ) : kullaniciPuanVerdi ? (
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-700 font-medium flex items-center gap-2">
+                      Puanınız: <StarsLight rating={kullanicininPuani} count={0} />
+                    </div>
+                  ) : onayliMusteri === null ? (
+                    <div className="border-t border-gray-100 pt-4 text-sm text-gray-400">Kontrol ediliyor…</div>
+                  ) : !onayliMusteri ? (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600">
+                      Sadece bu firmadan teklif almış müşteriler puan verebilir.
+                    </div>
+                  ) : (
+                    <form onSubmit={handlePuanGonder} className="border-t border-gray-100 pt-4">
+                      <p className="text-sm font-semibold text-gray-700 mb-3">Puanınızı Verin</p>
                       <div className="mb-3">
-                        <label className="block text-xs text-gray-500 mb-1">Puanınız</label>
+                        <label className="block text-xs text-gray-500 mb-1">Yıldız puanı</label>
                         <StarPicker value={puan} onChange={setPuan} />
                       </div>
-                      <div className="mb-3">
-                        <label className="block text-xs text-gray-500 mb-1">Yorumunuz</label>
-                        <textarea
-                          value={yorumMetni}
-                          onChange={(e) => setYorumMetni(e.target.value)}
-                          rows={3}
-                          placeholder="Bu firma hakkındaki deneyiminizi paylaşın…"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                      </div>
+                      {puan === 1 && (
+                        <div className="mb-3">
+                          <label className="block text-xs text-gray-500 mb-1">
+                            Açıklama <span className="text-red-500">*</span>
+                            <span className="ml-1 text-gray-400">({aciklama.trim().length}/100 karakter zorunlu)</span>
+                          </label>
+                          <textarea
+                            value={aciklama}
+                            onChange={(e) => setAciklama(e.target.value)}
+                            rows={4}
+                            placeholder="1 yıldız için açıklama zorunludur (en az 100 karakter)…"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        </div>
+                      )}
                       <button
                         type="submit"
                         disabled={yorumLoading}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition disabled:opacity-60"
                       >
-                        {yorumLoading ? 'Gönderiliyor…' : 'Değerlendirmeyi Gönder'}
+                        {yorumLoading ? 'Gönderiliyor…' : 'Puanı Gönder'}
                       </button>
                     </form>
-                  )
-                ) : (
-                  <div className="border-t border-gray-100 pt-4">
-                    <Link
-                      to="/giris"
-                      className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium"
-                    >
-                      Değerlendirme yazmak için giriş yapın →
-                    </Link>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* ── Sağ Kolon (dar) ────────────────────────────── */}

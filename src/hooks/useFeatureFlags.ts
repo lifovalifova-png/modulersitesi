@@ -3,19 +3,21 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 export interface FeatureFlags {
-  aiAsistan:     boolean;
-  teklifSepeti:  boolean;
-  talepHavuzu:   boolean;
-  onecikarIlan:  boolean;
-  sinirsizTalep: boolean;
+  aiAsistan:       boolean;
+  teklifSepeti:    boolean;
+  talepHavuzu:     boolean;
+  onecikarIlan:    boolean;
+  sinirsizTalep:   boolean;
+  puanlamaSistemi: boolean;
 }
 
 export const DEFAULT_FLAGS: FeatureFlags = {
-  aiAsistan:     true,
-  teklifSepeti:  true,
-  talepHavuzu:   true,
-  onecikarIlan:  false,
-  sinirsizTalep: false,
+  aiAsistan:       true,
+  teklifSepeti:    true,
+  talepHavuzu:     true,
+  onecikarIlan:    false,
+  sinirsizTalep:   false,
+  puanlamaSistemi: false,
 };
 
 export function useFeatureFlags(): { flags: FeatureFlags; loading: boolean } {
