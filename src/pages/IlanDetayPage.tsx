@@ -16,6 +16,7 @@ import {
   Send, CheckCircle, AlertCircle, Loader2, X, Eye, EyeOff, Star,
   ArrowLeft, Zap, ShoppingBag,
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 /* ── Kategori badge renkleri ────────────────────────────── */
 const CAT_COLORS: Record<string, string> = {
@@ -69,6 +70,7 @@ interface QuoteModalProps {
 }
 
 function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
+  const { t } = useLanguage();
   const [form, setForm] = useState({ name: '', phone: '', email: '', message: '', kvkk: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -77,9 +79,9 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!form.name.trim())                         e.name  = 'Ad soyad zorunludur.';
-    if (!/^[0-9+\s()\-]{10,}$/.test(form.phone)) e.phone = 'Geçerli bir telefon giriniz.';
-    if (!form.kvkk)                                e.kvkk  = 'KVKK metnini kabul etmelisiniz.';
+    if (!form.name.trim())                         e.name  = t('listing.nameError');
+    if (!/^[0-9+\s()\-]{10,}$/.test(form.phone)) e.phone = t('listing.phoneError');
+    if (!form.kvkk)                                e.kvkk  = t('listing.kvkkError');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -121,13 +123,13 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
         }`}>
           <div>
             <h2 className="text-lg font-bold text-gray-800">
-              {isSecond ? '2. Firmadan Teklif Al' : 'Teklif Al'}
+              {isSecond ? t('listing.modalTitle') : t('listing.getQuote')}
             </h2>
             {isSecond && (
-              <p className="text-xs text-amber-700 mt-0.5">Farklı bir firmadan da fiyat karşılaştırması yapın</p>
+              <p className="text-xs text-amber-700 mt-0.5">{t('listing.modalSubtitle')}</p>
             )}
           </div>
-          <button onClick={onClose} aria-label="Kapat" className="p-2 hover:bg-gray-100 rounded-full transition">
+          <button onClick={onClose} aria-label={t('common.close')} className="p-2 hover:bg-gray-100 rounded-full transition">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
@@ -140,7 +142,7 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
           </div>
           {isSecond && (
             <p className="mt-2 text-xs text-amber-800 bg-amber-100 rounded-lg px-3 py-2">
-              💡 Birden fazla firmadan teklif alarak en uygun fiyatı ve en iyi hizmeti bulun.
+              {t('listing.compareTip')}
             </p>
           )}
         </div>
@@ -148,42 +150,42 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
         {status === 'success' ? (
           <div className="px-6 py-14 text-center">
             <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Talebiniz Alındı!</h3>
-            <p className="text-gray-500 text-sm">En kısa sürede sizinle iletişime geçilecek.</p>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">{t('listing.successTitle')}</h3>
+            <p className="text-gray-500 text-sm">{t('listing.successMsg')}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="px-6 py-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ad Soyad <span className="text-red-500">*</span>
+                {t('listing.formName')} <span className="text-red-500">*</span>
               </label>
               <input type="text" value={form.name} onChange={(e) => set('name', e.target.value)}
-                placeholder="Adınız Soyadınız"
+                placeholder={t('listing.formNamePh')}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
               {errors.name && <p className="mt-1 text-xs text-red-600 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.name}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Telefon <span className="text-red-500">*</span>
+                {t('listing.formPhone')} <span className="text-red-500">*</span>
               </label>
               <input type="tel" value={form.phone} onChange={(e) => set('phone', e.target.value)}
-                placeholder="05XX XXX XX XX"
+                placeholder={t('listing.formPhonePh')}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
               {errors.phone && <p className="mt-1 text-xs text-red-600 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.phone}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('listing.formEmail')}</label>
               <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)}
-                placeholder="ornek@email.com"
+                placeholder={t('listing.formEmailPh')}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mesajınız</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('listing.formMessage')}</label>
               <textarea value={form.message} onChange={(e) => set('message', e.target.value)}
-                rows={3} placeholder="Özel isteğiniz veya sormak istedikleriniz…"
+                rows={3} placeholder={t('listing.formMsgPh')}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
             </div>
 
@@ -192,9 +194,9 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
                 <input type="checkbox" checked={form.kvkk} onChange={(e) => set('kvkk', e.target.checked)}
                   className="mt-0.5 w-4 h-4 rounded text-emerald-600 border-gray-300 focus:ring-emerald-500" />
                 <span className="text-xs text-gray-600 leading-relaxed">
-                  Kişisel verilerimin{' '}
-                  <Link to="/kvkk" target="_blank" className="text-emerald-600 hover:underline font-medium">Aydınlatma Metni</Link>{' '}
-                  çerçevesinde işlenmesini ve teklif hazırlanması amacıyla ilgili firmaya aktarılmasını onaylıyorum.{' '}
+                  {t('basket.kvkkText')}{' '}
+                  <Link to="/kvkk" target="_blank" className="text-emerald-600 hover:underline font-medium">{t('common.kvkkLink')}</Link>{' '}
+                  {t('basket.kvkkText2')}{' '}
                   <span className="text-red-500">*</span>
                 </span>
               </label>
@@ -203,7 +205,7 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
 
             {status === 'error' && (
               <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-3 rounded-lg">
-                <AlertCircle className="w-4 h-4" />Bir hata oluştu. Lütfen tekrar deneyin.
+                <AlertCircle className="w-4 h-4" />{t('common.error')}
               </div>
             )}
 
@@ -212,13 +214,13 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
                 isSecond ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
               }`}>
               {status === 'loading'
-                ? <><Loader2 className="w-4 h-4 animate-spin" />Gönderiliyor…</>
-                : <><Send className="w-4 h-4" />Teklif Talep Et</>
+                ? <><Loader2 className="w-4 h-4 animate-spin" />{t('common.sending')}</>
+                : <><Send className="w-4 h-4" />{t('listing.requestCta')}</>
               }
             </button>
 
             <p className="text-xs text-gray-400 text-center">
-              Bilgileriniz yalnızca teklif hazırlanması amacıyla ilgili firmaya iletilecektir.
+              {t('listing.kvkkConsent')}
             </p>
           </form>
         )}
@@ -232,6 +234,7 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
 ══════════════════════════════════════════════════════════ */
 
 function SimilarCard({ ilan, onQuote }: { ilan: Ilan; onQuote: (d: Ilan) => void }) {
+  const { t } = useLanguage();
   const img = ilan.gorseller[0] ?? '';
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-md transition flex flex-col">
@@ -242,7 +245,7 @@ function SimilarCard({ ilan, onQuote }: { ilan: Ilan; onQuote: (d: Ilan) => void
             : <div className="w-full h-full flex items-center justify-center text-gray-300 text-3xl">🏠</div>
           }
           {ilan.acil && (
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">ACİL</span>
+            <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">{t('badge.urgent')}</span>
           )}
         </div>
       </Link>
@@ -263,7 +266,7 @@ function SimilarCard({ ilan, onQuote }: { ilan: Ilan; onQuote: (d: Ilan) => void
           <p className="text-emerald-600 font-bold text-base">{formatFiyat(ilan.fiyat)}</p>
           <button onClick={() => onQuote(ilan)}
             className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition font-medium">
-            Teklif Al
+            {t('listing.getQuote')}
           </button>
         </div>
       </div>
@@ -278,6 +281,7 @@ function SimilarCard({ ilan, onQuote }: { ilan: Ilan; onQuote: (d: Ilan) => void
 export default function IlanDetayPage() {
   const { id }     = useParams<{ id: string }>();
   const navigate   = useNavigate();
+  const { t }      = useLanguage();
   const { addFirm, isInSepet, isFull, openDrawer } = useTeklifSepet();
 
   const [ilan,    setIlan]    = useState<Ilan | null>(null);
@@ -379,11 +383,11 @@ export default function IlanDetayPage() {
         <main className="min-h-[60vh] flex items-center justify-center bg-gray-50">
           <div className="text-center px-4">
             <p className="text-5xl font-bold text-gray-200 mb-4">404</p>
-            <h1 className="text-xl font-semibold text-gray-700 mb-2">İlan bulunamadı</h1>
-            <p className="text-gray-500 mb-6">Bu ilan kaldırılmış veya mevcut değil.</p>
+            <h1 className="text-xl font-semibold text-gray-700 mb-2">{t('listing.notFound')}</h1>
+            <p className="text-gray-500 mb-6">{t('listing.notFoundDesc')}</p>
             <button onClick={() => navigate(-1)}
               className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-lg hover:bg-emerald-700 transition font-medium">
-              <ArrowLeft className="w-4 h-4" /> Geri Dön
+              <ArrowLeft className="w-4 h-4" /> {t('listing.back')}
             </button>
           </div>
         </main>
@@ -421,15 +425,15 @@ export default function IlanDetayPage() {
             <div className="mb-6 bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
               <span className="text-red-500 text-lg">⚠️</span>
               <div>
-                <p className="text-red-700 font-semibold text-sm">Bu ilanın yayın süresi dolmuştur.</p>
-                <p className="text-red-500 text-xs mt-0.5">İlan sahibiyle iletişime geçebilirsiniz ancak ilan artık aktif listede görünmüyor.</p>
+                <p className="text-red-700 font-semibold text-sm">{t('ilanSuresi.expiredBanner')}</p>
+                <p className="text-red-500 text-xs mt-0.5">{t('ilanSuresi.expiredDetail')}</p>
               </div>
             </div>
           )}
 
           {/* Breadcrumb */}
           <nav className="text-sm text-gray-500 mb-6 flex items-center gap-1.5 flex-wrap">
-            <Link to="/" className="hover:text-emerald-600 transition">Ana Sayfa</Link>
+            <Link to="/" className="hover:text-emerald-600 transition">{t('common.home')}</Link>
             <span>/</span>
             <Link to={`/kategori/${catSlug}`} className="hover:text-emerald-600 transition">{ilan.kategori}</Link>
             <span>/</span>
@@ -452,22 +456,22 @@ export default function IlanDetayPage() {
                   )}
                   {ilan.acilSatis && (
                     <span className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow animate-pulse">
-                      🔴 ACİL SATILIK
+                      {t('acilSatis.badge')}
                     </span>
                   )}
                   {!ilan.acilSatis && ilan.acil && (
-                    <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow">ACİL</span>
+                    <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow">{t('badge.urgent')}</span>
                   )}
                   {ilan.indirimli && (
-                    <span className="absolute top-4 right-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow">İNDİRİMLİ</span>
+                    <span className="absolute top-4 right-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow">{t('badge.discounted')}</span>
                   )}
                   {images.length > 1 && (
                     <>
-                      <button onClick={prevImg} aria-label="Önceki görsel"
+                      <button onClick={prevImg} aria-label={t('listing.prevImage')}
                         className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition">
                         <ChevronLeft className="w-5 h-5 text-gray-700" />
                       </button>
-                      <button onClick={nextImg} aria-label="Sonraki görsel"
+                      <button onClick={nextImg} aria-label={t('listing.nextImage')}
                         className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition">
                         <ChevronRight className="w-5 h-5 text-gray-700" />
                       </button>
@@ -505,7 +509,7 @@ export default function IlanDetayPage() {
                   </span>
                   {ilan.acil && (
                     <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
-                      <Zap className="w-3 h-3" />ACİL
+                      <Zap className="w-3 h-3" />{t('badge.urgent')}
                     </span>
                   )}
                 </div>
@@ -514,17 +518,17 @@ export default function IlanDetayPage() {
                   <>
                     <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-red-700 font-bold text-sm">🔴 ACİL SATILIK</span>
+                        <span className="text-red-700 font-bold text-sm">{t('acilSatis.badge')}</span>
                         {ilan.acilSatisBitis && (() => {
                           const d = Math.ceil((ilan.acilSatisBitis.seconds * 1000 - Date.now()) / 86400000);
                           return (
                             <span className="text-xs text-red-500">
-                              ⏳ {d > 0 ? `${d} gün kaldı` : 'Süresi doldu'}
+                              ⏳ {d > 0 ? `${d} ${t('ilanSuresi.daysLeft')}` : t('ilanSuresi.expired')}
                             </span>
                           );
                         })()}
                       </div>
-                      <p className="text-xs text-red-500 mt-1">⚠️ Bu fiyat geçici olup acil satış süresince geçerlidir.</p>
+                      <p className="text-xs text-red-500 mt-1">{t('acilSatis.warning')}</p>
                     </div>
                     <div className="flex items-end gap-3">
                       <span className="text-3xl font-extrabold text-red-600">{formatFiyat(ilan.acilSatisFiyat)}</span>
@@ -535,7 +539,7 @@ export default function IlanDetayPage() {
                   <div className="flex items-end gap-3">
                     <span className="text-3xl font-extrabold text-emerald-600">{formatFiyat(ilan.fiyat)}</span>
                     {ilan.indirimli && (
-                      <span className="text-sm font-bold text-white bg-amber-500 px-2 py-0.5 rounded-lg">İndirimli</span>
+                      <span className="text-sm font-bold text-white bg-amber-500 px-2 py-0.5 rounded-lg">{t('badge.discounted')}</span>
                     )}
                   </div>
                 )}
@@ -543,14 +547,14 @@ export default function IlanDetayPage() {
 
               {/* Açıklama */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <h2 className="text-base font-bold text-gray-800 mb-3">İlan Açıklaması</h2>
+                <h2 className="text-base font-bold text-gray-800 mb-3">{t('listing.description')}</h2>
                 <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{ilan.aciklama}</p>
               </div>
 
               {/* Teknik Özellikler */}
               {features.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <h2 className="text-base font-bold text-gray-800 mb-4">Teknik Özellikler</h2>
+                  <h2 className="text-base font-bold text-gray-800 mb-4">{t('listing.specs')}</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-0 divide-y sm:divide-y-0">
                     {features.map((f, i) => (
                       <div key={f.label}
@@ -578,18 +582,18 @@ export default function IlanDetayPage() {
                     ? 'bg-amber-50 border-amber-200'
                     : 'bg-gray-50 border-gray-200'
                 }`}>
-                  <span className="text-xs text-gray-500">İlan geçerlilik süresi</span>
+                  <span className="text-xs text-gray-500">{t('ilanSuresi.label')}</span>
                   <span className={`text-xs font-bold ${
                     ilanBitisDays <= 0 ? 'text-red-600' : ilanBitisDays <= 7 ? 'text-amber-600' : 'text-gray-700'
                   }`}>
-                    {ilanBitisDays <= 0 ? 'Süresi doldu' : `${ilanBitisDays} gün kaldı`}
+                    {ilanBitisDays <= 0 ? t('ilanSuresi.expired') : `${ilanBitisDays} ${t('ilanSuresi.daysLeft')}`}
                   </span>
                 </div>
               )}
 
               {/* Firma Kartı */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Satıcı Firma</h3>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">{t('listing.seller')}</h3>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                     <span className="text-emerald-700 font-extrabold text-lg leading-none">
@@ -603,17 +607,17 @@ export default function IlanDetayPage() {
                     </span>
                   </div>
                   {ilan.firmaDogrulanmis && (
-                    <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 ml-auto" aria-label="Doğrulanmış firma" />
+                    <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 ml-auto" aria-label={t('listing.verifiedFirm')} />
                   )}
                 </div>
 
                 {ilan.firmaDogrulanmis ? (
                   <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 text-xs text-emerald-700 mb-4">
-                    <ShieldCheck className="w-3.5 h-3.5" />Doğrulanmış firma
+                    <ShieldCheck className="w-3.5 h-3.5" />{t('listing.verifiedFirm')}
                   </div>
                 ) : (
                   <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs text-amber-700 mb-4">
-                    Onay sürecindeki firma
+                    {t('listing.pendingFirm')}
                   </div>
                 )}
 
@@ -629,7 +633,7 @@ export default function IlanDetayPage() {
                     to={`/firma/${ilan.firmaId}`}
                     className="flex items-center justify-center gap-2 w-full border border-emerald-200 text-emerald-700 bg-emerald-50 py-2.5 rounded-xl text-sm font-medium hover:bg-emerald-100 transition mb-3"
                   >
-                    Firma Profilini Gör
+                    {t('listing.viewFirm')}
                   </Link>
                 )}
 
@@ -637,11 +641,11 @@ export default function IlanDetayPage() {
                 {!showPhone ? (
                   <button onClick={handleShowContact}
                     className="flex items-center justify-center gap-2 w-full border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:border-gray-300 hover:bg-gray-50 transition mb-1">
-                    <Eye className="w-4 h-4" /> İletişim Bilgilerini Göster
+                    <Eye className="w-4 h-4" /> {t('listing.showContact')}
                   </button>
                 ) : contactLoading ? (
                   <div className="flex items-center justify-center gap-2 w-full border border-gray-200 py-2.5 rounded-xl text-sm text-gray-400 mb-1">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Yükleniyor…
+                    <Loader2 className="w-4 h-4 animate-spin" /> {t('listing.loadingContact')}
                   </div>
                 ) : (
                   <div className="space-y-1.5 mb-1">
@@ -659,12 +663,12 @@ export default function IlanDetayPage() {
                     )}
                     {!firmaContact?.phone && !firmaContact?.eposta && (
                       <p className="text-center text-xs text-gray-400 py-2">
-                        İletişim bilgisi bulunamadı. Teklif formu üzerinden ulaşabilirsiniz.
+                        {t('listing.noContact')}
                       </p>
                     )}
                     <button onClick={() => setShowPhone(false)}
                       className="flex items-center justify-center gap-1 w-full text-xs text-gray-400 hover:text-gray-600 transition">
-                      <EyeOff className="w-3 h-3" /> Gizle
+                      <EyeOff className="w-3 h-3" /> {t('listing.hideContact')}
                     </button>
                   </div>
                 )}
@@ -674,18 +678,18 @@ export default function IlanDetayPage() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
                 <button onClick={() => setModal({ open: true, type: 'primary' })}
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm">
-                  <Send className="w-4 h-4" />Teklif Al
+                  <Send className="w-4 h-4" />{t('listing.getQuote')}
                 </button>
 
                 {isInSepet(ilan.id) ? (
                   <button onClick={openDrawer}
                     className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm">
-                    <CheckCircle className="w-4 h-4" />Sepette ✓ — Görüntüle
+                    <CheckCircle className="w-4 h-4" />{t('listing.inBasket')}
                   </button>
                 ) : isFull ? (
                   <button onClick={openDrawer}
                     className="w-full bg-gray-100 text-gray-500 font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-gray-200 transition">
-                    <ShoppingBag className="w-4 h-4" />Sepet Dolu (2/2) — Görüntüle
+                    <ShoppingBag className="w-4 h-4" />{t('listing.basketFull')}
                   </button>
                 ) : (
                   <button
@@ -700,27 +704,27 @@ export default function IlanDetayPage() {
                       sepetFeedback === 'added' ? 'bg-emerald-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'
                     }`}>
                     {sepetFeedback === 'added'
-                      ? <><CheckCircle className="w-4 h-4" />Sepete Eklendi ✓</>
-                      : <><Zap className="w-4 h-4" />2. Firmadan da Teklif Al</>
+                      ? <><CheckCircle className="w-4 h-4" />{t('listing.added')}</>
+                      : <><Zap className="w-4 h-4" />{t('listing.getQuote2')}</>
                     }
                   </button>
                 )}
 
                 <p className="text-[11px] text-gray-400 text-center leading-relaxed px-1">
-                  💡 Birden fazla firmadan teklif alarak en uygun fiyatı karşılaştırın.
+                  {t('listing.compareTip')}
                 </p>
               </div>
 
               {/* Güvenli Alışveriş */}
               <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Güvenli Alışveriş</h3>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{t('listing.safeTitle')}</h3>
                 <ul className="space-y-2.5 text-xs text-gray-600">
-                  {[
-                    'Firma bilgileri karşılıklı doğrulandıktan sonra ödeme yapın.',
-                    'Sözleşmesiz, faturasız satış önerisini kabul etmeyin.',
-                    'Teslimatta ürünü kontrol etmeden imzalamayın.',
-                    'Şüpheli durumlarda bize bildirin: info@modulerpazar.com',
-                  ].map((note) => (
+                  {([
+                    t('listing.safe1'),
+                    t('listing.safe2'),
+                    t('listing.safe3'),
+                    t('listing.safe4'),
+                  ] as string[]).map((note) => (
                     <li key={note} className="flex items-start gap-2">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
                       <span className="leading-relaxed">{note}</span>
@@ -736,7 +740,7 @@ export default function IlanDetayPage() {
           {/* Benzer İlanlar */}
           {similar.length > 0 && (
             <div className="mt-12">
-              <h2 className="text-xl font-bold text-gray-800 mb-5">Benzer İlanlar</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-5">{t('listing.similar')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {similar.map((d) => (
                   <SimilarCard key={d.id} ilan={d}

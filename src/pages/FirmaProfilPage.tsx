@@ -9,6 +9,7 @@ import { formatFiyat, type Ilan } from '../hooks/useIlanlar';
 import SEOMeta from '../components/SEOMeta';
 import { useAuth } from '../context/AuthContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
+import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
 import {
   ShieldCheck, MapPin, Tag, Star, Send, Building2, Globe,
@@ -67,6 +68,7 @@ function formatDate(ts: { seconds: number } | null | undefined): string {
 
 /* ── Yıldız puanı (header için — beyaz tema) ─────────────────── */
 function Stars({ rating, count }: { rating: number; count: number }) {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center gap-0.5">
       {[...Array(5)].map((_, i) => (
@@ -80,7 +82,7 @@ function Stars({ rating, count }: { rating: number; count: number }) {
         />
       ))}
       <span className="ml-1.5 text-sm font-semibold text-white/90">
-        {count > 0 ? `${rating.toFixed(1)} (${count} değerlendirme)` : 'Henüz değerlendirme yok'}
+        {count > 0 ? `${rating.toFixed(1)} (${count} ${t('puan.count')})` : t('puan.none')}
       </span>
     </div>
   );
@@ -170,6 +172,7 @@ export default function FirmaProfilPage() {
   const { id } = useParams<{ id: string }>();
   const { currentUser } = useAuth();
   const { flags } = useFeatureFlags();
+  const { t } = useLanguage();
 
   const [firma,    setFirma]    = useState<Firma | null>(null);
   const [ilanlar,  setIlanlar]  = useState<Ilan[]>([]);
@@ -239,10 +242,10 @@ export default function FirmaProfilPage() {
   /* Puan gönder */
   async function handlePuanGonder(e: React.FormEvent) {
     e.preventDefault();
-    if (!currentUser) { toast.error('Puan vermek için giriş yapınız.'); return; }
-    if (puan === 0) { toast.error('Lütfen puan seçiniz.'); return; }
+    if (!currentUser) { toast.error(t('puan.loginPrompt')); return; }
+    if (puan === 0) { toast.error(t('puan.selectError')); return; }
     if (puan === 1 && aciklama.trim().length < 100) {
-      toast.error('1 yıldız için en az 100 karakter açıklama zorunludur.');
+      toast.error(t('puan.aciklamaError'));
       return;
     }
     setYorumLoading(true);
@@ -257,9 +260,9 @@ export default function FirmaProfilPage() {
       });
       setPuan(0);
       setAciklama('');
-      toast.success('Puanınız kaydedildi. Teşekkürler!');
+      toast.success(t('puan.successMsg'));
     } catch {
-      toast.error('Puan gönderilemedi. Lütfen tekrar deneyin.');
+      toast.error(t('puan.errorMsg'));
     } finally {
       setYorumLoading(false);
     }
@@ -285,15 +288,15 @@ export default function FirmaProfilPage() {
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-4 py-20">
           <AlertCircle className="w-12 h-12 text-gray-300" />
-          <h1 className="text-xl font-bold text-gray-700">Firma Bulunamadı</h1>
+          <h1 className="text-xl font-bold text-gray-700">{t('firmaProfile.notFound')}</h1>
           <p className="text-gray-500 text-sm max-w-xs">
-            Bu firma mevcut değil veya henüz onaylanmamış olabilir.
+            {t('firmaProfile.notFoundDesc')}
           </p>
           <Link
             to="/firmalar-harita"
             className="flex items-center gap-2 text-emerald-600 hover:underline text-sm font-medium mt-2"
           >
-            <ArrowLeft className="w-4 h-4" /> Tüm Firmalara Dön
+            <ArrowLeft className="w-4 h-4" /> {t('firmaProfile.backToAll')}
           </Link>
         </main>
         <Footer />
@@ -344,9 +347,9 @@ export default function FirmaProfilPage() {
 
             {/* Breadcrumb */}
             <nav className="text-xs text-white/60 mb-6 flex items-center gap-1.5">
-              <Link to="/" className="hover:text-white transition">Ana Sayfa</Link>
+              <Link to="/" className="hover:text-white transition">{t('common.home')}</Link>
               <span>/</span>
-              <Link to="/firmalar-harita" className="hover:text-white transition">Firmalar</Link>
+              <Link to="/firmalar-harita" className="hover:text-white transition">{t('firmaProfile.breadcrumbFirms')}</Link>
               <span>/</span>
               <span className="text-white/90 truncate max-w-[160px]">{firmaAdi}</span>
             </nav>
@@ -364,7 +367,7 @@ export default function FirmaProfilPage() {
                   <h1 className="text-2xl md:text-3xl font-bold leading-tight">{firmaAdi}</h1>
                   {firma.verified && (
                     <span className="inline-flex items-center gap-1 bg-white/20 border border-white/30 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                      <ShieldCheck className="w-3.5 h-3.5" /> Doğrulanmış
+                      <ShieldCheck className="w-3.5 h-3.5" /> {t('firmaProfile.verified')}
                     </span>
                   )}
                 </div>
@@ -398,7 +401,7 @@ export default function FirmaProfilPage() {
                 to={`/talep-olustur?firma=${id}`}
                 className="flex-shrink-0 flex items-center gap-2 bg-white text-emerald-700 font-bold px-5 py-2.5 rounded-xl hover:bg-emerald-50 transition shadow-sm text-sm whitespace-nowrap"
               >
-                <Send className="w-4 h-4" /> Teklif İste
+                <Send className="w-4 h-4" /> {t('common.getQuote')}
               </Link>
             </div>
           </div>
@@ -415,7 +418,7 @@ export default function FirmaProfilPage() {
               {firma.tanitimMetni ? (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-emerald-600" /> Hakkımızda
+                    <Building2 className="w-4 h-4 text-emerald-600" /> {t('firmaProfile.about')}
                   </h2>
                   <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                     {firma.tanitimMetni}
@@ -424,10 +427,10 @@ export default function FirmaProfilPage() {
               ) : (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-emerald-600" /> Hakkımızda
+                    <Building2 className="w-4 h-4 text-emerald-600" /> {t('firmaProfile.about')}
                   </h2>
                   <p className="text-sm text-gray-400 italic">
-                    Firma henüz tanıtım metni eklememiş.
+                    {t('firmaProfile.noAbout')}
                   </p>
                 </div>
               )}
@@ -436,7 +439,7 @@ export default function FirmaProfilPage() {
               {kategoriler.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-emerald-600" /> Hizmet Kategorileri
+                    <Tag className="w-4 h-4 text-emerald-600" /> {t('firmaProfile.categories')}
                   </h2>
                   <div className="flex flex-wrap gap-2">
                     {kategoriler.map((slug) => (
@@ -456,7 +459,7 @@ export default function FirmaProfilPage() {
               {bolgeler.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-emerald-600" /> Hizmet Bölgeleri
+                    <MapPin className="w-4 h-4 text-emerald-600" /> {t('firmaProfile.regions')}
                   </h2>
                   <div className="flex flex-wrap gap-1.5">
                     {bolgeler.map((bolge) => (
@@ -475,7 +478,7 @@ export default function FirmaProfilPage() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <Package className="w-4 h-4 text-emerald-600" />
-                  Aktif İlanlar
+                  {t('firmaProfile.listings')}
                   {ilanlar.length > 0 && (
                     <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
                       {ilanlar.length}
@@ -485,7 +488,7 @@ export default function FirmaProfilPage() {
                 {ilanlar.length === 0 ? (
                   <div className="text-center py-8">
                     <Package className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">Henüz aktif ilan yok.</p>
+                    <p className="text-sm text-gray-400">{t('firmaProfile.noListings')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -501,7 +504,7 @@ export default function FirmaProfilPage() {
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <ThumbsUp className="w-4 h-4 text-emerald-600" />
-                    Müşteri Puanları
+                    {t('puan.title')}
                     {yorumlar.length > 0 && (
                       <span className="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
                         {avgPuan.toFixed(1)} / 5
@@ -515,7 +518,7 @@ export default function FirmaProfilPage() {
                       <div className="text-center flex-shrink-0">
                         <p className="text-4xl font-bold text-gray-800">{avgPuan.toFixed(1)}</p>
                         <StarsLight rating={avgPuan} count={0} />
-                        <p className="text-xs text-gray-400 mt-1">{yorumlar.length} değerlendirme</p>
+                        <p className="text-xs text-gray-400 mt-1">{yorumlar.length} {t('puan.count')}</p>
                       </div>
                       <div className="flex-1 space-y-1.5 self-center">
                         {dagilim.map(({ star, count }) => {
@@ -534,7 +537,7 @@ export default function FirmaProfilPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400 italic mb-4">Henüz değerlendirme yok.</p>
+                    <p className="text-sm text-gray-400 italic mb-4">{t('puan.none')}</p>
                   )}
 
                   {/* Form durumu */}
@@ -544,37 +547,37 @@ export default function FirmaProfilPage() {
                         to="/giris"
                         className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium"
                       >
-                        Puan vermek için giriş yapın →
+                        {t('puan.loginPrompt')}
                       </Link>
                     </div>
                   ) : kullaniciPuanVerdi ? (
                     <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-700 font-medium flex items-center gap-2">
-                      Puanınız: <StarsLight rating={kullanicininPuani} count={0} />
+                      {t('puan.yourRating')} <StarsLight rating={kullanicininPuani} count={0} />
                     </div>
                   ) : onayliMusteri === null ? (
-                    <div className="border-t border-gray-100 pt-4 text-sm text-gray-400">Kontrol ediliyor…</div>
+                    <div className="border-t border-gray-100 pt-4 text-sm text-gray-400">{t('puan.checking')}</div>
                   ) : !onayliMusteri ? (
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600">
-                      Sadece bu firmadan teklif almış müşteriler puan verebilir.
+                      {t('puan.eligibility')}
                     </div>
                   ) : (
                     <form onSubmit={handlePuanGonder} className="border-t border-gray-100 pt-4">
-                      <p className="text-sm font-semibold text-gray-700 mb-3">Puanınızı Verin</p>
+                      <p className="text-sm font-semibold text-gray-700 mb-3">{t('puan.formTitle')}</p>
                       <div className="mb-3">
-                        <label className="block text-xs text-gray-500 mb-1">Yıldız puanı</label>
+                        <label className="block text-xs text-gray-500 mb-1">{t('puan.starLabel')}</label>
                         <StarPicker value={puan} onChange={setPuan} />
                       </div>
                       {puan === 1 && (
                         <div className="mb-3">
                           <label className="block text-xs text-gray-500 mb-1">
-                            Açıklama <span className="text-red-500">*</span>
-                            <span className="ml-1 text-gray-400">({aciklama.trim().length}/100 karakter zorunlu)</span>
+                            {t('puan.aciklamaLabel')} <span className="text-red-500">*</span>
+                            <span className="ml-1 text-gray-400">({aciklama.trim().length}/100 {t('puan.aciklamaRequired')})</span>
                           </label>
                           <textarea
                             value={aciklama}
                             onChange={(e) => setAciklama(e.target.value)}
                             rows={4}
-                            placeholder="1 yıldız için açıklama zorunludur (en az 100 karakter)…"
+                            placeholder={t('puan.aciklamaPlaceholder')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
                           />
                         </div>
@@ -584,7 +587,7 @@ export default function FirmaProfilPage() {
                         disabled={yorumLoading}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition disabled:opacity-60"
                       >
-                        {yorumLoading ? 'Gönderiliyor…' : 'Puanı Gönder'}
+                        {yorumLoading ? t('common.sending') : t('puan.submit')}
                       </button>
                     </form>
                   )}
@@ -597,13 +600,13 @@ export default function FirmaProfilPage() {
 
               {/* İletişim Kartı */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h3 className="font-bold text-gray-800 text-sm mb-4">İletişim</h3>
+                <h3 className="font-bold text-gray-800 text-sm mb-4">{t('firmaProfile.contact')}</h3>
 
                 <Link
                   to={`/talep-olustur?firma=${id}`}
                   className="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition text-sm shadow-sm"
                 >
-                  <Send className="w-4 h-4" /> Teklif İste
+                  <Send className="w-4 h-4" /> {t('common.getQuote')}
                 </Link>
 
                 {firma.whatsapp && (
@@ -613,7 +616,7 @@ export default function FirmaProfilPage() {
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 w-full mt-2 border border-gray-200 text-gray-600 hover:border-green-300 hover:text-green-600 hover:bg-green-50 py-2.5 rounded-xl transition text-sm font-medium"
                   >
-                    <MessageCircle className="w-4 h-4" /> WhatsApp ile Yaz
+                    <MessageCircle className="w-4 h-4" /> {t('firmaProfile.whatsapp')}
                   </a>
                 )}
 
@@ -624,25 +627,25 @@ export default function FirmaProfilPage() {
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 w-full mt-2 border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 py-2.5 rounded-xl transition text-sm font-medium"
                   >
-                    <Globe className="w-4 h-4" /> Web Sitesi
+                    <Globe className="w-4 h-4" /> {t('firmaProfile.website')}
                   </a>
                 )}
 
                 <p className="text-xs text-gray-400 text-center mt-3 leading-relaxed">
-                  Telefon ve e-posta bilgileri teklif talebinizden sonra iletilir.
+                  {t('firmaProfile.contactNote')}
                 </p>
               </div>
 
               {/* Firma Detayları */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-                <h3 className="font-bold text-gray-800 text-sm">Firma Detayları</h3>
+                <h3 className="font-bold text-gray-800 text-sm">{t('firmaProfile.details')}</h3>
 
                 {/* Çalışma Saatleri */}
                 <div className="flex items-start gap-2.5">
                   <Clock className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Çalışma Saatleri</p>
-                    <p className="text-sm text-gray-700 font-medium">Hafta içi 09:00 – 18:00</p>
+                    <p className="text-xs text-gray-400 mb-0.5">{t('firmaProfile.hours')}</p>
+                    <p className="text-sm text-gray-700 font-medium">{t('firmaProfile.hoursValue')}</p>
                   </div>
                 </div>
 
@@ -654,13 +657,13 @@ export default function FirmaProfilPage() {
                       : <Store   className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                     }
                     <div>
-                      <p className="text-xs text-gray-400 mb-1">Satış Tipi</p>
+                      <p className="text-xs text-gray-400 mb-1">{t('firmaProfile.saleType')}</p>
                       <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${
                         firma.firmaType === 'uretici'
                           ? 'bg-emerald-100 text-emerald-700'
                           : 'bg-blue-100 text-blue-700'
                       }`}>
-                        {firma.firmaType === 'uretici' ? '🏭 Üretici' : '🏪 Satıcı / Bayi'}
+                        {firma.firmaType === 'uretici' ? t('firmaProfile.producer') : t('firmaProfile.seller')}
                       </span>
                     </div>
                   </div>
@@ -671,7 +674,7 @@ export default function FirmaProfilPage() {
                   <div className="flex items-start gap-2.5">
                     <Hash className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs text-gray-400 mb-0.5">Vergi Numarası</p>
+                      <p className="text-xs text-gray-400 mb-0.5">{t('firmaProfile.taxNo')}</p>
                       <p className="text-sm text-gray-700 font-mono font-medium tracking-wider">
                         {maskVergiNo(firma.vergiNo)}
                       </p>
@@ -684,7 +687,7 @@ export default function FirmaProfilPage() {
                   <div className="flex items-start gap-2.5">
                     <Calendar className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs text-gray-400 mb-0.5">Kayıt Tarihi</p>
+                      <p className="text-xs text-gray-400 mb-0.5">{t('firmaProfile.regDate')}</p>
                       <p className="text-sm text-gray-700 font-medium">
                         {formatDate(firma.olusturmaTarihi)}
                       </p>
@@ -698,9 +701,9 @@ export default function FirmaProfilPage() {
                 <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-start gap-3">
                   <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-emerald-800">Doğrulanmış Firma</p>
+                    <p className="text-sm font-semibold text-emerald-800">{t('firmaProfile.verifiedFirm')}</p>
                     <p className="text-xs text-emerald-600 mt-0.5 leading-relaxed">
-                      Vergi numarası ve kimlik bilgileri ModülerPazar tarafından doğrulanmıştır.
+                      {t('firmaProfile.verifiedDesc')}
                     </p>
                   </div>
                 </div>
@@ -711,7 +714,7 @@ export default function FirmaProfilPage() {
                 to="/firmalar-harita"
                 className="flex items-center justify-center gap-2 w-full border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 py-2.5 rounded-xl transition text-xs font-medium"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Tüm Firmaları Gör
+                <ArrowLeft className="w-3.5 h-3.5" /> {t('firmaProfile.seeAll')}
               </Link>
             </div>
 

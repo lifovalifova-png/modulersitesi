@@ -4,6 +4,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { trackEvent } from '../lib/analytics';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   X, Send, ShoppingBag, CheckCircle, AlertCircle, Loader2,
   Trash2, ShieldCheck, MapPin, Columns2,
@@ -21,6 +22,7 @@ const EMPTY_FORM = { ad: '', telefon: '', email: '', butce: '', mesaj: '', kvkk:
 
 export default function TeklifSepeti() {
   const { firms, removeFirm, isOpen, openDrawer, closeDrawer, clearAll } = useTeklifSepet();
+  const { t } = useLanguage();
 
   const [step, setStep] = useState<'list' | 'compare' | 'form' | 'success'>('list');
   const [form, setForm] = useState(EMPTY_FORM);
@@ -42,22 +44,22 @@ export default function TeklifSepeti() {
     if (firms.length < 2) return null;
     const [a, b] = firms;
     const rows: { label: string; a: string; b: string }[] = [
-      { label: 'Firma Adı',      a: a.firmaAdi,                                            b: b.firmaAdi },
-      { label: 'Kategori',       a: a.kategori,                                             b: b.kategori },
-      { label: 'Şehir',          a: a.sehir,                                                b: b.sehir },
-      { label: 'Fiyat',          a: new Intl.NumberFormat('tr-TR').format(a.fiyat) + ' ₺', b: new Intl.NumberFormat('tr-TR').format(b.fiyat) + ' ₺' },
-      { label: 'Doğrulanmış',    a: a.firmaDogrulanmis ? '✅ Evet' : '—',                  b: b.firmaDogrulanmis ? '✅ Evet' : '—' },
+      { label: t('basket.colFirmName'),  a: a.firmaAdi,                                            b: b.firmaAdi },
+      { label: t('basket.colCategory'),  a: a.kategori,                                             b: b.kategori },
+      { label: t('basket.colCity'),      a: a.sehir,                                                b: b.sehir },
+      { label: t('basket.colPrice'),     a: new Intl.NumberFormat('tr-TR').format(a.fiyat) + ' ₺', b: new Intl.NumberFormat('tr-TR').format(b.fiyat) + ' ₺' },
+      { label: t('basket.colVerified'),  a: a.firmaDogrulanmis ? t('basket.yes') : '—',             b: b.firmaDogrulanmis ? t('basket.yes') : '—' },
     ];
     return (
       <div className="p-5">
         <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <Columns2 className="w-4 h-4 text-emerald-600" /> Yan Yana Karşılaştırma
+          <Columns2 className="w-4 h-4 text-emerald-600" /> {t('basket.compareTitle')}
         </h3>
         <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-500 w-1/3">Özellik</th>
+                <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-500 w-1/3">{t('basket.colFeature')}</th>
                 <th className="text-left px-3 py-2.5 text-xs font-semibold text-emerald-700 w-1/3">
                   {a.firmaAdi.slice(0, 14)}{a.firmaAdi.length > 14 ? '…' : ''}
                 </th>
@@ -77,7 +79,6 @@ export default function TeklifSepeti() {
             </tbody>
           </table>
         </div>
-        {/* Her firma için ayrı teklif isteme */}
         <div className="mt-4 grid grid-cols-2 gap-2">
           {firms.map((f) => (
             <Link
@@ -94,7 +95,7 @@ export default function TeklifSepeti() {
           onClick={() => setStep('list')}
           className="w-full mt-2 text-xs text-gray-400 hover:text-gray-600 transition py-2"
         >
-          ← Geri dön
+          {t('basket.backToList')}
         </button>
       </div>
     );
@@ -103,7 +104,6 @@ export default function TeklifSepeti() {
   const count = firms.length;
   const isFull = count >= 2;
 
-  /* Hide floating button when basket is empty and drawer is closed */
   if (count === 0 && step !== 'success') return null;
 
   function set(key: string, val: string | boolean) {
@@ -112,9 +112,9 @@ export default function TeklifSepeti() {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!form.ad.trim())                              e.ad = 'Ad soyad zorunludur.';
-    if (!/^[0-9+\s()\-]{10,}$/.test(form.telefon))  e.telefon = 'Geçerli bir telefon giriniz.';
-    if (!form.kvkk)                                   e.kvkk = 'KVKK metnini kabul etmelisiniz.';
+    if (!form.ad.trim())                              e.ad = t('basket.nameError');
+    if (!/^[0-9+\s()\-]{10,}$/.test(form.telefon))  e.telefon = t('basket.phoneError');
+    if (!form.kvkk)                                   e.kvkk = t('basket.kvkkError');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -153,7 +153,7 @@ export default function TeklifSepeti() {
       {count > 0 && (
         <button
           onClick={openDrawer}
-          aria-label="Teklif Sepetini Aç"
+          aria-label={t('basket.openLabel')}
           className={`fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-lg font-semibold text-white text-sm transition-all ${
             isFull
               ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
@@ -161,7 +161,7 @@ export default function TeklifSepeti() {
           }`}
         >
           <ShoppingBag className="w-5 h-5" />
-          Teklif Sepeti
+          {t('basket.title')}
           <span
             className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
               isFull ? 'bg-white text-emerald-700' : 'bg-white text-amber-600'
@@ -190,20 +190,20 @@ export default function TeklifSepeti() {
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-emerald-600" />
-            <h2 className="font-bold text-gray-800">Teklif Sepeti</h2>
+            <h2 className="font-bold text-gray-800">{t('basket.title')}</h2>
             {count > 0 && (
               <span
                 className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                   isFull ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                 }`}
               >
-                {count}/2 Firma
+                {count}/2 {t('basket.firms')}
               </span>
             )}
           </div>
           <button
             onClick={closeDrawer}
-            aria-label="Kapat"
+            aria-label={t('basket.close')}
             className="p-2 hover:bg-gray-100 rounded-full transition"
           >
             <X className="w-5 h-5 text-gray-500" />
@@ -217,15 +217,13 @@ export default function TeklifSepeti() {
           {step === 'success' && (
             <div className="flex flex-col items-center justify-center h-full px-6 py-12 text-center">
               <CheckCircle className="w-16 h-16 text-emerald-500 mb-4" />
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Teklif Talebiniz Alındı!</h3>
-              <p className="text-gray-500 text-sm mb-6">
-                Seçtiğiniz firmalar en kısa sürede sizinle iletişime geçecek.
-              </p>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">{t('basket.successTitle')}</h3>
+              <p className="text-gray-500 text-sm mb-6">{t('basket.successMsg')}</p>
               <button
                 onClick={closeDrawer}
                 className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-emerald-700 transition"
               >
-                Kapat
+                {t('basket.close')}
               </button>
             </div>
           )}
@@ -234,20 +232,21 @@ export default function TeklifSepeti() {
           {step === 'form' && (
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <p className="text-sm text-gray-600">
-                Aşağıdaki bilgileri doldurun; seçtiğiniz{' '}
-                <strong>{count} firmaya</strong> teklif talebiniz iletilsin.
+                {t('basket.formIntro')}{' '}
+                <strong>{count} {t('basket.firms')}</strong>{' '}
+                {t('basket.formIntro2')}
               </p>
 
               {/* Ad Soyad */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ad Soyad <span className="text-red-500">*</span>
+                  {t('basket.name')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.ad}
                   onChange={(e) => set('ad', e.target.value)}
-                  placeholder="Adınız Soyadınız"
+                  placeholder={t('basket.namePh')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 {errors.ad && (
@@ -260,13 +259,13 @@ export default function TeklifSepeti() {
               {/* Telefon */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Telefon <span className="text-red-500">*</span>
+                  {t('basket.phone')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
                   value={form.telefon}
                   onChange={(e) => set('telefon', e.target.value)}
-                  placeholder="05XX XXX XX XX"
+                  placeholder={t('basket.phonePh')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 {errors.telefon && (
@@ -278,25 +277,25 @@ export default function TeklifSepeti() {
 
               {/* E-posta */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('basket.email')}</label>
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => set('email', e.target.value)}
-                  placeholder="ornek@email.com"
+                  placeholder={t('basket.emailPh')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               {/* Bütçe */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bütçe Aralığı</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('basket.budget')}</label>
                 <select
                   value={form.butce}
                   onChange={(e) => set('butce', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                 >
-                  <option value="">Seçiniz (opsiyonel)</option>
+                  <option value="">{t('basket.budgetOpt')}</option>
                   {BUTCE_OPTIONS.map((o) => (
                     <option key={o} value={o}>{o}</option>
                   ))}
@@ -305,12 +304,12 @@ export default function TeklifSepeti() {
 
               {/* Mesaj */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mesajınız</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('basket.message')}</label>
                 <textarea
                   value={form.mesaj}
                   onChange={(e) => set('mesaj', e.target.value)}
                   rows={3}
-                  placeholder="Özel isteğiniz veya sorularınız…"
+                  placeholder={t('basket.messagePh')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                 />
               </div>
@@ -325,12 +324,11 @@ export default function TeklifSepeti() {
                     className="mt-0.5 w-4 h-4 rounded text-emerald-600 border-gray-300 focus:ring-emerald-500"
                   />
                   <span className="text-xs text-gray-600 leading-relaxed">
-                    Kişisel verilerimin{' '}
+                    {t('basket.kvkkText')}{' '}
                     <Link to="/kvkk" target="_blank" className="text-emerald-600 hover:underline font-medium">
-                      Aydınlatma Metni
+                      {t('common.kvkkLink')}
                     </Link>{' '}
-                    çerçevesinde işlenmesini ve teklif hazırlanması amacıyla seçilen firmalara
-                    aktarılmasını onaylıyorum.{' '}
+                    {t('basket.kvkkText2')}{' '}
                     <span className="text-red-500">*</span>
                   </span>
                 </label>
@@ -343,7 +341,7 @@ export default function TeklifSepeti() {
 
               {status === 'error' && (
                 <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-3 rounded-lg">
-                  <AlertCircle className="w-4 h-4" />Bir hata oluştu. Lütfen tekrar deneyin.
+                  <AlertCircle className="w-4 h-4" />{t('common.error')}
                 </div>
               )}
 
@@ -353,7 +351,7 @@ export default function TeklifSepeti() {
                   onClick={() => setStep('list')}
                   className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
                 >
-                  Geri
+                  {t('basket.back')}
                 </button>
                 <button
                   type="submit"
@@ -361,8 +359,8 @@ export default function TeklifSepeti() {
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition disabled:opacity-60"
                 >
                   {status === 'loading'
-                    ? <><Loader2 className="w-4 h-4 animate-spin" />Gönderiliyor…</>
-                    : <><Send className="w-4 h-4" />Gönder</>
+                    ? <><Loader2 className="w-4 h-4 animate-spin" />{t('common.sending')}</>
+                    : <><Send className="w-4 h-4" />{t('basket.send')}</>
                   }
                 </button>
               </div>
@@ -383,9 +381,7 @@ export default function TeklifSepeti() {
                     : 'bg-amber-50 border border-amber-100 text-amber-800'
                 }`}
               >
-                {isFull
-                  ? '✅ 2 firma seçildi. Tek formla her iki firmaya teklif isteği gönderin!'
-                  : '💡 En fazla 2 firma seçebilirsiniz. Bir firma daha ekleyin ve karşılaştırın.'}
+                {isFull ? t('basket.fullMsg') : t('basket.tipMsg')}
               </div>
 
               {/* Firm cards */}
@@ -394,14 +390,12 @@ export default function TeklifSepeti() {
                   key={firm.id}
                   className="border border-gray-200 rounded-xl p-4 flex items-start gap-3 bg-white hover:shadow-sm transition"
                 >
-                  {/* Logo placeholder */}
                   <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                     <span className="text-emerald-700 font-extrabold text-base leading-none">
                       {(firm.firmaAdi || 'F').charAt(0)}
                     </span>
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="font-semibold text-gray-800 text-sm leading-snug line-clamp-1">
@@ -420,10 +414,9 @@ export default function TeklifSepeti() {
                     </p>
                   </div>
 
-                  {/* Remove button */}
                   <button
                     onClick={() => removeFirm(firm.id)}
-                    aria-label={`${firm.firmaAdi} firmayı çıkar`}
+                    aria-label={`${firm.firmaAdi} ${t('basket.removeFirm')}`}
                     className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition flex-shrink-0"
                   >
                     <X className="w-4 h-4" />
@@ -434,9 +427,7 @@ export default function TeklifSepeti() {
               {/* Empty slot */}
               {count < 2 && (
                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center text-sm text-gray-400">
-                  Bir ilanda{' '}
-                  <span className="font-medium text-amber-600">"2. Firmadan da Teklif Al"</span>{' '}
-                  butonuna basarak ikinci firmayı ekleyin.
+                  {t('basket.emptySlotMsg')}
                 </div>
               )}
             </div>
@@ -453,21 +444,21 @@ export default function TeklifSepeti() {
               className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 transition"
             >
               <Send className="w-4 h-4" />
-              Teklif Talebini Gönder
+              {t('basket.submitCta')}
             </button>
             {count === 2 && (
               <button
                 onClick={() => setStep('compare')}
                 className="w-full border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition"
               >
-                <Columns2 className="w-4 h-4" /> Karşılaştır
+                <Columns2 className="w-4 h-4" /> {t('basket.compare')}
               </button>
             )}
             <button
               onClick={() => { clearAll(); closeDrawer(); }}
               className="w-full flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition"
             >
-              <Trash2 className="w-3.5 h-3.5" /> Sepeti Temizle
+              <Trash2 className="w-3.5 h-3.5" /> {t('basket.clear')}
             </button>
           </div>
         )}

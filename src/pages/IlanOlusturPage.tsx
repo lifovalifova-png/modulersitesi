@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { db, storage } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { CATEGORIES } from '../data/categories';
 import { sanitizeText } from '../utils/sanitize';
 import Header from '../components/Header';
@@ -46,6 +47,7 @@ interface UploadItem {
 export default function IlanOlusturPage() {
   const { currentUser, role, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { t }    = useLanguage();
 
   /* Firma verisi */
   const [firma,        setFirma]        = useState<FirmaData | null>(null);
@@ -177,17 +179,17 @@ export default function IlanOlusturPage() {
   /* ── Doğrulama ────────────────────────────────────────── */
   function validate(): boolean {
     const e: Record<string, string> = {};
-    if (!baslik.trim())   e.baslik      = 'Başlık zorunludur.';
-    if (!kategoriSlug)    e.kategoriSlug = 'Kategori seçiniz.';
+    if (!baslik.trim())   e.baslik      = t('ilanOlustur.baslikRequired');
+    if (!kategoriSlug)    e.kategoriSlug = t('ilanOlustur.kategoriRequired');
     const fiyatNum = Number(fiyatStr.replace(/\./g, '').replace(',', '.'));
-    if (!fiyatStr || fiyatNum <= 0) e.fiyat = 'Geçerli bir fiyat giriniz.';
-    if (!images.some((i) => i.status === 'done')) e.gorseller = 'En az 1 görsel yükleyiniz.';
+    if (!fiyatStr || fiyatNum <= 0) e.fiyat = t('ilanOlustur.fiyatRequired');
+    if (!images.some((i) => i.status === 'done')) e.gorseller = t('ilanOlustur.gorselRequired');
     if (acilSatis) {
       const afiyat = Number(acilSatisFiyat.replace(/\./g, '').replace(',', '.'));
-      if (!acilSatisFiyat || afiyat <= 0) e.acilSatisFiyat = 'Geçerli bir acil satış fiyatı giriniz.';
-      else if (fiyatNum > 0 && afiyat >= fiyatNum) e.acilSatisFiyat = 'Acil satış fiyatı normal fiyattan düşük olmalıdır.';
-      if (!acilSatisBitis) e.acilSatisBitis = 'Bitiş tarihi zorunludur.';
-      else if (new Date(acilSatisBitis) <= new Date()) e.acilSatisBitis = 'Bitiş tarihi gelecekte olmalıdır.';
+      if (!acilSatisFiyat || afiyat <= 0) e.acilSatisFiyat = t('ilanOlustur.acilFiyatRequired');
+      else if (fiyatNum > 0 && afiyat >= fiyatNum) e.acilSatisFiyat = t('acilSatis.priceLow');
+      if (!acilSatisBitis) e.acilSatisBitis = t('ilanOlustur.acilBitisRequired');
+      else if (new Date(acilSatisBitis) <= new Date()) e.acilSatisBitis = t('ilanOlustur.acilBitisFuture');
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -197,7 +199,7 @@ export default function IlanOlusturPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (images.some((i) => i.status === 'uploading')) {
-      toast.error('Görseller yüklenirken lütfen bekleyin.');
+      toast.error(t('ilanOlustur.waitUploading'));
       return;
     }
     if (!validate()) return;
@@ -237,10 +239,10 @@ export default function IlanOlusturPage() {
         tarih:            serverTimestamp(),
       });
 
-      toast.success('İlanınız yayınlandı!');
+      toast.success(t('ilanOlustur.published'));
       navigate('/firma-paneli');
     } catch {
-      toast.error('İlan eklenirken hata oluştu. Lütfen tekrar deneyin.');
+      toast.error(t('ilanOlustur.publishError'));
     } finally {
       setSubmitting(false);
     }
@@ -282,25 +284,25 @@ export default function IlanOlusturPage() {
 
           {/* Breadcrumb */}
           <nav className="text-sm text-gray-500 mb-6 flex items-center gap-2">
-            <Link to="/firma-paneli" className="hover:text-emerald-600 transition">Firma Paneli</Link>
+            <Link to="/firma-paneli" className="hover:text-emerald-600 transition">{t('firmaPanel.title')}</Link>
             <span>/</span>
-            <span className="text-gray-800">Yeni İlan</span>
+            <span className="text-gray-800">{t('ilanOlustur.breadcrumb')}</span>
           </nav>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Yeni İlan Ver</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('ilanOlustur.title')}</h1>
 
           {/* ── Firma bilgisi — readonly ─────────────────── */}
           {firma && (
             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 mb-6">
               <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-3">
-                İlan sahibi firma
+                {t('ilanOlustur.ownerLabel')}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 {[
-                  { label: 'Firma Adı', value: firma.name    },
-                  { label: 'Şehir',     value: firma.city    },
-                  { label: 'Telefon',   value: firma.phone   },
-                  { label: 'E-posta',   value: firma.eposta  },
+                  { label: t('common.firmaAdi'), value: firma.name   },
+                  { label: t('common.sehir'),    value: firma.city   },
+                  { label: t('common.telefon'),  value: firma.phone  },
+                  { label: t('common.eposta'),   value: firma.eposta },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <p className="text-xs text-emerald-500 mb-0.5">{label}</p>
@@ -315,17 +317,17 @@ export default function IlanOlusturPage() {
 
             {/* ── İlan Bilgileri ──────────────────────────── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-              <h2 className="font-semibold text-gray-800 text-sm">İlan Bilgileri</h2>
+              <h2 className="font-semibold text-gray-800 text-sm">{t('ilanOlustur.sectionInfo')}</h2>
 
               {/* Başlık */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Başlık <span className="text-red-500">*</span>
+                  {t('ilanOlustur.baslikLabel')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   value={baslik}
                   onChange={(e) => { setBaslik(e.target.value); setErrors((p) => ({ ...p, baslik: '' })); }}
-                  placeholder="Örn: 80m² Prefabrik Villa – Anahtar Teslim"
+                  placeholder={t('ilanOlustur.baslikPh')}
                   maxLength={200}
                   className={inp('baslik')}
                 />
@@ -336,14 +338,14 @@ export default function IlanOlusturPage() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Kategori <span className="text-red-500">*</span>
+                    {t('ilanOlustur.kategoriLabel')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={kategoriSlug}
                     onChange={(e) => { setKategoriSlug(e.target.value); setErrors((p) => ({ ...p, kategoriSlug: '' })); }}
                     className={inp('kategoriSlug') + ' bg-white'}
                   >
-                    <option value="">Seçiniz…</option>
+                    <option value="">{t('ilanOlustur.selectPh')}</option>
                     {CATEGORIES.map((c) => (
                       <option key={c.slug} value={c.slug}>{c.name}</option>
                     ))}
@@ -353,7 +355,7 @@ export default function IlanOlusturPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fiyat (₺) <span className="text-red-500">*</span>
+                    {t('ilanOlustur.fiyatLabel')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -364,7 +366,7 @@ export default function IlanOlusturPage() {
                       setFiyatStr(digits ? Number(digits).toLocaleString('tr-TR') : '');
                       setErrors((p) => ({ ...p, fiyat: '' }));
                     }}
-                    placeholder="Örn: 350.000"
+                    placeholder={t('ilanOlustur.fiyatPh')}
                     className={inp('fiyat')}
                   />
                   <Err f="fiyat" />
@@ -374,15 +376,15 @@ export default function IlanOlusturPage() {
               {/* Açıklama */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Açıklama{' '}
-                  <span className="text-gray-400 text-xs font-normal">(isteğe bağlı)</span>
+                  {t('ilanOlustur.aciklamaLabel')}{' '}
+                  <span className="text-gray-400 text-xs font-normal">{t('common.optional')}</span>
                 </label>
                 <textarea
                   rows={4}
                   value={aciklama}
                   onChange={(e) => setAciklama(e.target.value)}
                   maxLength={2000}
-                  placeholder="Yapının özellikleri, teslim süresi, dahil olan hizmetler…"
+                  placeholder={t('ilanOlustur.aciklamaPh')}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                 />
                 <p className="text-xs text-gray-400 mt-1 text-right">{aciklama.length} / 2000</p>
@@ -392,10 +394,10 @@ export default function IlanOlusturPage() {
             {/* ── Acil Satılık ────────────────────────────── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-gray-800 text-sm">Acil Satış</h2>
+                <h2 className="font-semibold text-gray-800 text-sm">{t('acilSatis.sectionTitle')}</h2>
                 {acilSatis && (
                   <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                    🔴 ACİL SATILIK
+                    {t('acilSatis.badge')}
                   </span>
                 )}
               </div>
@@ -415,7 +417,7 @@ export default function IlanOlusturPage() {
                   }}
                   className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                 />
-                <span className="text-sm text-gray-700">Bu ilanı "Acil Satılık" olarak işaretle</span>
+                <span className="text-sm text-gray-700">{t('acilSatis.checkboxLabel')}</span>
               </label>
 
               {acilSatis && (
@@ -423,7 +425,7 @@ export default function IlanOlusturPage() {
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Acil Satış Fiyatı (₺) <span className="text-red-500">*</span>
+                        {t('acilSatis.priceLabel')} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -441,7 +443,7 @@ export default function IlanOlusturPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Bitiş Tarihi <span className="text-red-500">*</span>
+                        {t('acilSatis.endDateLabel')} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -459,14 +461,14 @@ export default function IlanOlusturPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Acil Satış Nedeni{' '}
-                      <span className="text-gray-400 text-xs font-normal">(isteğe bağlı)</span>
+                      {t('acilSatis.reasonLabel')}{' '}
+                      <span className="text-gray-400 text-xs font-normal">{t('common.optional')}</span>
                     </label>
                     <input
                       type="text"
                       value={acilSatisNedeni}
                       onChange={(e) => setAcilSatisNedeni(e.target.value)}
-                      placeholder="Örn: Acil nakit ihtiyacı, taşınma"
+                      placeholder={t('acilSatis.reasonPlaceholder')}
                       maxLength={200}
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
@@ -476,7 +478,7 @@ export default function IlanOlusturPage() {
                   <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
                     <span className="text-2xl">🔴</span>
                     <div>
-                      <p className="text-red-700 font-bold text-sm">ACİL SATILIK</p>
+                      <p className="text-red-700 font-bold text-sm">{t('badge.urgentSale')}</p>
                       {acilSatisFiyat && (
                         <p className="text-red-600 text-xs mt-0.5">
                           Acil fiyat: <span className="font-semibold">{acilSatisFiyat} ₺</span>
@@ -499,10 +501,10 @@ export default function IlanOlusturPage() {
             {/* ── Görsel Yükleme ──────────────────────────── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <h2 className="font-semibold text-gray-800 text-sm mb-1">
-                Görseller <span className="text-red-500">*</span>
+                {t('ilanOlustur.gorselSection')} <span className="text-red-500">*</span>
               </h2>
               <p className="text-xs text-gray-400 mb-4">
-                En az 1, en fazla {MAX_IMAGES} görsel — her biri maks. 5 MB — JPG, PNG, WebP
+                {t('ilanOlustur.gorselInfo')}
               </p>
 
               {/* Drag-drop zone */}
@@ -521,10 +523,10 @@ export default function IlanOlusturPage() {
                   }`}
                 >
                   <ImageIcon className="w-10 h-10 mx-auto text-gray-300 mb-3" />
-                  <p className="text-sm font-medium text-gray-600">Görselleri buraya sürükleyin</p>
-                  <p className="text-xs text-gray-400 mt-1 mb-3">veya</p>
+                  <p className="text-sm font-medium text-gray-600">{t('ilanOlustur.dragDrop')}</p>
+                  <p className="text-xs text-gray-400 mt-1 mb-3">{t('ilanOlustur.or')}</p>
                   <span className="inline-flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-emerald-700 transition pointer-events-none">
-                    <Upload className="w-3.5 h-3.5" /> Dosya Seç
+                    <Upload className="w-3.5 h-3.5" /> {t('ilanOlustur.fileSelect')}
                   </span>
                   <input
                     ref={fileInputRef}
@@ -594,7 +596,7 @@ export default function IlanOlusturPage() {
 
               {images.length > 0 && (
                 <p className="text-xs text-gray-400 mt-3">
-                  {images.filter((i) => i.status === 'done').length} / {MAX_IMAGES} görsel yüklendi
+                  {images.filter((i) => i.status === 'done').length} / {MAX_IMAGES} {t('ilanOlustur.gorselCountLabel')}
                 </p>
               )}
             </div>
@@ -606,10 +608,10 @@ export default function IlanOlusturPage() {
               className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {submitting
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Yayınlanıyor…</>
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('ilanOlustur.publishing')}</>
                 : uploading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Görseller yükleniyor…</>
-                : <><CheckCircle className="w-4 h-4" /> İlanı Yayınla</>
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('ilanOlustur.uploading')}</>
+                : <><CheckCircle className="w-4 h-4" /> {t('ilanOlustur.publish')}</>
               }
             </button>
 

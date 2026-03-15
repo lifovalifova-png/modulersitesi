@@ -13,6 +13,7 @@ import {
 import { type Ilan, formatFiyat } from '../hooks/useIlanlar';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { CATEGORIES } from '../data/categories';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -66,6 +67,7 @@ interface AcilForm {
 export default function FirmaPaneliPage() {
   const navigate                    = useNavigate();
   const { currentUser, role, loading } = useAuth();
+  const { t }                       = useLanguage();
   const [bildirimler, setBildirimler] = useState<BildirimWithTalep[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [filter,      setFilter]      = useState<FilterTab>('beklemede');
@@ -173,9 +175,9 @@ export default function FirmaPaneliPage() {
       await updateDoc(doc(db, 'taleplar', bildirim.talepId), {
         firmaKabulEdenler: arrayUnion(currentUser!.uid),
       });
-      toast.success('Talep kabul edildi. Müşteri bilgileri açıldı.');
+      toast.success(t('firmaPanel.acceptSuccess'));
     } catch {
-      toast.error('İşlem sırasında hata oluştu.');
+      toast.error(t('firmaPanel.opError'));
     } finally {
       setProcessing(null);
     }
@@ -186,9 +188,9 @@ export default function FirmaPaneliPage() {
     setProcessing(bildirimId);
     try {
       await updateDoc(doc(db, 'bildirimler', bildirimId), { status: 'red' });
-      toast.info('Talep reddedildi.');
+      toast.info(t('firmaPanel.rejectSuccess'));
     } catch {
-      toast.error('İşlem sırasında hata oluştu.');
+      toast.error(t('firmaPanel.opError'));
     } finally {
       setProcessing(null);
     }
@@ -199,11 +201,11 @@ export default function FirmaPaneliPage() {
     const form = acilForms[ilan.id];
     if (!form) return;
     const fiyat = Number(form.fiyat);
-    if (!form.bitis) { toast.error('Bitiş tarihi zorunludur.'); return; }
-    if (!fiyat || fiyat <= 0) { toast.error('Geçerli bir fiyat girin.'); return; }
-    if (fiyat >= ilan.fiyat) { toast.error('Acil satış fiyatı normal fiyattan düşük olmalıdır.'); return; }
+    if (!form.bitis) { toast.error(t('ilanOlustur.acilBitisRequired')); return; }
+    if (!fiyat || fiyat <= 0) { toast.error(t('acilSatis.validPrice')); return; }
+    if (fiyat >= ilan.fiyat) { toast.error(t('acilSatis.priceLow')); return; }
     const bitisDate = new Date(form.bitis + 'T23:59:59');
-    if (bitisDate <= new Date()) { toast.error('Bitiş tarihi gelecekte olmalıdır.'); return; }
+    if (bitisDate <= new Date()) { toast.error(t('ilanOlustur.acilBitisFuture')); return; }
     setAcilSaving(ilan.id);
     try {
       await updateDoc(doc(db, 'ilanlar', ilan.id), {
@@ -212,9 +214,9 @@ export default function FirmaPaneliPage() {
         acilSatisBitis:  Timestamp.fromDate(bitisDate),
         acilSatisNedeni: form.neden || null,
       });
-      toast.success('Acil satış aktifleştirildi.');
+      toast.success(t('acilSatis.activatedMsg'));
     } catch {
-      toast.error('Kayıt sırasında hata oluştu.');
+      toast.error(t('firmaPanel.saveError'));
     } finally {
       setAcilSaving(null);
     }
@@ -233,9 +235,9 @@ export default function FirmaPaneliPage() {
         ...prev,
         [ilanId]: { enabled: false, fiyat: '', bitis: '', neden: '' },
       }));
-      toast.info('Acil satış kaldırıldı.');
+      toast.info(t('acilSatis.removedMsg'));
     } catch {
-      toast.error('İşlem sırasında hata oluştu.');
+      toast.error(t('firmaPanel.opError'));
     } finally {
       setAcilSaving(null);
     }
@@ -250,9 +252,9 @@ export default function FirmaPaneliPage() {
         yenilenmeSayisi: increment(1),
         aktif:           true,
       });
-      toast.success('İlan 30 gün uzatıldı.');
+      toast.success(t('ilanSuresi.yenilendi'));
     } catch {
-      toast.error('Yenileme sırasında hata oluştu.');
+      toast.error(t('ilanSuresi.yenileHata'));
     } finally {
       setYenileSaving(null);
     }
@@ -284,9 +286,9 @@ export default function FirmaPaneliPage() {
 
   const filtered = bildirimler.filter((b) => b.status === filter);
 
-  const tabCls = (t: FilterTab) =>
+  const tabCls = (tab: FilterTab) =>
     `px-4 py-2 rounded-full text-xs font-semibold transition ${
-      filter === t
+      filter === tab
         ? 'bg-emerald-600 text-white shadow-sm'
         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
     }`;
@@ -310,17 +312,17 @@ export default function FirmaPaneliPage() {
               <Building2 className="w-5 h-5 text-emerald-700" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Firma Paneli</h1>
-              <p className="text-sm text-gray-500">Gelen proje talepleri ve müşteri teklifleri</p>
+              <h1 className="text-xl font-bold text-gray-900">{t('firmaPanel.title')}</h1>
+              <p className="text-sm text-gray-500">{t('firmaPanel.subtitle')}</p>
             </div>
           </div>
 
           {/* İstatistik kartları */}
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[
-              { label: 'Yeni Talepler', count: counts.beklemede, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
-              { label: 'Kabul Ettiklerim', count: counts.kabul,     color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
-              { label: 'Reddettiklerim',  count: counts.red,       color: 'text-gray-500',    bg: 'bg-gray-50 border-gray-200' },
+              { label: t('firmaPanel.tab.new'),      count: counts.beklemede, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+              { label: t('firmaPanel.tab.accepted'), count: counts.kabul,     color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+              { label: t('firmaPanel.tab.rejected'), count: counts.red,       color: 'text-gray-500',    bg: 'bg-gray-50 border-gray-200' },
             ].map((s) => (
               <div key={s.label} className={`border rounded-xl p-4 text-center ${s.bg}`}>
                 <p className={`text-2xl font-bold ${s.color}`}>{s.count}</p>
@@ -333,43 +335,42 @@ export default function FirmaPaneliPage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2 flex-wrap">
                 <Package className="w-4 h-4 text-emerald-600" />
-                <h2 className="font-semibold text-gray-800 text-sm">İlanlarım</h2>
+                <h2 className="font-semibold text-gray-800 text-sm">{t('firmaPanel.myListings')}</h2>
                 <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full ${
                   firmaIlanlar.length >= ilanLimit
                     ? 'bg-red-100 text-red-600'
                     : 'bg-gray-100 text-gray-400'
                 }`}>
-                  {firmaIlanlar.length} / {ilanLimit} ilan
+                  {firmaIlanlar.length} / {ilanLimit} {t('common.listings')}
                 </span>
                 {firmaIlanlar.length < ilanLimit ? (
                   <Link
                     to="/ilan-olustur"
                     className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition font-medium flex items-center gap-1"
                   >
-                    <span>+</span> Yeni İlan
+                    <span>+</span> {t('firmaPanel.newListingLabel')}
                   </Link>
                 ) : (
                   <span
-                    title="İlan limitinize ulaştınız"
+                    title={t('firmaPanel.limitReached')}
                     className="text-xs bg-gray-200 text-gray-400 px-3 py-1.5 rounded-lg cursor-not-allowed font-medium flex items-center gap-1"
                   >
-                    + Yeni İlan
+                    + {t('firmaPanel.newListingLabel')}
                   </span>
                 )}
               </div>
               {firmaIlanlar.length >= ilanLimit && (
                 <div className="mx-5 mt-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
-                  <p className="font-semibold text-amber-800">İlan limitinize ulaştınız</p>
+                  <p className="font-semibold text-amber-800">{t('firmaPanel.limitReached')}</p>
                   <p className="text-amber-700 text-xs mt-0.5">
-                    Ücretsiz planda en fazla {ilanLimit} ilan yayınlayabilirsiniz.
-                    Daha fazla ilan için yakında gelecek ücretli planlarımıza göz atın.
+                    {t('firmaPanel.limitFree')} {ilanLimit} {t('firmaPanel.limitUnit')}
                   </p>
                 </div>
               )}
               {firmaIlanlar.length === 0 && (
                 <div className="py-10 text-center text-sm text-gray-400">
                   <Package className="w-8 h-8 mx-auto mb-2 text-gray-200" />
-                  Henüz ilan yayınlamadınız.
+                  {t('firmaPanel.noListings')}
                 </div>
               )}
               <div className="divide-y divide-gray-100">
@@ -392,10 +393,10 @@ export default function FirmaPaneliPage() {
                             <p className="text-xs text-gray-400">{formatFiyat(ilan.fiyat)}</p>
                             {ilanBitisDays !== null && (
                               ilanBitisDays <= 0
-                                ? <span className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">Süresi Doldu</span>
+                                ? <span className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">{t('ilanSuresi.expiredBadge')}</span>
                                 : ilanBitisDays <= 7
-                                ? <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">⚠️ {ilanBitisDays} gün kaldı</span>
-                                : <span className="text-xs text-gray-400">{ilanBitisDays} gün kaldı</span>
+                                ? <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">⚠️ {ilanBitisDays} {t('ilanSuresi.daysLeft')}</span>
+                                : <span className="text-xs text-gray-400">{ilanBitisDays} {t('ilanSuresi.daysLeft')}</span>
                             )}
                           </div>
                         </div>
@@ -406,13 +407,13 @@ export default function FirmaPaneliPage() {
                               onClick={() => handleYenile(ilan.id)}
                               disabled={yenileSaving === ilan.id}
                               className="text-xs border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg transition disabled:opacity-60 flex items-center gap-1"
-                              title="İlan süresini 30 gün uzat"
+                              title={t('ilanSuresi.yenileTooltip')}
                             >
                               {yenileSaving === ilan.id
                                 ? <span className="w-3 h-3 border border-emerald-400 border-t-transparent rounded-full animate-spin" />
                                 : '🔄'
                               }
-                              Yenile
+                              {t('ilanSuresi.yenileLabel')}
                             </button>
                           )}
                         <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
@@ -429,7 +430,7 @@ export default function FirmaPaneliPage() {
                             }}
                             className="w-4 h-4 rounded text-red-600 border-gray-300 focus:ring-red-500"
                           />
-                          <span className="text-sm font-medium text-gray-700">Acil Satılık</span>
+                          <span className="text-sm font-medium text-gray-700">{t('firmaPanel.acilToggle')}</span>
                         </label>
                         </div>
                       </div>
@@ -440,7 +441,7 @@ export default function FirmaPaneliPage() {
                           {/* Önizleme badge */}
                           <div className="flex items-center gap-2">
                             <span className="inline-flex items-center gap-1 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md animate-pulse">
-                              🔴 ACİL SATILIK
+                              {t('acilSatis.badge')}
                               {form.fiyat && ` — ${Number(form.fiyat).toLocaleString('tr-TR')} ₺`}
                             </span>
                           </div>
@@ -449,7 +450,7 @@ export default function FirmaPaneliPage() {
                             {/* Acil fiyat */}
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Acil Satış Fiyatı (₺) <span className="text-red-500">*</span>
+                                {t('acilSatis.priceLabel')} <span className="text-red-500">*</span>
                               </label>
                               <input
                                 type="number"
@@ -457,14 +458,14 @@ export default function FirmaPaneliPage() {
                                 max={ilan.fiyat - 1}
                                 value={form.fiyat}
                                 onChange={(e) => setAcilForms((prev) => ({ ...prev, [ilan.id]: { ...form, fiyat: e.target.value } }))}
-                                placeholder={`Normal: ${ilan.fiyat.toLocaleString('tr-TR')} ₺`}
+                                placeholder={`${t('firmaPanel.normalFiyat')} ${ilan.fiyat.toLocaleString('tr-TR')} ₺`}
                                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                               />
                             </div>
                             {/* Bitiş tarihi */}
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
-                                Geçerlilik Tarihi <span className="text-red-500">*</span>
+                                {t('firmaPanel.acilBitisLabel')} <span className="text-red-500">*</span>
                               </label>
                               <input
                                 type="date"
@@ -478,12 +479,12 @@ export default function FirmaPaneliPage() {
 
                           {/* Neden */}
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Neden acil? (opsiyonel)</label>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">{t('firmaPanel.acilNedenLabel')}</label>
                             <input
                               type="text"
                               value={form.neden}
                               onChange={(e) => setAcilForms((prev) => ({ ...prev, [ilan.id]: { ...form, neden: e.target.value } }))}
-                              placeholder="Örn: Stok erken tükenecek, fiyat artmadan alın"
+                              placeholder={t('firmaPanel.acilNedenPh')}
                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
                             />
                           </div>
@@ -498,9 +499,9 @@ export default function FirmaPaneliPage() {
                                 ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                 : <AlertTriangle className="w-3.5 h-3.5" />
                               }
-                              Kaydet
+                              {t('common.save')}
                             </button>
-                            <p className="text-xs text-gray-400">Normal fiyat: {formatFiyat(ilan.fiyat)}</p>
+                            <p className="text-xs text-gray-400">{t('firmaPanel.normalFiyat')} {formatFiyat(ilan.fiyat)}</p>
                           </div>
                         </div>
                       )}
@@ -513,13 +514,13 @@ export default function FirmaPaneliPage() {
           {/* Filtre sekmeleri */}
           <div className="flex gap-2 mb-4">
             <button onClick={() => setFilter('beklemede')} className={tabCls('beklemede')}>
-              Yeni Talepler {counts.beklemede > 0 && `(${counts.beklemede})`}
+              {t('firmaPanel.tab.new')} {counts.beklemede > 0 && `(${counts.beklemede})`}
             </button>
             <button onClick={() => setFilter('kabul')} className={tabCls('kabul')}>
-              Kabul Ettiklerim {counts.kabul > 0 && `(${counts.kabul})`}
+              {t('firmaPanel.tab.accepted')} {counts.kabul > 0 && `(${counts.kabul})`}
             </button>
             <button onClick={() => setFilter('red')} className={tabCls('red')}>
-              Reddettiklerim
+              {t('firmaPanel.tab.rejected')}
             </button>
           </div>
 
@@ -532,9 +533,9 @@ export default function FirmaPaneliPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm py-16 text-center">
               <Bell className="w-10 h-10 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 text-sm">
-                {filter === 'beklemede' ? 'Henüz yeni talep yok.' :
-                 filter === 'kabul'     ? 'Henüz kabul ettiğiniz talep yok.' :
-                                          'Reddedilen talep yok.'}
+                {filter === 'beklemede' ? t('firmaPanel.noNew') :
+                 filter === 'kabul'     ? t('firmaPanel.noAccepted') :
+                                          t('firmaPanel.noRejected')}
               </p>
             </div>
           ) : (
@@ -578,7 +579,7 @@ export default function FirmaPaneliPage() {
                           {/* Kabul rozeti */}
                           {isKabul && (
                             <span className="inline-flex items-center gap-1 text-xs text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full font-semibold">
-                              <CheckCircle className="w-3 h-3" /> Kabul Edildi
+                              <CheckCircle className="w-3 h-3" /> {t('firmaPanel.accepted')}
                             </span>
                           )}
                         </div>
@@ -598,10 +599,10 @@ export default function FirmaPaneliPage() {
                       {(talep?.metrekare || talep?.teslimTarihi) && (
                         <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-400">
                           {talep.metrekare && (
-                            <span><strong className="text-gray-600">Boyut:</strong> {talep.metrekare}</span>
+                            <span><strong className="text-gray-600">{t('firmaPanel.detailSize')}</strong> {talep.metrekare}</span>
                           )}
                           {talep.teslimTarihi && (
-                            <span><strong className="text-gray-600">Teslim:</strong> {talep.teslimTarihi}</span>
+                            <span><strong className="text-gray-600">{t('firmaPanel.detailDelivery')}</strong> {talep.teslimTarihi}</span>
                           )}
                         </div>
                       )}
@@ -611,7 +612,7 @@ export default function FirmaPaneliPage() {
                         <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                           <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide mb-3 flex items-center gap-1.5">
                             <User className="w-3.5 h-3.5" />
-                            Müşteri İletişim Bilgileri
+                            {t('firmaPanel.contactTitle')}
                           </p>
                           <div className="space-y-2">
                             <p className="flex items-center gap-2 text-sm text-gray-700">
@@ -642,19 +643,19 @@ export default function FirmaPaneliPage() {
                         className="mt-3 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition"
                       >
                         <FileText className="w-3.5 h-3.5" />
-                        {isOpen ? 'Detayı Kapat' : 'Tüm Detayları Gör'}
+                        {isOpen ? t('firmaPanel.hideDetails') : t('firmaPanel.showDetails')}
                         {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                       </button>
 
                       {/* Genişletilmiş detay */}
                       {isOpen && talep && (
                         <div className="mt-3 bg-gray-50 rounded-xl p-4 text-sm text-gray-600 space-y-1.5">
-                          <p><strong>Kategori:</strong> {CAT_MAP[talep.kategori] ?? talep.kategori}</p>
-                          <p><strong>Şehir / İlçe:</strong> {talep.sehir}{talep.ilce ? ` — ${talep.ilce}` : ''}</p>
-                          <p><strong>Bütçe:</strong> {BUDGET_LABELS[talep.butce] ?? talep.butce}</p>
-                          {talep.metrekare  && <p><strong>Boyut:</strong> {talep.metrekare}</p>}
-                          {talep.teslimTarihi && <p><strong>Teslim Tarihi:</strong> {talep.teslimTarihi}</p>}
-                          <p><strong>Açıklama:</strong> {talep.aciklama}</p>
+                          <p><strong>{t('firmaPanel.detailCategory')}</strong> {CAT_MAP[talep.kategori] ?? talep.kategori}</p>
+                          <p><strong>{t('firmaPanel.detailCity')}</strong> {talep.sehir}{talep.ilce ? ` — ${talep.ilce}` : ''}</p>
+                          <p><strong>{t('firmaPanel.detailBudget')}</strong> {BUDGET_LABELS[talep.butce] ?? talep.butce}</p>
+                          {talep.metrekare  && <p><strong>{t('firmaPanel.detailSize')}</strong> {talep.metrekare}</p>}
+                          {talep.teslimTarihi && <p><strong>{t('firmaPanel.detailDelivery')}</strong> {talep.teslimTarihi}</p>}
+                          <p><strong>{t('firmaPanel.detailDesc')}</strong> {talep.aciklama}</p>
                         </div>
                       )}
                     </div>
@@ -671,7 +672,7 @@ export default function FirmaPaneliPage() {
                             ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             : <CheckCircle className="w-4 h-4" />
                           }
-                          Kabul Et — Müşteri Bilgilerini Al
+                          {t('firmaPanel.accept')}
                         </button>
                         <button
                           onClick={() => handleReddet(bildirim.id)}
@@ -679,7 +680,7 @@ export default function FirmaPaneliPage() {
                           className="flex items-center justify-center gap-2 border border-gray-300 text-gray-600 text-sm px-4 py-2 rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
                         >
                           <XCircle className="w-4 h-4" />
-                          Reddet
+                          {t('firmaPanel.reject')}
                         </button>
                       </div>
                     )}
@@ -691,14 +692,12 @@ export default function FirmaPaneliPage() {
 
           {/* Bildirim ekranı alt yardımcı */}
           <div className="mt-8 bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
-            <strong>Nasıl çalışır?</strong> Müşteriler projeleri için teklif talep ettiğinde platform
-            size bildirim gönderir. "Kabul Et" seçeneğiyle müşterinin iletişim bilgilerini görüntüleyerek
-            doğrudan teklif iletebilirsiniz.
+            <strong>{t('firmaPanel.howTitle')}</strong> {t('firmaPanel.howDesc')}
           </div>
 
           <div className="mt-4 text-center">
             <Link to="/" className="text-sm text-gray-400 hover:text-emerald-600 transition">
-              ← Ana Sayfaya Dön
+              {t('firmaPanel.backHome')}
             </Link>
           </div>
         </div>

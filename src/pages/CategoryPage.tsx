@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import { CATEGORIES } from '../data/categories';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import SEOMeta from '../components/SEOMeta';
+import { useLanguage } from '../context/LanguageContext';
 import {
   MapPin, Tag, Calendar, ShieldCheck, Grid, List, Filter, X,
   ChevronLeft, ChevronRight, ChevronDown, SlidersHorizontal, Zap, Loader2,
@@ -36,22 +37,24 @@ const PRICE_RANGES = [
   { label: '2.000.000 TL ve üzeri',     min: 2000000, max: Infinity },
 ];
 
-const SORT_OPTIONS = [
-  { value: 'newest',       label: 'En Yeni' },
-  { value: 'price_asc',    label: 'Fiyat: Düşükten Yükseğe' },
-  { value: 'price_desc',   label: 'Fiyat: Yüksekten Düşüğe' },
-  { value: 'urgent_first', label: 'Acil İlanlar Önce' },
-];
+const SORT_VALUES = ['newest', 'price_asc', 'price_desc', 'urgent_first'] as const;
+const SORT_KEYS: Record<string, string> = {
+  newest:       'category.sortNewest',
+  price_asc:    'category.sortPriceLow',
+  price_desc:   'category.sortPriceHigh',
+  urgent_first: 'category.sortUrgent',
+};
 
-const FEATURE_FILTERS = [
-  { id: 'acilSatis',      label: '🔴 Acil Satılık' },
-  { id: 'acil',           label: 'Acil Satış' },
-  { id: 'indirimli',      label: 'İndirimli' },
-  { id: 'sifir',          label: 'Sıfır' },
-  { id: 'ikinci_el',      label: '2. El' },
-  { id: 'mobilyali',      label: 'Mobilyalı' },
-  { id: 'anahtar_teslim', label: 'Anahtar Teslim' },
-];
+const FEATURE_IDS = ['acilSatis', 'acil', 'indirimli', 'sifir', 'ikinci_el', 'mobilyali', 'anahtar_teslim'] as const;
+const FEATURE_KEYS: Record<string, string> = {
+  acilSatis:      'category.featUrgentSale',
+  acil:           'category.featUrgent',
+  indirimli:      'category.featDiscount',
+  sifir:          'category.featNew',
+  ikinci_el:      'category.featSecondHand',
+  mobilyali:      'category.featFurnished',
+  anahtar_teslim: 'category.featTurnkey',
+};
 
 const CAT_COLORS: Record<string, string> = {
   'Prefabrik':           'bg-emerald-100 text-emerald-700',
@@ -98,6 +101,7 @@ function Sidebar({
   city, setCity, priceMin, setPriceMin, priceMax, setPriceMax,
   sort, setSort, features, setFeatures, onClear, activeCount,
 }: SidebarProps) {
+  const { t } = useLanguage();
 
   const toggleFeature = (id: string) =>
     setFeatures(features.includes(id) ? features.filter((x) => x !== id) : [...features, id]);
@@ -109,7 +113,7 @@ function Sidebar({
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-gray-800 flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
-          Filtreler
+          {t('category.filters')}
           {activeCount > 0 && (
             <span className="bg-emerald-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               {activeCount}
@@ -118,14 +122,14 @@ function Sidebar({
         </h2>
         {activeCount > 0 && (
           <button onClick={onClear} className="text-xs text-red-500 hover:text-red-700 transition font-medium">
-            Temizle
+            {t('category.clearFilters')}
           </button>
         )}
       </div>
 
       {/* Fiyat Aralığı */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Fiyat Aralığı</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('category.priceRange')}</p>
         <div className="relative">
           <select
             value={
@@ -147,7 +151,7 @@ function Sidebar({
                 key={i}
                 value={i === 0 ? '' : `${r.min},${r.max === Infinity ? 'inf' : r.max}`}
               >
-                {r.label}
+                {i === 0 ? t('category.allPrices') : r.label}
               </option>
             ))}
           </select>
@@ -157,10 +161,10 @@ function Sidebar({
 
       {/* Şehir */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Şehir</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('category.city')}</p>
         <div className="relative">
           <select value={city} onChange={(e) => setCity(e.target.value)} className={inp + ' pr-8'}>
-            <option value="">Tüm Şehirler</option>
+            <option value="">{t('category.allCities')}</option>
             {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
           <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -169,17 +173,17 @@ function Sidebar({
 
       {/* Sıralama */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Sıralama</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('category.sort')}</p>
         <div className="space-y-1.5">
-          {SORT_OPTIONS.map((opt) => (
-            <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer">
+          {SORT_VALUES.map((val) => (
+            <label key={val} className="flex items-center gap-2.5 cursor-pointer">
               <input
-                type="radio" name="sort" value={opt.value}
-                checked={sort === opt.value} onChange={() => setSort(opt.value)}
+                type="radio" name="sort" value={val}
+                checked={sort === val} onChange={() => setSort(val)}
                 className="w-3.5 h-3.5 text-emerald-600 border-gray-300 focus:ring-emerald-500"
               />
-              <span className={`text-sm ${sort === opt.value ? 'text-emerald-700 font-medium' : 'text-gray-600'}`}>
-                {opt.label}
+              <span className={`text-sm ${sort === val ? 'text-emerald-700 font-medium' : 'text-gray-600'}`}>
+                {t(SORT_KEYS[val])}
               </span>
             </label>
           ))}
@@ -188,17 +192,17 @@ function Sidebar({
 
       {/* Özellikler */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Özellikler</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('category.features')}</p>
         <div className="space-y-1.5">
-          {FEATURE_FILTERS.map((f) => (
-            <label key={f.id} className="flex items-center gap-2.5 cursor-pointer">
+          {FEATURE_IDS.map((id) => (
+            <label key={id} className="flex items-center gap-2.5 cursor-pointer">
               <input
-                type="checkbox" checked={features.includes(f.id)}
-                onChange={() => toggleFeature(f.id)}
+                type="checkbox" checked={features.includes(id)}
+                onChange={() => toggleFeature(id)}
                 className="w-3.5 h-3.5 rounded text-emerald-600 border-gray-300 focus:ring-emerald-500"
               />
-              <span className={`text-sm ${features.includes(f.id) ? 'text-emerald-700 font-medium' : 'text-gray-600'}`}>
-                {f.label}
+              <span className={`text-sm ${features.includes(id) ? 'text-emerald-700 font-medium' : 'text-gray-600'}`}>
+                {t(FEATURE_KEYS[id])}
               </span>
             </label>
           ))}
@@ -208,7 +212,7 @@ function Sidebar({
       {activeCount > 0 && (
         <button onClick={onClear}
           className="w-full text-sm text-red-500 border border-red-200 bg-red-50 hover:bg-red-100 py-2 rounded-lg transition font-medium">
-          Filtreleri Temizle
+          {t('category.clearAll')}
         </button>
       )}
     </aside>
@@ -218,6 +222,7 @@ function Sidebar({
 /* ═══ İlan Kartları ════════════════════════════════════════ */
 
 const GridCard = memo(function GridCard({ ilan }: { ilan: Ilan }) {
+  const { t } = useLanguage();
   const img = ilan.gorseller[0] ?? '';
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-emerald-200 transition flex flex-col">
@@ -230,17 +235,17 @@ const GridCard = memo(function GridCard({ ilan }: { ilan: Ilan }) {
           )}
           {ilan.acilSatis && (
             <span className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 animate-pulse">
-              🔴 ACİL SATILIK
+              🔴 {t('badge.urgentSale')}
             </span>
           )}
           {!ilan.acilSatis && ilan.acil && (
             <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1">
-              <Zap className="w-2.5 h-2.5" />ACİL
+              <Zap className="w-2.5 h-2.5" />{t('badge.urgent')}
             </span>
           )}
           {ilan.indirimli && (
             <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-md">
-              İNDİRİMLİ
+              {t('badge.discounted')}
             </span>
           )}
         </div>
@@ -273,12 +278,12 @@ const GridCard = memo(function GridCard({ ilan }: { ilan: Ilan }) {
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-xs text-gray-500 truncate max-w-[120px]">{ilan.firmaAdi}</span>
             {ilan.firmaDogrulanmis && (
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" aria-label="Doğrulanmış" />
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" aria-label={t('common.verified')} />
             )}
           </div>
           <Link to={`/ilan/${ilan.id}`}
             className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition font-semibold flex-shrink-0">
-            Teklif Al
+            {t('category.getQuote')}
           </Link>
         </div>
       </div>
@@ -287,6 +292,7 @@ const GridCard = memo(function GridCard({ ilan }: { ilan: Ilan }) {
 });
 
 const ListCard = memo(function ListCard({ ilan }: { ilan: Ilan }) {
+  const { t } = useLanguage();
   const img = ilan.gorseller[0] ?? '';
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-emerald-200 transition flex">
@@ -299,17 +305,17 @@ const ListCard = memo(function ListCard({ ilan }: { ilan: Ilan }) {
           )}
           {ilan.acilSatis && (
             <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 animate-pulse">
-              🔴 ACİL SATILIK
+              🔴 {t('badge.urgentSale')}
             </span>
           )}
           {!ilan.acilSatis && ilan.acil && (
             <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
-              <Zap className="w-2.5 h-2.5" />ACİL
+              <Zap className="w-2.5 h-2.5" />{t('badge.urgent')}
             </span>
           )}
           {ilan.indirimli && (
             <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-              İND.
+              {t('badge.discounted')}
             </span>
           )}
         </div>
@@ -339,11 +345,11 @@ const ListCard = memo(function ListCard({ ilan }: { ilan: Ilan }) {
           </p>
           <div className="flex items-center gap-1 ml-auto">
             <span className="text-xs text-gray-500 hidden sm:block truncate max-w-[120px]">{ilan.firmaAdi}</span>
-            {ilan.firmaDogrulanmis && <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" aria-label="Doğrulanmış" />}
+            {ilan.firmaDogrulanmis && <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" aria-label={t('common.verified')} />}
           </div>
           <Link to={`/ilan/${ilan.id}`}
             className="text-sm bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition font-semibold flex-shrink-0">
-            Teklif Al
+            {t('category.getQuote')}
           </Link>
         </div>
       </div>
@@ -431,9 +437,11 @@ export default function CategoryPage() {
   useEffect(() => { setPage(1); }, [slug, city, priceMin, priceMax, sort, features]);
   useEffect(() => { setSidebarOpen(false); }, [slug]);
 
+  const { t } = useLanguage();
+
   const category   = CATEGORIES.find((c) => c.slug === slug);
   const activeCount = [city, (priceMin || priceMax) ? 'price' : '', sort !== 'newest' ? 'sort' : '', ...features].filter(Boolean).length;
-  const h1Title    = category ? `${category.fullName} İlanları` : 'Tüm İlanlar';
+  const h1Title    = category ? `${category.fullName} ${t('category.listingsSuffix')}` : t('category.allListings');
 
   const clearFilters = () => {
     setCity(''); setPriceMin(''); setPriceMax('');
@@ -479,7 +487,7 @@ export default function CategoryPage() {
 
           {/* Breadcrumb */}
           <nav className="text-sm text-gray-500 mb-5 flex items-center gap-1.5 flex-wrap">
-            <Link to="/" className="hover:text-emerald-600 transition">Ana Sayfa</Link>
+            <Link to="/" className="hover:text-emerald-600 transition">{t('common.home')}</Link>
             <span>/</span>
             <span className="text-gray-800">{pageTitle}</span>
           </nav>
@@ -491,14 +499,14 @@ export default function CategoryPage() {
               <p className="text-gray-500 text-sm mt-1">
                 {loading ? (
                   <span className="flex items-center gap-1.5">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Yükleniyor…
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t('category.loading')}
                   </span>
                 ) : (
                   <>
-                    {filtered.length} ilan bulundu
+                    {filtered.length} {t('category.found')}
                     {activeCount > 0 && (
                       <button onClick={clearFilters} className="ml-2 text-red-500 hover:text-red-700 underline text-xs">
-                        filtreleri temizle
+                        {t('category.clearLink')}
                       </button>
                     )}
                   </>
@@ -510,17 +518,17 @@ export default function CategoryPage() {
               <div className="relative hidden sm:block">
                 <select value={sort} onChange={(e) => setSort(e.target.value)}
                   className="appearance-none bg-white border border-gray-300 rounded-lg text-sm text-gray-700 px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                  {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {SORT_VALUES.map((val) => <option key={val} value={val}>{t(SORT_KEYS[val])}</option>)}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               </div>
 
               <div className="hidden md:flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                <button onClick={() => setViewMode('grid')} aria-pressed={viewMode === 'grid'} aria-label="Izgara görünümü"
+                <button onClick={() => setViewMode('grid')} aria-pressed={viewMode === 'grid'} aria-label={t('category.gridView')}
                   className={`p-2 transition ${viewMode === 'grid' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:bg-gray-50'}`}>
                   <Grid className="w-4 h-4" />
                 </button>
-                <button onClick={() => setViewMode('list')} aria-pressed={viewMode === 'list'} aria-label="Liste görünümü"
+                <button onClick={() => setViewMode('list')} aria-pressed={viewMode === 'list'} aria-label={t('category.listView')}
                   className={`p-2 transition ${viewMode === 'list' ? 'bg-emerald-50 text-emerald-600' : 'text-gray-500 hover:bg-gray-50'}`}>
                   <List className="w-4 h-4" />
                 </button>
@@ -528,7 +536,7 @@ export default function CategoryPage() {
 
               <button onClick={() => setSidebarOpen(true)}
                 className="lg:hidden flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
-                <Filter className="w-4 h-4" />Filtrele
+                <Filter className="w-4 h-4" />{t('category.filter')}
                 {activeCount > 0 && (
                   <span className="bg-emerald-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">{activeCount}</span>
                 )}
@@ -554,8 +562,8 @@ export default function CategoryPage() {
                 <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
                 <div className="absolute right-0 top-0 bottom-0 w-72 bg-white shadow-xl overflow-y-auto">
                   <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                    <span className="font-semibold text-gray-800">Filtreler</span>
-                    <button onClick={() => setSidebarOpen(false)} aria-label="Filtreleri kapat"
+                    <span className="font-semibold text-gray-800">{t('category.filters')}</span>
+                    <button onClick={() => setSidebarOpen(false)} aria-label={t('common.close')}
                       className="p-1 hover:bg-gray-100 rounded-lg transition">
                       <X className="w-5 h-5 text-gray-500" />
                     </button>
@@ -566,7 +574,7 @@ export default function CategoryPage() {
                       features={features} setFeatures={setFeatures} onClear={clearFilters} activeCount={activeCount} />
                     <button onClick={() => setSidebarOpen(false)}
                       className="w-full mt-5 bg-emerald-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition">
-                      {filtered.length} İlanı Göster
+                      {filtered.length} {t('category.showListings')}
                     </button>
                   </div>
                 </div>
@@ -579,7 +587,7 @@ export default function CategoryPage() {
               {/* Hata */}
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm mb-4">
-                  Veriler yüklenirken hata oluştu: {error}
+                  {t('category.error')} {error}
                 </div>
               )}
 
@@ -593,25 +601,25 @@ export default function CategoryPage() {
                   <p className="text-4xl mb-4">🔍</p>
                   {activeCount > 0 ? (
                     <>
-                      <p className="font-semibold text-gray-700 mb-1">Uygun ilan bulunamadı</p>
-                      <p className="text-sm text-gray-400 mb-5">Filtrelerinizi değiştirmeyi deneyin.</p>
+                      <p className="font-semibold text-gray-700 mb-1">{t('category.noResults')}</p>
+                      <p className="text-sm text-gray-400 mb-5">{t('category.tryFilters')}</p>
                       <button onClick={clearFilters}
                         className="text-sm bg-emerald-600 text-white px-5 py-2 rounded-lg hover:bg-emerald-700 transition">
-                        Filtreleri Temizle
+                        {t('category.clearAll')}
                       </button>
                     </>
                   ) : (
                     <>
                       <p className="text-5xl mb-4">🏗️</p>
-                      <p className="font-semibold text-gray-700 mb-1 text-lg">Bu kategoride henüz ilan yok</p>
+                      <p className="font-semibold text-gray-700 mb-1 text-lg">{t('category.noCategoryAds')}</p>
                       <p className="text-sm text-gray-400 mb-6 max-w-xs mx-auto">
-                        Siz de projenizi paylaşın, firmalar size teklif versin.
+                        {t('category.noCategoryDesc')}
                       </p>
                       <Link
                         to="/talep-olustur"
                         className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition"
                       >
-                        İlk teklif isteyen siz olun
+                        {t('category.firstQuote')}
                         <ChevronRight className="w-4 h-4" />
                       </Link>
                     </>
@@ -632,7 +640,7 @@ export default function CategoryPage() {
                   <Pagination page={page} totalPages={totalPages} onChange={setPage} />
                   {filtered.length > 0 && (
                     <p className="text-center text-xs text-gray-400 mt-4">
-                      {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} / {filtered.length} ilan gösteriliyor
+                      {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} / {filtered.length} {t('category.showing')}
                     </p>
                   )}
 
@@ -647,10 +655,10 @@ export default function CategoryPage() {
                         {loadingMore ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Yükleniyor…
+                            {t('category.loading')}
                           </>
                         ) : (
-                          'Daha Fazla İlan Yükle'
+                          t('category.loadMore')
                         )}
                       </button>
                     </div>
