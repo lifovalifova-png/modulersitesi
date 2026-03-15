@@ -2,11 +2,13 @@ import { Link } from 'react-router-dom';
 import { Building2, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { SITE_CONFIG, LEGAL_LINKS } from '../config/site';
 import { useLanguage } from '../context/LanguageContext';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 
 const currentYear = new Date().getFullYear();
 
 export default function Footer() {
   const { t } = useLanguage();
+  const { flags } = useFeatureFlags();
   return (
     <footer className="bg-gray-900 text-gray-300">
       {/* Main Footer */}
@@ -51,8 +53,10 @@ export default function Footer() {
               <li><Link to="/satici-formu" className="hover:text-emerald-400 transition">{t('footer.postAd')}</Link></li>
               <li><Link to="/blog" className="hover:text-emerald-400 transition">{t('footer.blog')}</Link></li>
               <li><Link to="/sss" className="hover:text-emerald-400 transition">{t('footer.faq')}</Link></li>
-              <li><Link to="/fiyat-hesapla" className="hover:text-emerald-400 transition">Fiyat Hesapla</Link></li>
-              <li><Link to="/hakkimizda" className="hover:text-emerald-400 transition">Hakkımızda</Link></li>
+              {flags.fiyatHesaplama && (
+                <li><Link to="/fiyat-hesapla" className="hover:text-emerald-400 transition">{t('nav.fiyatHesapla')}</Link></li>
+              )}
+              <li><Link to="/hakkimizda" className="hover:text-emerald-400 transition">{t('nav.about')}</Link></li>
             </ul>
           </div>
 

@@ -19,3 +19,11 @@ export const CATEGORIES: Category[] = [
 export const CATEGORY_NAMES: Record<string, string> = Object.fromEntries(
   CATEGORIES.map((c) => [c.slug, c.fullName])
 );
+
+export const CATEGORY_NAME_KEYS: Record<string, string> = Object.fromEntries(
+  CATEGORIES.map((c) => [c.slug, `catName.${c.slug}`])
+);
+
+export const CATEGORY_FULLNAME_KEYS: Record<string, string> = Object.fromEntries(
+  CATEGORIES.map((c) => [c.slug, `catFull.${c.slug}`])
+);

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, Search, Mail, Map, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
-import { CATEGORIES } from '../data/categories';
+import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { SITE_CONFIG } from '../config/site';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -26,6 +27,7 @@ export default function Header() {
   const navigate = useNavigate();
   const { currentUser, role, logout } = useAuth();
   const { lang, setLang, t } = useLanguage();
+  const { flags } = useFeatureFlags();
 
   function handleTeklifIste() {
     if (!currentUser) {
@@ -87,7 +89,7 @@ export default function Header() {
         >
           <option value="">{t('header.allCategoriesOpt')}</option>
           {CATEGORIES.map((cat) => (
-            <option key={cat.slug} value={cat.slug}>{cat.name}</option>
+            <option key={cat.slug} value={cat.slug}>{t(CATEGORY_NAME_KEYS[cat.slug])}</option>
           ))}
         </select>
         <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
@@ -273,7 +275,7 @@ export default function Header() {
                 >
                   <option value="">{t('header.allCategories')}</option>
                   {CATEGORIES.map((cat) => (
-                    <option key={cat.slug} value={cat.slug}>{cat.name}</option>
+                    <option key={cat.slug} value={cat.slug}>{t(CATEGORY_NAME_KEYS[cat.slug])}</option>
                   ))}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
@@ -335,7 +337,7 @@ export default function Header() {
                       role="menuitem"
                       className="block px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 text-sm"
                     >
-                      {cat.name}
+                      {t(CATEGORY_NAME_KEYS[cat.slug])}
                     </Link>
                   ))}
                 </div>
@@ -349,7 +351,7 @@ export default function Header() {
                 to={`/kategori/${cat.slug}`}
                 className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
               >
-                {cat.name}
+                {t(CATEGORY_NAME_KEYS[cat.slug])}
               </Link>
             ))}
 
@@ -379,19 +381,21 @@ export default function Header() {
               {t('nav.faq')}
             </Link>
 
-            <Link
-              to="/fiyat-hesapla"
-              className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
-            >
-              <Calculator className="w-4 h-4" aria-hidden="true" />
-              Fiyat Hesapla
-            </Link>
+            {flags.fiyatHesaplama && (
+              <Link
+                to="/fiyat-hesapla"
+                className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+              >
+                <Calculator className="w-4 h-4" aria-hidden="true" />
+                {t('nav.fiyatHesapla')}
+              </Link>
+            )}
 
             <Link
               to="/hakkimizda"
               className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
             >
-              Hakkımızda
+              {t('nav.about')}
             </Link>
 
           </div>
@@ -438,20 +442,22 @@ export default function Header() {
             >
               {t('nav.faq')}
             </Link>
-            <Link
-              to="/fiyat-hesapla"
-              className="flex items-center gap-2 w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Calculator className="w-5 h-5" aria-hidden="true" />
-              Fiyat Hesapla
-            </Link>
+            {flags.fiyatHesaplama && (
+              <Link
+                to="/fiyat-hesapla"
+                className="flex items-center gap-2 w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Calculator className="w-5 h-5" aria-hidden="true" />
+                {t('nav.fiyatHesapla')}
+              </Link>
+            )}
             <Link
               to="/hakkimizda"
               className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Hakkımızda
+              {t('nav.about')}
             </Link>
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-400 mb-2 px-2">{t('header.categoriesLabel')}</p>
@@ -462,7 +468,7 @@ export default function Header() {
                   className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition text-sm"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  {cat.name}
+                  {t(CATEGORY_NAME_KEYS[cat.slug])}
                 </Link>
               ))}
             </div>

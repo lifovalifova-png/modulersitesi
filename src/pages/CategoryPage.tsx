@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, memo } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { CATEGORIES } from '../data/categories';
+import { CATEGORIES, CATEGORY_FULLNAME_KEYS } from '../data/categories';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import SEOMeta from '../components/SEOMeta';
 import { useLanguage } from '../context/LanguageContext';
@@ -441,7 +441,7 @@ export default function CategoryPage() {
 
   const category   = CATEGORIES.find((c) => c.slug === slug);
   const activeCount = [city, (priceMin || priceMax) ? 'price' : '', sort !== 'newest' ? 'sort' : '', ...features].filter(Boolean).length;
-  const h1Title    = category ? `${category.fullName} ${t('category.listingsSuffix')}` : t('category.allListings');
+  const h1Title    = category ? `${t(CATEGORY_FULLNAME_KEYS[category.slug])} ${t('category.listingsSuffix')}` : t('category.allListings');
 
   const clearFilters = () => {
     setCity(''); setPriceMin(''); setPriceMax('');
@@ -471,7 +471,7 @@ export default function CategoryPage() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-  const pageTitle  = category?.fullName ?? 'Tüm İlanlar';
+  const pageTitle  = category ? t(CATEGORY_FULLNAME_KEYS[category.slug]) : t('category.allListings');
 
   return (
     <div className="flex flex-col min-h-screen">

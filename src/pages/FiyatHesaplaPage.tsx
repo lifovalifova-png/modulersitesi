@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import Header from '../components/Header';
@@ -41,12 +42,23 @@ interface Result {
 }
 
 export default function FiyatHesaplaPage() {
+  const navigate = useNavigate();
+  const { flags, loading: flagsLoading } = useFeatureFlags();
+
+  useEffect(() => {
+    if (!flagsLoading && !flags.fiyatHesaplama) {
+      navigate('/', { replace: true });
+    }
+  }, [flagsLoading, flags.fiyatHesaplama, navigate]);
+
   const [kategori, setKategori] = useState('');
   const [metrekare, setMetrekare] = useState('');
   const [sehir, setSehir] = useState('');
   const [result, setResult] = useState<Result | null>(null);
   const [prices, setPrices] = useState<Record<string, number>>(DEFAULT_PRICES);
   const [loading, setLoading] = useState(false);
+
+  if (flagsLoading || !flags.fiyatHesaplama) return null;
 
   /* Firestore'dan güncel fiyatları çek */
   useEffect(() => {

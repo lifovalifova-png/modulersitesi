@@ -434,6 +434,12 @@ const FEATURE_DEFS: FeatureDef[] = [
     description: 'Onaylı müşterilerin firmaları 1–5 yıldızla değerlendirmesi.',
     tier:        'Ücretsiz',
   },
+  {
+    key:         'fiyatHesaplama',
+    label:       'Fiyat Hesaplayıcı',
+    description: 'Kullanıcıların yapı tipine göre tahmini maliyet hesaplaması.',
+    tier:        'Ücretsiz',
+  },
 ];
 
 /* ═══════════════════════════════════════════════════════════

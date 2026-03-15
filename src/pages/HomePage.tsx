@@ -267,8 +267,8 @@ export default function HomePage() {
               {/* Kalan hak göstergesi */}
               <p className="mt-2 text-xs text-white/50">
                 {aiRemaining === 0
-                  ? '⚠️ Bugünkü soru hakkınız doldu. Yarın tekrar deneyin.'
-                  : `Bugün ${aiRemaining} soru hakkınız kaldı.`
+                  ? t('ai.queryExhausted')
+                  : t('ai.queryRemaining').replace('{n}', String(aiRemaining))
                 }
               </p>
             </div>
