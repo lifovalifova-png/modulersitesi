@@ -451,12 +451,20 @@ function FeaturesTab() {
   const [saving,  setSaving]  = useState(false);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'settings', 'features'), (snap) => {
-      if (snap.exists()) {
-        setFlags({ ...DEFAULT_FLAGS, ...(snap.data() as Partial<FeatureFlags>) });
-      }
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      doc(db, 'settings', 'features'),
+      (snap) => {
+        setFlags(snap.exists()
+          ? { ...DEFAULT_FLAGS, ...(snap.data() as Partial<FeatureFlags>) }
+          : DEFAULT_FLAGS,
+        );
+        setLoading(false);
+      },
+      (_err) => {
+        setFlags(DEFAULT_FLAGS);
+        setLoading(false);
+      },
+    );
     return unsub;
   }, []);
 

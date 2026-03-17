@@ -9,15 +9,18 @@ export interface FeatureFlags {
   onecikarIlan:    boolean;
   sinirsizTalep:   boolean;
   puanlamaSistemi: boolean;
+  fiyatHesaplama:  boolean;
 }
 
+// Tüm flagler false — fail-closed: döküman yoksa veya okunamazsa özellikler kapalı kalır
 export const DEFAULT_FLAGS: FeatureFlags = {
-  aiAsistan:       true,
-  teklifSepeti:    true,
-  talepHavuzu:     true,
+  aiAsistan:       false,
+  teklifSepeti:    false,
+  talepHavuzu:     false,
   onecikarIlan:    false,
   sinirsizTalep:   false,
   puanlamaSistemi: false,
+  fiyatHesaplama:  false,
 };
 
 export function useFeatureFlags(): { flags: FeatureFlags; loading: boolean } {
@@ -25,12 +28,22 @@ export function useFeatureFlags(): { flags: FeatureFlags; loading: boolean } {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'settings', 'features'), (snap) => {
-      if (snap.exists()) {
-        setFlags({ ...DEFAULT_FLAGS, ...(snap.data() as Partial<FeatureFlags>) });
-      }
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      doc(db, 'settings', 'features'),
+      (snap) => {
+        if (snap.exists()) {
+          setFlags({ ...DEFAULT_FLAGS, ...(snap.data() as Partial<FeatureFlags>) });
+        } else {
+          setFlags(DEFAULT_FLAGS);
+        }
+        setLoading(false);
+      },
+      (_err) => {
+        // Okuma hatası (ağ sorunu vb.) — tüm flagler kapalı kalır
+        setFlags(DEFAULT_FLAGS);
+        setLoading(false);
+      },
+    );
     return unsub;
   }, []);
 
