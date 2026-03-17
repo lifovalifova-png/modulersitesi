@@ -75,9 +75,14 @@ service cloud.firestore {
       allow create, update, delete: if request.auth != null && isAdmin();
     }
 
-    // Admin koleksiyonu — client erişimi tamamen kapalı (sadece Admin SDK)
+    // Admin koleksiyonu
     match /admins/{uid} {
-      allow read, write: if false;
+      // Kullanıcı kendi admin durumunu okuyabilir
+      allow read: if request.auth != null && request.auth.uid == uid;
+      // İlk kurulum: kullanıcı kendi admin kaydını oluşturabilir (bootstrap)
+      // setDoc ile yalnızca CREATE izni var; belge zaten varsa update denemesi sessizce reddedilir
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update, delete: if false;
     }
 
     // Admin kontrolü

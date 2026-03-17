@@ -461,15 +461,17 @@ function FeaturesTab() {
   }, []);
 
   async function handleToggle(key: keyof FeatureFlags) {
+    const prev = flags;
     const next = { ...flags, [key]: !flags[key] };
     setFlags(next);
     setSaving(true);
     try {
       await setDoc(doc(db, 'settings', 'features'), next);
       toast.success('Özellik güncellendi');
-    } catch {
-      toast.error('Güncelleme başarısız');
-      setFlags(flags);
+    } catch (err) {
+      console.error('[FeaturesTab] toggle hatası:', err);
+      toast.error('Güncelleme başarısız — konsolu kontrol edin');
+      setFlags(prev);
     } finally {
       setSaving(false);
     }
@@ -2821,6 +2823,15 @@ export default function AdminDashboardPage() {
     });
     return unsub;
   }, [navigate]);
+
+  /* ── Admin kaydını otomatik oluştur (ilk kurulum bootstrap) ─ */
+  useEffect(() => {
+    if (!user) return;
+    setDoc(doc(db, 'admins', user.uid), { email: user.email ?? '' })
+      .catch(() => {
+        // Belge zaten varsa update izni yok — bu normal, sessizce geç
+      });
+  }, [user]);
 
   /* ── Süresi dolan ilanları otomatik kapat ───────────────── */
   useEffect(() => {
