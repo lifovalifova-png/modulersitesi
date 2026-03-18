@@ -61,6 +61,9 @@ export default function IlanOlusturPage() {
   const [errors,       setErrors]       = useState<Record<string, string>>({});
   const [submitting,   setSubmitting]   = useState(false);
 
+  /* Stok durumu */
+  const [stokDurumu, setStokDurumu] = useState<'var' | 'tedarik' | 'yok'>('var');
+
   /* Acil satış */
   const [acilSatis,       setAcilSatis]       = useState(false);
   const [acilSatisFiyat,  setAcilSatisFiyat]  = useState('');
@@ -235,6 +238,7 @@ export default function IlanOlusturPage() {
           ? Timestamp.fromDate(new Date(acilSatisBitis + 'T23:59:59'))
           : null,
         acilSatisNedeni:  acilSatis ? (acilSatisNedeni.trim() || null) : null,
+        stokDurumu,
         status:           'aktif',
         tarih:            serverTimestamp(),
       });
@@ -389,6 +393,31 @@ export default function IlanOlusturPage() {
                 />
                 <p className="text-xs text-gray-400 mt-1 text-right">{aciklama.length} / 2000</p>
               </div>
+
+              {/* Stok Durumu */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Stok Durumu
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {([
+                    { value: 'var',     label: 'Stokta Var',          cls: 'border-green-400 bg-green-50 text-green-700'  },
+                    { value: 'tedarik', label: 'Tedarik Bekleniyor',  cls: 'border-yellow-400 bg-yellow-50 text-yellow-700' },
+                    { value: 'yok',     label: 'Stok Yok',            cls: 'border-gray-400 bg-gray-50 text-gray-600'     },
+                  ] as const).map(({ value, label, cls }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setStokDurumu(value)}
+                      className={`border rounded-lg px-3 py-2 text-sm font-medium transition ${
+                        stokDurumu === value ? cls : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* ── Acil Satılık ────────────────────────────── */}
@@ -524,7 +553,8 @@ export default function IlanOlusturPage() {
                 >
                   <ImageIcon className="w-10 h-10 mx-auto text-gray-300 mb-3" />
                   <p className="text-sm font-medium text-gray-600">{t('ilanOlustur.dragDrop')}</p>
-                  <p className="text-xs text-gray-400 mt-1 mb-3">{t('ilanOlustur.or')}</p>
+                  <p className="text-xs text-gray-400 mt-1">JPG, PNG veya <span className="text-emerald-600 font-medium">WebP</span> (önerilen)</p>
+                  <p className="text-xs text-gray-400 mt-0.5 mb-3">{t('ilanOlustur.or')}</p>
                   <span className="inline-flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-emerald-700 transition pointer-events-none">
                     <Upload className="w-3.5 h-3.5" /> {t('ilanOlustur.fileSelect')}
                   </span>

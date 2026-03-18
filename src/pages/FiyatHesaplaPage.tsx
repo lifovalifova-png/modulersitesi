@@ -29,6 +29,15 @@ const KATEGORI_LABELS: Record<string, string> = {
 
 const METREKARE_OPTIONS = ['30', '50', '60', '80', '100', '120', '150', '200', '250+'];
 
+/* ── Yapı tipine göre modül/panel birim boyutu ─────────────── */
+const MODULE_CONFIG: Record<string, { birimM2: number; birim: string }> = {
+  prefabrik:             { birimM2: 20,  birim: 'modül'      },
+  'celik-yapilar':       { birimM2: 25,  birim: 'çelik panel' },
+  'yasam-konteynerleri': { birimM2: 14,  birim: 'konteyner'  },
+  'tiny-house':          { birimM2: 18,  birim: 'modül'      },
+  'ahsap-yapilar':       { birimM2:  8,  birim: 'ahşap panel' },
+};
+
 const CITIES = [
   'Adana','Ankara','Antalya','Bursa','Diyarbakır','Erzurum','Gaziantep',
   'İstanbul','İzmir','Kayseri','Konya','Malatya','Mersin','Muğla',
@@ -39,6 +48,12 @@ interface Result {
   min: number;
   max: number;
   kalanKategoriSlug: string;
+  netM2: number;
+  fireM2: number;
+  birimSayisi: number;
+  birim: string;
+  toplamMinFire: number;
+  toplamMaxFire: number;
 }
 
 export default function FiyatHesaplaPage() {
@@ -73,15 +88,32 @@ export default function FiyatHesaplaPage() {
     e.preventDefault();
     if (!kategori || !metrekare) return;
     setLoading(true);
-    const m2 = parseInt(metrekare.replace('+', ''), 10);
+    const netM2      = parseInt(metrekare.replace('+', ''), 10);
+    const fireM2     = Math.ceil(netM2 * 1.05 * 10) / 10; // %5 fire payı
     const birimFiyat = prices[kategori] ?? DEFAULT_PRICES[kategori] ?? 4000;
-    /* ±%25 min-max aralığı */
-    const base = m2 * birimFiyat;
+    const modCfg     = MODULE_CONFIG[kategori];
+    const birimSayisi = modCfg ? Math.ceil(fireM2 / modCfg.birimM2) : 0;
+    /* ±%25 min-max aralığı (fire payı dahil m² üzerinden) */
+    const base = fireM2 * birimFiyat;
     const min  = Math.round(base * 0.85 / 1000) * 1000;
     const max  = Math.round(base * 1.25 / 1000) * 1000;
+    /* Net m² üzerinden de hesapla (gösterim için) */
+    const baseNet     = netM2 * birimFiyat;
+    const toplamMinFire = min;
+    const toplamMaxFire = max;
     setTimeout(() => {
-      setResult({ min, max, kalanKategoriSlug: kategori });
-      trackEvent('fiyat_hesaplandi', { yapiTipi: kategori, metrekare: m2 });
+      setResult({
+        min: Math.round(baseNet * 0.85 / 1000) * 1000,
+        max: Math.round(baseNet * 1.25 / 1000) * 1000,
+        kalanKategoriSlug: kategori,
+        netM2,
+        fireM2,
+        birimSayisi,
+        birim: modCfg?.birim ?? 'birim',
+        toplamMinFire,
+        toplamMaxFire,
+      });
+      trackEvent('fiyat_hesaplandi', { yapiTipi: kategori, metrekare: netM2 });
       setLoading(false);
     }, 400);
   }
@@ -220,6 +252,35 @@ export default function FiyatHesaplaPage() {
                   <p className="text-xs text-blue-600 font-medium mb-1">Maksimum Tahmini</p>
                   <p className="text-2xl font-extrabold text-blue-700">{fmt(result.max)}</p>
                 </div>
+              </div>
+
+              {/* Miktar Hesaplayıcı */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+                <h3 className="font-semibold text-gray-700 text-sm mb-3 flex items-center gap-2">
+                  <span>📦</span> Miktar Hesabı
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                  <div className="bg-white rounded-lg border border-gray-100 p-3 text-center">
+                    <p className="text-xs text-gray-500 mb-1">Net Alan</p>
+                    <p className="font-bold text-gray-800">{result.netM2} m²</p>
+                  </div>
+                  <div className="bg-white rounded-lg border border-amber-100 p-3 text-center">
+                    <p className="text-xs text-amber-600 mb-1">+%5 Fire Payı</p>
+                    <p className="font-bold text-amber-700">{result.fireM2.toFixed(1)} m²</p>
+                  </div>
+                  <div className="bg-white rounded-lg border border-emerald-100 p-3 text-center col-span-2 sm:col-span-1">
+                    <p className="text-xs text-emerald-600 mb-1">Gerekli {result.birim}</p>
+                    <p className="font-bold text-emerald-700 text-lg">{result.birimSayisi} adet</p>
+                  </div>
+                  <div className="bg-white rounded-lg border border-blue-100 p-3 text-center col-span-2 sm:col-span-1">
+                    <p className="text-xs text-blue-600 mb-1">Fire Dahil Tahmini</p>
+                    <p className="font-bold text-blue-700 text-xs leading-snug">{fmt(result.toplamMinFire)} – {fmt(result.toplamMaxFire)}</p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  Fire payı (%5) malzeme kayıpları ve kesilmeler için otomatik eklenir.
+                  {result.birimSayisi > 0 && ` ${result.birimSayisi} adet ${result.birim} × ${MODULE_CONFIG[kategori]?.birimM2} m²/adet baz alınmıştır.`}
+                </p>
               </div>
 
               <p className="text-xs text-gray-500 mb-5 leading-relaxed">

@@ -81,6 +81,7 @@ export default function FirmaPaneliPage() {
   const [firmaIlanlar,  setFirmaIlanlar]  = useState<Ilan[]>([]);
   const [acilForms,     setAcilForms]     = useState<Record<string, AcilForm>>({});
   const [acilSaving,    setAcilSaving]    = useState<string | null>(null);
+  const [stokSaving,    setStokSaving]    = useState<string | null>(null);
   const [yenileSaving,  setYenileSaving]  = useState<string | null>(null);
   const [ilanLimit,     setIlanLimit]     = useState(3);
 
@@ -240,6 +241,19 @@ export default function FirmaPaneliPage() {
       toast.error(t('firmaPanel.opError'));
     } finally {
       setAcilSaving(null);
+    }
+  };
+
+  /* ── Stok Durumu güncelle ───────────────────────────────── */
+  const handleStokChange = async (ilanId: string, stokDurumu: 'var' | 'tedarik' | 'yok') => {
+    setStokSaving(ilanId);
+    try {
+      await updateDoc(doc(db, 'ilanlar', ilanId), { stokDurumu });
+      toast.success('Stok durumu güncellendi.');
+    } catch {
+      toast.error(t('firmaPanel.opError'));
+    } finally {
+      setStokSaving(null);
     }
   };
 
@@ -433,6 +447,30 @@ export default function FirmaPaneliPage() {
                           <span className="text-sm font-medium text-gray-700">{t('firmaPanel.acilToggle')}</span>
                         </label>
                         </div>
+                      </div>
+
+                      {/* Stok Durumu */}
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-gray-500 font-medium">Stok:</span>
+                        {([
+                          { value: 'var',     label: 'Stokta Var',         cls: 'border-green-400 bg-green-50 text-green-700'   },
+                          { value: 'tedarik', label: 'Tedarik Bekleniyor', cls: 'border-yellow-400 bg-yellow-50 text-yellow-700' },
+                          { value: 'yok',     label: 'Stok Yok',           cls: 'border-gray-400 bg-gray-100 text-gray-500'     },
+                        ] as const).map(({ value, label, cls }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            disabled={stokSaving === ilan.id}
+                            onClick={() => (ilan.stokDurumu ?? 'var') !== value && handleStokChange(ilan.id, value)}
+                            className={`border rounded-md px-2 py-0.5 text-xs font-medium transition disabled:opacity-60 ${
+                              (ilan.stokDurumu ?? 'var') === value
+                                ? cls
+                                : 'border-gray-200 text-gray-400 hover:border-gray-300'
+                            }`}
+                          >
+                            {stokSaving === ilan.id && (ilan.stokDurumu ?? 'var') !== value ? '…' : label}
+                          </button>
+                        ))}
                       </div>
 
                       {/* Acil form — sadece enabled ise */}

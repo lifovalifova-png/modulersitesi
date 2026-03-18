@@ -438,6 +438,32 @@ const en: Record<string, string> = {
   'common.sehir':     'City',
   'common.telefon':   'Phone',
   'common.eposta':    'Email',
+
+  /* ── Nav (ek) ──────────────────────────────────────────── */
+  'nav.fiyatHesapla': 'Price Calculator',
+  'nav.about':        'About Us',
+
+  /* ── AI query limit ────────────────────────────────────── */
+  'ai.queryExhausted': '⚠️ You have used all your queries for today. Try again tomorrow.',
+  'ai.queryRemaining': 'You have {n} queries left today.',
+
+  /* ── Category names ────────────────────────────────────── */
+  'catName.prefabrik':             'Prefabrik',
+  'catName.celik-yapilar':         'Steel Structures',
+  'catName.yasam-konteynerleri':   'Living Containers',
+  'catName.ikinci-el':             'Second Hand',
+  'catName.ozel-projeler':         'Custom Projects',
+  'catName.ahsap-yapilar':         'Timber Buildings',
+  'catName.tiny-house':            'Tiny House',
+
+  /* ── Category full names ───────────────────────────────── */
+  'catFull.prefabrik':             'Prefab Homes',
+  'catFull.celik-yapilar':         'Steel Structures',
+  'catFull.yasam-konteynerleri':   'Living Containers',
+  'catFull.ikinci-el':             '2nd Hand Listings',
+  'catFull.ozel-projeler':         'Custom Projects',
+  'catFull.ahsap-yapilar':         'Timber Buildings',
+  'catFull.tiny-house':            'Tiny House',
 };
 
 export default en;

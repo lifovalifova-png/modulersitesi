@@ -35,6 +35,7 @@ export interface Ilan {
   ilanBitis?: { seconds: number; nanoseconds: number } | null;
   yenilenmeSayisi?: number;
   aktif?: boolean;
+  stokDurumu?: 'var' | 'tedarik' | 'yok';
 }
 
 const PAGE_SIZE = 20;

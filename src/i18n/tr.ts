@@ -438,6 +438,32 @@ const tr: Record<string, string> = {
   'common.sehir':     'Şehir',
   'common.telefon':   'Telefon',
   'common.eposta':    'E-posta',
+
+  /* ── Nav (ek) ──────────────────────────────────────────── */
+  'nav.fiyatHesapla': 'Fiyat Hesapla',
+  'nav.about':        'Hakkımızda',
+
+  /* ── AI sorgu limiti ───────────────────────────────────── */
+  'ai.queryExhausted': '⚠️ Bugünkü soru hakkınız doldu. Yarın tekrar deneyin.',
+  'ai.queryRemaining': 'Bugün {n} soru hakkınız kaldı.',
+
+  /* ── Kategori isimleri ─────────────────────────────────── */
+  'catName.prefabrik':             'Prefabrik',
+  'catName.celik-yapilar':         'Çelik Yapılar',
+  'catName.yasam-konteynerleri':   'Yaşam Konteynerleri',
+  'catName.ikinci-el':             '2. El',
+  'catName.ozel-projeler':         'Özel Projeler',
+  'catName.ahsap-yapilar':         'Ahşap Yapılar',
+  'catName.tiny-house':            'Tiny House',
+
+  /* ── Kategori tam isimleri ─────────────────────────────── */
+  'catFull.prefabrik':             'Prefabrik Evler',
+  'catFull.celik-yapilar':         'Çelik Yapılar',
+  'catFull.yasam-konteynerleri':   'Yaşam Konteynerleri',
+  'catFull.ikinci-el':             '2. El İlanlar',
+  'catFull.ozel-projeler':         'Özel Projeler',
+  'catFull.ahsap-yapilar':         'Ahşap Yapılar',
+  'catFull.tiny-house':            'Tiny House',
 };
 
 export default tr;

@@ -265,13 +265,24 @@ const GridCard = memo(function GridCard({ ilan }: { ilan: Ilan }) {
           {ilan.baslik}
         </Link>
 
-        <div className="flex items-end justify-between mb-3">
+        <div className="flex items-end justify-between mb-2">
           <p className={`font-extrabold text-lg leading-none ${ilan.acilSatis ? 'text-red-600' : 'text-emerald-600'}`}>
             {ilan.acilSatis && ilan.acilSatisFiyat ? formatFiyat(ilan.acilSatisFiyat) : formatFiyat(ilan.fiyat)}
           </p>
           <span className="text-[10px] text-gray-400 flex items-center gap-1">
             <Calendar className="w-2.5 h-2.5" />{formatTarih(ilan.tarih)}
           </span>
+        </div>
+
+        {/* Stok badge */}
+        <div className="mb-2">
+          {(ilan.stokDurumu === undefined || ilan.stokDurumu === 'var') ? (
+            <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Stokta Var</span>
+          ) : ilan.stokDurumu === 'tedarik' ? (
+            <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">Tedarik Bekleniyor</span>
+          ) : (
+            <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">Stok Yok</span>
+          )}
         </div>
 
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
@@ -343,6 +354,14 @@ const ListCard = memo(function ListCard({ ilan }: { ilan: Ilan }) {
           <p className={`font-extrabold text-xl leading-none ${ilan.acilSatis ? 'text-red-600' : 'text-emerald-600'}`}>
             {ilan.acilSatis && ilan.acilSatisFiyat ? formatFiyat(ilan.acilSatisFiyat) : formatFiyat(ilan.fiyat)}
           </p>
+          {/* Stok badge */}
+          {(ilan.stokDurumu === undefined || ilan.stokDurumu === 'var') ? (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">Stokta Var</span>
+          ) : ilan.stokDurumu === 'tedarik' ? (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">Tedarik Bekleniyor</span>
+          ) : (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">Stok Yok</span>
+          )}
           <div className="flex items-center gap-1 ml-auto">
             <span className="text-xs text-gray-500 hidden sm:block truncate max-w-[120px]">{ilan.firmaAdi}</span>
             {ilan.firmaDogrulanmis && <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" aria-label={t('common.verified')} />}
@@ -466,6 +485,8 @@ export default function CategoryPage() {
     }
     // acilSatis olanları en üste taşı (tüm sort'lardan sonra)
     result.sort((a, b) => (b.acilSatis ? 1 : 0) - (a.acilSatis ? 1 : 0));
+    // stok yok olanları en alta taşı
+    result.sort((a, b) => (a.stokDurumu === 'yok' ? 1 : 0) - (b.stokDurumu === 'yok' ? 1 : 0));
     return result;
   }, [ilanlar, city, priceMin, priceMax, sort, features]);
 
