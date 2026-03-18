@@ -135,15 +135,16 @@ interface AdminIlan {
   aktif?:            boolean;
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda' | 'acilIlanlar';
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda' | 'acilIlanlar' | 'geriBildirimler';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
 interface PendingCounts {
-  talepler: number;
-  firms:    number;
-  yorumlar: number;
-  quotes:   number;
+  talepler:        number;
+  firms:           number;
+  yorumlar:        number;
+  quotes:          number;
+  geriBildirimler: number;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2774,6 +2775,151 @@ function AcilIlanlarTab() {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════
+   TAB — GERİ BİLDİRİMLER
+════════════════════════════════════════════════════════════ */
+interface AdminGeriBildirim {
+  id: string;
+  tip: 'istek' | 'sikayet';
+  baslik: string;
+  aciklama: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  tarih: { seconds: number } | null;
+  durum: 'beklemede' | 'inceleniyor' | 'cozuldu';
+}
+
+type GBDurum = 'all' | 'beklemede' | 'inceleniyor' | 'cozuldu';
+
+function GeriBildirimlerTab() {
+  const [liste,   setListe]   = useState<AdminGeriBildirim[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter,  setFilter]  = useState<GBDurum>('all');
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'geri_bildirimler'), (snap) => {
+      setListe(
+        snap.docs
+          .map((d) => ({ id: d.id, ...d.data() } as AdminGeriBildirim))
+          .sort((a, b) => (b.tarih?.seconds ?? 0) - (a.tarih?.seconds ?? 0)),
+      );
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  async function handleDurumGuncelle(id: string, durum: AdminGeriBildirim['durum']) {
+    await updateDoc(doc(db, 'geri_bildirimler', id), { durum });
+    toast.success('Durum güncellendi.');
+  }
+
+  async function handleSil(id: string) {
+    if (!window.confirm('Bu geri bildirimi silmek istediğinize emin misiniz?')) return;
+    await deleteDoc(doc(db, 'geri_bildirimler', id));
+    toast.success('Geri bildirim silindi.');
+  }
+
+  const goruntulenen = filter === 'all' ? liste : liste.filter((g) => g.durum === filter);
+
+  const tabCls = (t: GBDurum) =>
+    `px-3 py-1.5 text-sm rounded-lg font-medium transition ${
+      filter === t ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+    }`;
+
+  const tipBadge = (tip: AdminGeriBildirim['tip']) =>
+    tip === 'istek'
+      ? <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">📋 İstek</span>
+      : <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">⚠️ Şikayet</span>;
+
+  const durumRenk: Record<AdminGeriBildirim['durum'], string> = {
+    beklemede:   'bg-amber-100 text-amber-700',
+    inceleniyor: 'bg-blue-100 text-blue-700',
+    cozuldu:     'bg-emerald-100 text-emerald-700',
+  };
+
+  if (loading) return <div className="p-6 text-sm text-gray-500">Yükleniyor…</div>;
+
+  return (
+    <div className="p-6">
+      <div className="mb-5">
+        <h2 className="text-xl font-bold text-gray-800">Geri Bildirimler</h2>
+        <p className="text-sm text-gray-500 mt-0.5">{liste.length} kayıt</p>
+      </div>
+
+      {/* Filtreler */}
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {(['all', 'beklemede', 'inceleniyor', 'cozuldu'] as GBDurum[]).map((t) => (
+          <button key={t} onClick={() => setFilter(t)} className={tabCls(t)}>
+            {t === 'all' ? 'Tümü' : t === 'beklemede' ? 'Beklemede' : t === 'inceleniyor' ? 'İnceleniyor' : 'Çözüldü'}
+            {t === 'all' && ` (${liste.length})`}
+            {t !== 'all' && ` (${liste.filter((g) => g.durum === t).length})`}
+          </button>
+        ))}
+      </div>
+
+      {goruntulenen.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+          <p className="text-gray-400 text-sm">Geri bildirim bulunamadı.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600">Tip</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600">Başlık</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600 hidden md:table-cell">Kullanıcı</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600 hidden lg:table-cell">Tarih</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600">Durum</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600">İşlem</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {goruntulenen.map((g) => (
+                <tr key={g.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 whitespace-nowrap">{tipBadge(g.tip)}</td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-gray-800 truncate max-w-[200px]" title={g.baslik}>{g.baslik}</p>
+                    <p className="text-xs text-gray-400 truncate max-w-[200px]" title={g.aciklama}>{g.aciklama}</p>
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <p className="text-gray-700 truncate max-w-[150px]">{g.userName}</p>
+                    <p className="text-xs text-gray-400 truncate max-w-[150px]">{g.userEmail}</p>
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-gray-500">
+                    {g.tarih ? new Date(g.tarih.seconds * 1000).toLocaleDateString('tr-TR') : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={g.durum}
+                      onChange={(e) => handleDurumGuncelle(g.id, e.target.value as AdminGeriBildirim['durum'])}
+                      className={`text-xs font-medium px-2 py-1 rounded-lg border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 ${durumRenk[g.durum]}`}
+                    >
+                      <option value="beklemede">Beklemede</option>
+                      <option value="inceleniyor">İnceleniyor</option>
+                      <option value="cozuldu">Çözüldü</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => handleSil(g.id)}
+                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition"
+                      title="Sil"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'overview',   label: 'Genel Bakış',   icon: <LayoutDashboard className="w-4 h-4" /> },
   { key: 'settings',   label: 'Site Ayarları', icon: <Settings className="w-4 h-4" /> },
@@ -2786,7 +2932,8 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'features',   label: 'Özellikler',    icon: <Sliders    className="w-4 h-4" /> },
   { key: 'yorumlar',   label: 'Puanlar',       icon: <ThumbsUp   className="w-4 h-4" /> },
   { key: 'hakkimizda', label: 'Hakkımızda',    icon: <BookOpen   className="w-4 h-4" /> },
-  { key: 'acilIlanlar', label: 'Acil İlanlar', icon: <Flame className="w-4 h-4 text-red-500" /> },
+  { key: 'acilIlanlar',      label: 'Acil İlanlar',    icon: <Flame className="w-4 h-4 text-red-500" /> },
+  { key: 'geriBildirimler', label: 'Geri Bildirimler', icon: <Inbox className="w-4 h-4" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -2796,7 +2943,7 @@ export default function AdminDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [seedBusy,      setSeedBusy]      = useState(false);
   const [clearBusy,     setClearBusy]     = useState(false);
-  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ talepler: 0, firms: 0, yorumlar: 0, quotes: 0 });
+  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ talepler: 0, firms: 0, yorumlar: 0, quotes: 0, geriBildirimler: 0 });
 
   async function handleSeed() {
     toast.info('10 firma, 30 ilan, 15 talep, 10 teklif eklenecek…');
@@ -2878,7 +3025,11 @@ export default function AdminDashboardPage() {
       query(collection(db, 'quotes'), where('durum', '==', 'beklemede')),
       (s) => setPendingCounts((p) => ({ ...p, quotes: s.size })),
     );
-    return () => { u1(); u2(); u3(); };
+    const u4 = onSnapshot(
+      query(collection(db, 'geri_bildirimler'), where('durum', '==', 'beklemede')),
+      (s) => setPendingCounts((p) => ({ ...p, geriBildirimler: s.size })),
+    );
+    return () => { u1(); u2(); u3(); u4(); };
   }, [user]);
 
   const handleSignOut = async () => {
@@ -2941,8 +3092,9 @@ export default function AdminDashboardPage() {
           <nav className="space-y-1">
             {TABS.map((t) => {
               const badge =
-                t.key === 'talepler' ? pendingCounts.talepler :
-                t.key === 'firms'    ? pendingCounts.firms    : 0;
+                t.key === 'talepler'        ? pendingCounts.talepler :
+                t.key === 'firms'           ? pendingCounts.firms    :
+                t.key === 'geriBildirimler' ? pendingCounts.geriBildirimler : 0;
               return (
                 <button
                   key={t.key}
@@ -3015,7 +3167,8 @@ export default function AdminDashboardPage() {
           {tab === 'features'   && <FeaturesTab />}
           {tab === 'yorumlar'   && <YorumlarTab />}
           {tab === 'hakkimizda' && <HakkimizdaTab />}
-          {tab === 'acilIlanlar' && <AcilIlanlarTab />}
+          {tab === 'acilIlanlar'      && <AcilIlanlarTab />}
+          {tab === 'geriBildirimler' && <GeriBildirimlerTab />}
         </main>
       </div>
     </div>

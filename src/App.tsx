@@ -35,6 +35,7 @@ const FirmaProfilPage       = lazy(() => import('./pages/FirmaProfilPage'));
 const ProfilPage            = lazy(() => import('./pages/ProfilPage'));
 const FiyatHesaplaPage      = lazy(() => import('./pages/FiyatHesaplaPage'));
 const HakkimizdaPage        = lazy(() => import('./pages/HakkimizdaPage'));
+const GeriBildirimPage      = lazy(() => import('./pages/GeriBildirimPage'));
 const NotFoundPage          = lazy(() => import('./pages/NotFoundPage'));
 
 /* ── Sayfa yüklenirken gösterilecek spinner ───────────────── */
@@ -80,6 +81,7 @@ function App() {
                 <Route path="/logo-kit"         element={<LogoKitPage />} />
                 <Route path="/fiyat-hesapla"    element={<FiyatHesaplaPage />} />
                 <Route path="/hakkimizda"       element={<HakkimizdaPage />} />
+                <Route path="/geri-bildirim"   element={<GeriBildirimPage />} />
                 <Route path="/admin"            element={<AdminLoginPage />} />
                 <Route path="/admin/dashboard"  element={
                   <AdminRoute>

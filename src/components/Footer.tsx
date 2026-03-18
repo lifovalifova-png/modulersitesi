@@ -57,6 +57,7 @@ export default function Footer() {
                 <li><Link to="/fiyat-hesapla" className="hover:text-emerald-400 transition">{t('nav.fiyatHesapla')}</Link></li>
               )}
               <li><Link to="/hakkimizda" className="hover:text-emerald-400 transition">{t('nav.about')}</Link></li>
+              <li><Link to="/geri-bildirim" className="hover:text-emerald-400 transition">İstek & Şikayet</Link></li>
             </ul>
           </div>
 
