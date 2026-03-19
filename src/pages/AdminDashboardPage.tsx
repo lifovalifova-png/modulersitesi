@@ -30,6 +30,7 @@ import {
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
   Send, Eye, EyeOff, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
   Inbox, BookOpen, BarChart2, Download, Sliders, Star, ThumbsUp, Flame,
+  Facebook, Instagram, Twitter, Linkedin, Youtube,
 } from 'lucide-react';
 import { type FeatureFlags, DEFAULT_FLAGS } from '../hooks/useFeatureFlags';
 import logoSrc from '../assets/logo.svg';
@@ -182,6 +183,22 @@ const EMPTY_ILAN: Omit<AdminIlan, 'id'> = {
 const DEFAULT_SETTINGS: SiteSettings = {
   name: 'ModülerPazar', tagline: 'Türkiye\'nin En Büyük Modüler Yapı Pazarı',
   email: 'modulerpazar@yandex.com', destekSuresi: '3-5 iş günü', logoUrl: '',
+};
+
+interface SosyalMedya {
+  linkedin:  string;
+  instagram: string;
+  facebook:  string;
+  twitter:   string;
+  youtube:   string;
+}
+
+const DEFAULT_SOSYAL: SosyalMedya = {
+  linkedin:  'https://linkedin.com/company/modulerpazar',
+  instagram: '',
+  facebook:  '',
+  twitter:   '',
+  youtube:   '',
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -780,6 +797,8 @@ function SettingsTab() {
   const [fiyatlarSaving, setFiyatlarSaving] = useState(false);
   const [limits,         setLimits]         = useState({ ilanLimit: 3, gunlukTeklifLimit: 1, aiSorguLimit: 5, ilanSuresiGun: 30, maxYenilemeSayisi: 3 });
   const [limitsSaving,   setLimitsSaving]   = useState(false);
+  const [sosyal,         setSosyal]         = useState<SosyalMedya>(DEFAULT_SOSYAL);
+  const [sosyalSaving,   setSosyalSaving]   = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'settings', 'site'), (snap) => {
@@ -801,6 +820,31 @@ function SettingsTab() {
     });
     return unsub;
   }, []);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'sosyalMedya'), (snap) => {
+      if (snap.exists()) setSosyal((prev) => ({ ...prev, ...(snap.data() as SosyalMedya) }));
+    });
+    return unsub;
+  }, []);
+
+  const handleSosyalSave = async () => {
+    for (const [key, val] of Object.entries(sosyal)) {
+      if (val && !val.startsWith('https://')) {
+        toast.error(`${key} alanı https:// ile başlamalıdır.`);
+        return;
+      }
+    }
+    setSosyalSaving(true);
+    try {
+      await setDoc(doc(db, 'settings', 'sosyalMedya'), sosyal);
+      toast.success('Sosyal medya linkleri kaydedildi.');
+    } catch {
+      toast.error('Kaydetme sırasında hata oluştu.');
+    } finally {
+      setSosyalSaving(false);
+    }
+  };
 
   const handleLimitsSave = async () => {
     setLimitsSaving(true);
@@ -1022,6 +1066,48 @@ function SettingsTab() {
           {limitsSaving
             ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor…</>
             : <><Save className="w-4 h-4" /> Limitleri Kaydet</>
+          }
+        </button>
+      </div>
+
+      {/* Sosyal Medya Linkleri */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <div>
+          <h3 className="font-semibold text-gray-700 text-sm">Sosyal Medya Linkleri</h3>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Boş bırakılan platformlar footer'da gösterilmez. URL'ler https:// ile başlamalıdır.
+          </p>
+        </div>
+        <div className="space-y-3">
+          {([
+            { key: 'linkedin',  label: 'LinkedIn',  icon: <Linkedin  className="w-4 h-4 text-blue-600" />,   placeholder: 'https://linkedin.com/company/modulerpazar' },
+            { key: 'instagram', label: 'Instagram', icon: <Instagram className="w-4 h-4 text-pink-500" />,   placeholder: 'https://instagram.com/modulerpazar' },
+            { key: 'facebook',  label: 'Facebook',  icon: <Facebook  className="w-4 h-4 text-blue-700" />,   placeholder: 'https://facebook.com/modulerpazar' },
+            { key: 'twitter',   label: 'Twitter/X', icon: <Twitter   className="w-4 h-4 text-sky-500" />,    placeholder: 'https://twitter.com/modulerpazar' },
+            { key: 'youtube',   label: 'YouTube',   icon: <Youtube   className="w-4 h-4 text-red-600" />,    placeholder: 'https://youtube.com/@modulerpazar' },
+          ] as { key: keyof SosyalMedya; label: string; icon: React.ReactNode; placeholder: string }[]).map(({ key, label, icon, placeholder }) => (
+            <div key={key}>
+              <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1.5">
+                {icon} {label}
+              </label>
+              <input
+                type="url"
+                value={sosyal[key]}
+                onChange={(e) => setSosyal((p) => ({ ...p, [key]: e.target.value }))}
+                placeholder={placeholder}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={handleSosyalSave}
+          disabled={sosyalSaving}
+          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {sosyalSaving
+            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor…</>
+            : <><Save className="w-4 h-4" /> Sosyal Medyayı Kaydet</>
           }
         </button>
       </div>

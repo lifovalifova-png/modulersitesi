@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom';
-import { Building2, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { Building2, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin, Youtube } from 'lucide-react';
 import { SITE_CONFIG, LEGAL_LINKS } from '../config/site';
 import { useLanguage } from '../context/LanguageContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
+import { useSosyalMedya } from '../hooks/useSosyalMedya';
 
 const currentYear = new Date().getFullYear();
 
 export default function Footer() {
   const { t } = useLanguage();
   const { flags } = useFeatureFlags();
+  const sosyal = useSosyalMedya();
   return (
     <footer className="bg-gray-900 text-gray-300">
       {/* Main Footer */}
@@ -26,19 +28,32 @@ export default function Footer() {
             <p className="text-sm mb-4">
               {t('footer.desc')}
             </p>
-            <div className="flex gap-3">
-              <a href="https://www.facebook.com/modulerpazar" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
-                <Facebook className="w-5 h-5" aria-hidden="true" />
-              </a>
-              <a href="https://www.instagram.com/modulerpazar" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
-                <Instagram className="w-5 h-5" aria-hidden="true" />
-              </a>
-              <a href="https://twitter.com/modulerpazar" target="_blank" rel="noopener noreferrer" aria-label="Twitter / X" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
-                <Twitter className="w-5 h-5" aria-hidden="true" />
-              </a>
-              <a href="https://www.linkedin.com/company/modulerpazar" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
-                <Linkedin className="w-5 h-5" aria-hidden="true" />
-              </a>
+            <div className="flex gap-3 flex-wrap">
+              {sosyal.linkedin && (
+                <a href={sosyal.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
+                  <Linkedin className="w-5 h-5" aria-hidden="true" />
+                </a>
+              )}
+              {sosyal.instagram && (
+                <a href={sosyal.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
+                  <Instagram className="w-5 h-5" aria-hidden="true" />
+                </a>
+              )}
+              {sosyal.facebook && (
+                <a href={sosyal.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
+                  <Facebook className="w-5 h-5" aria-hidden="true" />
+                </a>
+              )}
+              {sosyal.twitter && (
+                <a href={sosyal.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter / X" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
+                  <Twitter className="w-5 h-5" aria-hidden="true" />
+                </a>
+              )}
+              {sosyal.youtube && (
+                <a href={sosyal.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="p-2 bg-gray-800 rounded-lg hover:bg-emerald-600 transition">
+                  <Youtube className="w-5 h-5" aria-hidden="true" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -129,12 +144,7 @@ export default function Footer() {
             addressRegion: 'İstanbul',
             addressCountry: 'TR',
           },
-          sameAs: [
-            'https://www.facebook.com/modulerpazar',
-            'https://www.instagram.com/modulerpazar',
-            'https://twitter.com/modulerpazar',
-            'https://www.linkedin.com/company/modulerpazar',
-          ],
+          sameAs: [sosyal.linkedin, sosyal.instagram, sosyal.facebook, sosyal.twitter, sosyal.youtube].filter(Boolean),
         }) }}
       />
     </footer>
