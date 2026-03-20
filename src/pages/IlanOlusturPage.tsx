@@ -138,9 +138,10 @@ export default function IlanOlusturPage() {
         const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
         setImages((prev) => prev.map((img) => img.id === id ? { ...img, progress: pct } : img));
       },
-      () => {
+      (storageError) => {
+        console.error(`[Storage] ${file.name} yükleme hatası — code: ${storageError.code}`, storageError);
         setImages((prev) => prev.map((img) => img.id === id ? { ...img, status: 'error' } : img));
-        toast.error(`${file.name} yüklenemedi.`);
+        toast.error(`${file.name} yüklenemedi. (${storageError.code})`);
       },
       async () => {
         const url = await getDownloadURL(task.snapshot.ref);
@@ -245,8 +246,12 @@ export default function IlanOlusturPage() {
 
       toast.success(t('ilanOlustur.published'));
       navigate('/firma-paneli');
-    } catch {
-      toast.error(t('ilanOlustur.publishError'));
+    } catch (err) {
+      console.error('[Firestore] İlan oluşturma hatası:', err);
+      const msg = (err as { code?: string }).code === 'permission-denied'
+        ? 'İzin reddedildi. E-posta adresinizi doğruladığınızdan emin olun.'
+        : t('ilanOlustur.publishError');
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -295,12 +300,31 @@ export default function IlanOlusturPage() {
 
           <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('ilanOlustur.title')}</h1>
 
+          {/* ── E-posta doğrulama uyarısı ───────────────── */}
+          {currentUser && !currentUser.emailVerified && (
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-300 rounded-2xl p-4 mb-4">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-800">E-posta adresiniz doğrulanmamış</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  İlan oluşturabilmek için e-posta doğrulaması gereklidir. Giriş e-postanızı kontrol edin.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* ── Firma bilgisi — readonly ─────────────────── */}
           {firma && (
             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 mb-6">
-              <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-3">
-                {t('ilanOlustur.ownerLabel')}
-              </p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                  {t('ilanOlustur.ownerLabel')}
+                </p>
+                {firma.verified
+                  ? <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">✓ Onaylı Firma</span>
+                  : <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">⏳ Onay Bekliyor</span>
+                }
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 {[
                   { label: t('common.firmaAdi'), value: firma.name   },
