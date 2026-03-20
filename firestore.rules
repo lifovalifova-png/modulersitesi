@@ -10,8 +10,7 @@ service cloud.firestore {
     // İlanlar — herkes okur, sadece seller yazabilir, admin silebilir
     match /ilanlar/{id} {
       allow read: if true;
-      allow create: if request.auth != null
-        && request.auth.token.email_verified == true;
+      allow create: if request.auth != null;
       allow update, delete: if request.auth != null
         && (resource.data.firmaId == request.auth.uid || isAdmin());
       allow delete: if isAdmin();
