@@ -65,6 +65,7 @@ export default function Footer() {
               <li><Link to="/kategori/prefabrik" className="hover:text-emerald-400 transition">{t('footer.prefabrik')}</Link></li>
               <li><Link to="/kategori/tiny-house" className="hover:text-emerald-400 transition">{t('footer.tinyHouse')}</Link></li>
               <li><Link to="/kategori/ikinci-el" className="hover:text-emerald-400 transition">{t('footer.secondHand')}</Link></li>
+              <li><Link to="/firmalar" className="hover:text-emerald-400 transition">Firmalar</Link></li>
               <li><Link to="/satici-formu" className="hover:text-emerald-400 transition">{t('footer.postAd')}</Link></li>
               <li><Link to="/blog" className="hover:text-emerald-400 transition">{t('footer.blog')}</Link></li>
               <li><Link to="/sss" className="hover:text-emerald-400 transition">{t('footer.faq')}</Link></li>

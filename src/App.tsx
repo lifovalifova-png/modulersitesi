@@ -31,6 +31,8 @@ const GizlilikPage          = lazy(() => import('./pages/GizlilikPage'));
 const KullanimKosullariPage = lazy(() => import('./pages/KullanimKosullariPage'));
 const LegalPage             = lazy(() => import('./pages/LegalPage'));
 const LogoKitPage           = lazy(() => import('./pages/LogoKitPage'));
+const FirmalarPage          = lazy(() => import('./pages/FirmalarPage'));
+const FirmaIlanlariPage     = lazy(() => import('./pages/FirmaIlanlariPage'));
 const FirmaProfilPage       = lazy(() => import('./pages/FirmaProfilPage'));
 const ProfilPage            = lazy(() => import('./pages/ProfilPage'));
 const FiyatHesaplaPage      = lazy(() => import('./pages/FiyatHesaplaPage'));
@@ -62,6 +64,9 @@ function App() {
                 <Route path="/kategori/:slug"    element={<CategoryPage />} />
                 <Route path="/ilan/:id"          element={<IlanDetayPage />} />
                 <Route path="/firmalar-harita"   element={<FirmalarHaritaPage />} />
+                <Route path="/firmalar"          element={<FirmalarPage />} />
+                <Route path="/firmalar/:firmaId/ilanlar" element={<FirmaIlanlariPage />} />
+                <Route path="/firmalar/:firmaId" element={<FirmaProfilPage />} />
                 <Route path="/firma/:id"         element={<FirmaProfilPage />} />
                 <Route path="/satici-formu"      element={<SellerFormPage />} />
                 <Route path="/ilan-olustur"      element={<IlanOlusturPage />} />

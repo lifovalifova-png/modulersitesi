@@ -368,6 +368,13 @@ export default function Header() {
             </Link>
 
             <Link
+              to="/firmalar"
+              className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+            >
+              Firmalar
+            </Link>
+
+            <Link
               to="/blog"
               className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
             >
@@ -427,6 +434,13 @@ export default function Header() {
             >
               <Map className="w-5 h-5" aria-hidden="true" />
               {t('header.firmMap')}
+            </Link>
+            <Link
+              to="/firmalar"
+              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Firmalar
             </Link>
             <Link
               to="/blog"
