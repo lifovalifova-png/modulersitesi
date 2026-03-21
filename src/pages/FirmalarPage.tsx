@@ -5,7 +5,8 @@ import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
-import { CATEGORIES } from '../data/categories';
+import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
+import { useLanguage } from '../context/LanguageContext';
 import { ShieldCheck, MapPin, Tag, ChevronDown, Building2, Star, Package, ArrowRight } from 'lucide-react';
 
 /* ── Firma tipi ──────────────────────────────────────────── */
@@ -60,6 +61,8 @@ function SkeletonCard() {
 
 /* ── Component ───────────────────────────────────────────── */
 export default function FirmalarPage() {
+  const { t } = useLanguage();
+
   const [firms,          setFirms]          = useState<Firm[]>([]);
   const [stats,          setStats]          = useState<Record<string, FirmStats>>({});
   const [loading,        setLoading]        = useState(true);
@@ -132,8 +135,8 @@ export default function FirmalarPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <SEOMeta
-        title="Firmalar — Modüler Yapı Firmaları | ModülerPazar"
-        description="Türkiye'nin dört bir yanındaki onaylı prefabrik, çelik yapı, konteyner ev ve tiny house firmalarını keşfedin."
+        title={`${t('firms.pageTitle')} | ModülerPazar`}
+        description={t('firms.seoDesc')}
         url="/firmalar"
       />
       <Header />
@@ -144,13 +147,13 @@ export default function FirmalarPage() {
           {/* Sayfa başlığı */}
           <div className="mb-6">
             <nav className="text-sm text-gray-500 mb-3 flex items-center gap-2">
-              <Link to="/" className="hover:text-emerald-600 transition">Ana Sayfa</Link>
+              <Link to="/" className="hover:text-emerald-600 transition">{t('common.home')}</Link>
               <span>/</span>
-              <span className="text-gray-800">Firmalar</span>
+              <span className="text-gray-800">{t('nav.firms')}</span>
             </nav>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Firmalar</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{t('nav.firms')}</h1>
             <p className="text-gray-500 mt-1 text-sm">
-              {loading ? 'Yükleniyor…' : `Türkiye genelinde ${firms.length} onaylı firma`}
+              {loading ? t('common.loading') : `${t('firms.countPrefix')} ${firms.length} ${t('firms.countSuffix')}`}
             </p>
           </div>
 
@@ -160,12 +163,12 @@ export default function FirmalarPage() {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                aria-label="Kategoriye göre filtrele"
+                aria-label={t('firms.filterCategory')}
                 className="appearance-none border border-gray-300 rounded-lg bg-white text-sm text-gray-700 px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="">Tüm Kategoriler</option>
+                <option value="">{t('header.allCategories')}</option>
                 {CATEGORIES.map((c) => (
-                  <option key={c.slug} value={c.name}>{c.name}</option>
+                  <option key={c.slug} value={c.name}>{t(CATEGORY_NAME_KEYS[c.slug])}</option>
                 ))}
               </select>
               <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
@@ -175,10 +178,10 @@ export default function FirmalarPage() {
               <select
                 value={filterCity}
                 onChange={(e) => setFilterCity(e.target.value)}
-                aria-label="Şehre göre filtrele"
+                aria-label={t('firms.filterCity')}
                 className="appearance-none border border-gray-300 rounded-lg bg-white text-sm text-gray-700 px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="">Tüm Şehirler</option>
+                <option value="">{t('header.allCities')}</option>
                 {cities.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
@@ -188,7 +191,7 @@ export default function FirmalarPage() {
 
             {!loading && (
               <span className="text-sm text-gray-500 ml-auto">
-                {filtered.length} firma gösteriliyor
+                {filtered.length} {t('firms.showing')}
               </span>
             )}
           </div>
@@ -202,16 +205,14 @@ export default function FirmalarPage() {
             <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
               <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 text-sm font-medium">
-                {firms.length === 0
-                  ? 'Henüz onaylı firma yok.'
-                  : 'Filtrelerle eşleşen firma bulunamadı.'}
+                {firms.length === 0 ? t('firms.noFirms') : t('firms.noMatch')}
               </p>
               {firms.length === 0 && (
                 <Link
                   to="/satici-formu"
                   className="inline-block mt-4 text-sm text-emerald-600 hover:underline font-medium"
                 >
-                  İlk firma olmak için kayıt olun →
+                  {t('firms.beFirst')}
                 </Link>
               )}
             </div>
@@ -229,7 +230,7 @@ export default function FirmalarPage() {
                     to={`/firmalar/${firm.id}/ilanlar`}
                     className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-emerald-300 hover:shadow-md transition flex flex-col gap-3 group"
                   >
-                    {/* Üst kısım: Avatar + Ad */}
+                    {/* Avatar + Ad */}
                     <div className="flex items-center gap-3">
                       <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                         <span className="text-xl font-extrabold text-emerald-700">
@@ -242,7 +243,7 @@ export default function FirmalarPage() {
                             {firm.name}
                           </p>
                           {firm.verified && (
-                            <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" aria-label="Doğrulanmış" />
+                            <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" aria-label={t('common.verified')} />
                           )}
                         </div>
                         {(firm.city || firm.sehir) && (
@@ -265,7 +266,7 @@ export default function FirmalarPage() {
                       {ilanCount > 0 && (
                         <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
                           <Package className="w-2.5 h-2.5" aria-hidden="true" />
-                          {ilanCount} ilan
+                          {ilanCount} {t('common.listings')}
                         </span>
                       )}
                     </div>
@@ -277,18 +278,18 @@ export default function FirmalarPage() {
                           <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(avg) ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-200'}`} />
                         ))}
                         <span className="text-xs text-gray-500 ml-0.5">
-                          {avg.toFixed(1)} ({ratingCount} değerlendirme)
+                          {avg.toFixed(1)} ({ratingCount} {t('puan.count')})
                         </span>
                       </div>
                     ) : (
-                      <p className="text-xs text-gray-400">Henüz değerlendirme yok</p>
+                      <p className="text-xs text-gray-400">{t('puan.noRatings')}</p>
                     )}
 
                     {/* Buton */}
                     <div className="mt-auto pt-1">
                       <span className="flex items-center justify-center gap-2 w-full text-center bg-emerald-600 text-white text-xs font-semibold py-2.5 rounded-lg group-hover:bg-emerald-700 transition">
                         <Package className="w-3.5 h-3.5" />
-                        İlanları Gör
+                        {t('firms.viewListings')}
                         <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
@@ -299,9 +300,9 @@ export default function FirmalarPage() {
           )}
 
           <p className="mt-6 text-xs text-gray-400 text-center">
-            Firmanızı listeye eklemek için{' '}
+            {t('firms.registerCta')}{' '}
             <Link to="/satici-formu" className="text-emerald-600 hover:underline">
-              ücretsiz kayıt olun
+              {t('firms.registerLink')}
             </Link>.
           </p>
         </div>

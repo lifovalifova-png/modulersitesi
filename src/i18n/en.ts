@@ -442,6 +442,33 @@ const en: Record<string, string> = {
   /* ── Nav (ek) ──────────────────────────────────────────── */
   'nav.fiyatHesapla': 'Price Calculator',
   'nav.about':        'About Us',
+  'nav.firms':        'Firms',
+
+  /* ── Firms Page ────────────────────────────────────────── */
+  'firms.pageTitle':         'Firms — Modular Building Companies',
+  'firms.seoDesc':           'Discover verified prefab, steel structure, container home and tiny house firms across Turkey.',
+  'firms.countPrefix':       'Nationwide',
+  'firms.countSuffix':       'approved firms',
+  'firms.filterCategory':    'Filter by category',
+  'firms.filterCity':        'Filter by city',
+  'firms.showing':           'firms shown',
+  'firms.noFirms':           'No approved firms yet.',
+  'firms.noMatch':           'No firms match the selected filters.',
+  'firms.beFirst':           'Be the first to register →',
+  'firms.viewListings':      'View Listings',
+  'firms.registerCta':       'To add your firm to the list,',
+  'firms.registerLink':      'sign up for free',
+  'firms.backToAll':         'Back to All Firms',
+  'firms.unnamed':           'Unnamed Firm',
+  'firms.activeListings':    'active listings',
+  'firms.viewProfile':       'View Firm Profile',
+  'firms.noListingsForFirm': 'No active listings for this firm.',
+  'firms.viewProfileLink':   'View firm profile →',
+  'firms.listingsSeoSuffix': 'Listings',
+  'firms.listingsSeoDesc':   'active listings from this firm.',
+  'firms.inStock':           'In Stock',
+  'firms.supplyPending':     'Supply Pending',
+  'firms.outOfStock':        'Out of Stock',
 
   /* ── AI query limit ────────────────────────────────────── */
   'ai.queryExhausted': '⚠️ You have used all your queries for today. Try again tomorrow.',

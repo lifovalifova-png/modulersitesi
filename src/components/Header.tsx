@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, Mail, Map, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, Mail, Map, Building2, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
 import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { SITE_CONFIG } from '../config/site';
@@ -371,7 +371,8 @@ export default function Header() {
               to="/firmalar"
               className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
             >
-              Firmalar
+              <Building2 className="w-4 h-4" aria-hidden="true" />
+              {t('nav.firms')}
             </Link>
 
             <Link
@@ -437,10 +438,11 @@ export default function Header() {
             </Link>
             <Link
               to="/firmalar"
-              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              className="flex items-center gap-2 w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Firmalar
+              <Building2 className="w-5 h-5" aria-hidden="true" />
+              {t('nav.firms')}
             </Link>
             <Link
               to="/blog"

@@ -442,6 +442,33 @@ const tr: Record<string, string> = {
   /* ── Nav (ek) ──────────────────────────────────────────── */
   'nav.fiyatHesapla': 'Fiyat Hesapla',
   'nav.about':        'Hakkımızda',
+  'nav.firms':        'Firmalar',
+
+  /* ── Firmalar Sayfası ─────────────────────────────────── */
+  'firms.pageTitle':         'Firmalar — Modüler Yapı Firmaları',
+  'firms.seoDesc':           'Türkiye\'nin dört bir yanındaki onaylı prefabrik, çelik yapı, konteyner ev ve tiny house firmalarını keşfedin.',
+  'firms.countPrefix':       'Türkiye genelinde',
+  'firms.countSuffix':       'onaylı firma',
+  'firms.filterCategory':    'Kategoriye göre filtrele',
+  'firms.filterCity':        'Şehre göre filtrele',
+  'firms.showing':           'firma gösteriliyor',
+  'firms.noFirms':           'Henüz onaylı firma yok.',
+  'firms.noMatch':           'Filtrelerle eşleşen firma bulunamadı.',
+  'firms.beFirst':           'İlk firma olmak için kayıt olun →',
+  'firms.viewListings':      'İlanları Gör',
+  'firms.registerCta':       'Firmanızı listeye eklemek için',
+  'firms.registerLink':      'ücretsiz kayıt olun',
+  'firms.backToAll':         'Tüm Firmalara Dön',
+  'firms.unnamed':           'İsimsiz Firma',
+  'firms.activeListings':    'aktif ilan',
+  'firms.viewProfile':       'Firma Profilini Gör',
+  'firms.noListingsForFirm': 'Bu firmaya ait aktif ilan bulunmuyor.',
+  'firms.viewProfileLink':   'Firma profilini görüntüle →',
+  'firms.listingsSeoSuffix': 'İlanları',
+  'firms.listingsSeoDesc':   'firmasının aktif ilanları.',
+  'firms.inStock':           'Stokta Var',
+  'firms.supplyPending':     'Tedarik Bekleniyor',
+  'firms.outOfStock':        'Stok Yok',
 
   /* ── AI sorgu limiti ───────────────────────────────────── */
   'ai.queryExhausted': '⚠️ Bugünkü soru hakkınız doldu. Yarın tekrar deneyin.',
