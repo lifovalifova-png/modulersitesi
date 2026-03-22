@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
+import { sanitizeText } from '../utils/sanitize';
 
 type Tip = 'istek' | 'sikayet';
 
@@ -25,8 +26,8 @@ export default function GeriBildirimPage() {
     try {
       await addDoc(collection(db, 'geri_bildirimler'), {
         tip:       seciliTip,
-        baslik:    baslik.trim(),
-        aciklama:  aciklama.trim(),
+        baslik:    sanitizeText(baslik, 200),
+        aciklama:  sanitizeText(aciklama, 2000),
         userId:    currentUser.uid,
         userEmail: currentUser.email ?? '',
         userName:  currentUser.displayName ?? currentUser.email ?? '',

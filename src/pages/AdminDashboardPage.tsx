@@ -494,9 +494,8 @@ function FeaturesTab() {
     try {
       await setDoc(doc(db, 'settings', 'features'), next);
       toast.success('Özellik güncellendi');
-    } catch (err) {
-      console.error('[FeaturesTab] toggle hatası:', err);
-      toast.error('Güncelleme başarısız — konsolu kontrol edin');
+    } catch {
+      toast.error('Güncelleme başarısız.');
       setFlags(prev);
     } finally {
       setSaving(false);
@@ -2501,7 +2500,7 @@ function RaporTab() {
   /* Google Sheets aktar */
   async function handleExport() {
     const webhookUrl = import.meta.env.VITE_SHEETS_WEBHOOK_URL as string | undefined;
-    console.log('[sheets] VITE_SHEETS_WEBHOOK_URL:', webhookUrl ?? '(tanımsız)');
+    // debug log kaldırıldı
     if (!webhookUrl) {
       toast.error('Google Sheets bağlantısı kurulmamış, lütfen Vercel\'de VITE_SHEETS_WEBHOOK_URL ayarlayın');
       return;
@@ -3099,9 +3098,9 @@ export default function AdminDashboardPage() {
         const batch = writeBatch(db);
         expired.forEach((d) => batch.update(doc(db, 'ilanlar', d.id), { aktif: false }));
         await batch.commit();
-        console.log(`[admin] ${expired.length} süresi dolan ilan pasife alındı.`);
-      } catch (err) {
-        console.warn('[admin] expire check hatası:', err);
+        // sessizce tamamlandı
+      } catch {
+        // expire check hatası — sessizce geç
       }
     })();
   }, [user]);

@@ -139,7 +139,7 @@ export default function IlanOlusturPage() {
         setImages((prev) => prev.map((img) => img.id === id ? { ...img, progress: pct } : img));
       },
       (storageError) => {
-        console.error(`[Storage] ${file.name} yükleme hatası — code: ${storageError.code}`, storageError);
+        // storage upload hatası
         setImages((prev) => prev.map((img) => img.id === id ? { ...img, status: 'error' } : img));
         toast.error(`${file.name} yüklenemedi. (${storageError.code})`);
       },
@@ -247,7 +247,7 @@ export default function IlanOlusturPage() {
       toast.success(t('ilanOlustur.published'));
       navigate('/firma-paneli');
     } catch (err) {
-      console.error('[Firestore] İlan oluşturma hatası:', err);
+      // ilan oluşturma hatası
       const msg = (err as { code?: string }).code === 'permission-denied'
         ? 'İzin reddedildi. E-posta adresinizi doğruladığınızdan emin olun.'
         : t('ilanOlustur.publishError');

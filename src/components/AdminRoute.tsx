@@ -1,16 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 
-type Status = 'loading' | 'authenticated' | 'unauthenticated';
+type Status = 'loading' | 'admin' | 'unauthorized';
 
 export default function AdminRoute({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>('loading');
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      setStatus(user ? 'authenticated' : 'unauthenticated');
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setStatus('unauthorized');
+        return;
+      }
+      try {
+        const adminSnap = await getDoc(doc(db, 'admins', user.uid));
+        setStatus(adminSnap.exists() ? 'admin' : 'unauthorized');
+      } catch {
+        setStatus('unauthorized');
+      }
     });
     return unsub;
   }, []);
@@ -23,7 +33,7 @@ export default function AdminRoute({ children }: { children: React.ReactNode }) 
     );
   }
 
-  if (status === 'unauthenticated') {
+  if (status !== 'admin') {
     return <Navigate to="/admin" replace />;
   }
 
