@@ -423,6 +423,28 @@ const tr: Record<string, string> = {
   'teklif.statusAccepted':    'Kabul Edildi',
   'teklif.statusRejected':    'Reddedildi',
 
+  /* ── Profil — Tekliflerim ────────────────────────────────── */
+  'profil.tekliflerimTab':    'Tekliflerim',
+  'profil.taleplerTab':       'Taleplerim',
+  'profil.tekliflerTab':      'Tekliflerim',
+  'profil.gelenTeklifler':    'Gelen Teklifler',
+  'profil.teklifYok':         'Bu talebe henüz teklif gelmedi.',
+  'profil.tumTekliflerYok':   'Henüz teklif almadınız. Talep oluşturduktan sonra firmalardan teklifler burada görünecek.',
+  'profil.firma':             'Firma',
+  'profil.fiyat':             'Fiyat',
+  'profil.teslimSuresi':      'Teslim',
+  'profil.detayGor':          'Detay Gör',
+  'profil.kabulEt':           'Kabul Et',
+  'profil.reddet':            'Reddet',
+  'profil.kabulEdildi':       'Teklif kabul edildi! Firma bilgilendirilecek.',
+  'profil.reddedildi':        'Teklif reddedildi.',
+  'profil.islemHata':         'İşlem sırasında hata oluştu.',
+  'profil.beklemede':         'Beklemede',
+  'profil.kabulDurum':        'Kabul Edildi',
+  'profil.redDurum':          'Reddedildi',
+  'profil.yeniTeklifBildirim': '{n} adet yeni teklifiniz var!',
+  'profil.talepDetay':        'Talep Detayına Git',
+
   /* ── Başlangıç Rehberi ─────────────────────────────────── */
   'rehber.panelTab':       'Panel',
   'rehber.tabTitle':       'Başlangıç Rehberi',

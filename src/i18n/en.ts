@@ -423,6 +423,28 @@ const en: Record<string, string> = {
   'teklif.statusAccepted':    'Accepted',
   'teklif.statusRejected':    'Rejected',
 
+  /* ── Profile — My Offers ─────────────────────────────────── */
+  'profil.tekliflerimTab':    'My Offers',
+  'profil.taleplerTab':       'My Requests',
+  'profil.tekliflerTab':      'My Offers',
+  'profil.gelenTeklifler':    'Incoming Offers',
+  'profil.teklifYok':         'No offers received for this request yet.',
+  'profil.tumTekliflerYok':   'No offers yet. After creating a request, offers from firms will appear here.',
+  'profil.firma':             'Firm',
+  'profil.fiyat':             'Price',
+  'profil.teslimSuresi':      'Delivery',
+  'profil.detayGor':          'View Details',
+  'profil.kabulEt':           'Accept',
+  'profil.reddet':            'Reject',
+  'profil.kabulEdildi':       'Offer accepted! The firm will be notified.',
+  'profil.reddedildi':        'Offer rejected.',
+  'profil.islemHata':         'An error occurred.',
+  'profil.beklemede':         'Pending',
+  'profil.kabulDurum':        'Accepted',
+  'profil.redDurum':          'Rejected',
+  'profil.yeniTeklifBildirim': 'You have {n} new offer(s)!',
+  'profil.talepDetay':        'View Request Details',
+
   /* ── Getting Started Guide ─────────────────────────────── */
   'rehber.panelTab':       'Panel',
   'rehber.tabTitle':       'Getting Started',

@@ -1,12 +1,15 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, FileText, UserCircle, ChevronDown } from 'lucide-react';
+import { LogOut, FileText, UserCircle, ChevronDown, Bell } from 'lucide-react';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 
 export default function UserMenu() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, role, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [bekleyenTeklif, setBekleyenTeklif] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
   /* Dışarı tıklanınca kapat */
@@ -17,6 +20,18 @@ export default function UserMenu() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  /* Bekleyen teklif sayısını dinle (alıcı kullanıcılar) */
+  useEffect(() => {
+    if (!currentUser?.email || role === 'seller') return;
+    const q = query(
+      collection(db, 'teklifler'),
+      where('musteriEmail', '==', currentUser.email),
+      where('durum', '==', 'beklemede'),
+    );
+    const unsub = onSnapshot(q, snap => setBekleyenTeklif(snap.size), () => {});
+    return unsub;
+  }, [currentUser?.email, role]);
 
   /* Giriş yapılmamışsa: Giriş / Kayıt butonları */
   if (!currentUser) {
@@ -55,16 +70,23 @@ export default function UserMenu() {
         <Link
           to="/profil"
           aria-label="Profilim"
-          className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm flex-shrink-0 hover:opacity-80 transition overflow-hidden"
+          className="relative w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm flex-shrink-0 hover:opacity-80 transition overflow-visible"
         >
-          {currentUser.photoURL ? (
-            <img
-              src={currentUser.photoURL}
-              alt={displayName}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-          ) : (
-            initials
+          <span className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+            {currentUser.photoURL ? (
+              <img
+                src={currentUser.photoURL}
+                alt={displayName}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              initials
+            )}
+          </span>
+          {bekleyenTeklif > 0 && (
+            <span className="absolute -top-1 -right-1 w-4.5 h-4.5 min-w-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+              {bekleyenTeklif > 9 ? '9+' : bekleyenTeklif}
+            </span>
           )}
         </Link>
         {/* Ad + chevron → dropdown */}
@@ -102,6 +124,19 @@ export default function UserMenu() {
               <UserCircle className="w-4 h-4" />
               Profilim
             </Link>
+            {role !== 'seller' && bekleyenTeklif > 0 && (
+              <Link
+                to="/profil"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 transition"
+              >
+                <Bell className="w-4 h-4" />
+                <span className="flex-1">Tekliflerim</span>
+                <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  {bekleyenTeklif}
+                </span>
+              </Link>
+            )}
             <Link
               to="/firma-paneli"
               onClick={() => setOpen(false)}
