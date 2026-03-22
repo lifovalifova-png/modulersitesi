@@ -1832,6 +1832,7 @@ function FirmsTab() {
 function TaleplerTab() {
   const [talepler,  setTalepler]  = useState<AdminTalep[]>([]);
   const [firms,     setFirms]     = useState<AdminFirm[]>([]);
+  const [teklifCounts, setTeklifCounts] = useState<Record<string, number>>({});
   const [filter,    setFilter]    = useState<TalepStatus>('all');
   const [expanded,  setExpanded]  = useState<string | null>(null);
   const [sending,   setSending]   = useState<string | null>(null);
@@ -1841,7 +1842,15 @@ function TaleplerTab() {
       setTalepler(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminTalep))));
     const u2 = onSnapshot(collection(db, 'firms'), (snap) =>
       setFirms(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminFirm))));
-    return () => { u1(); u2(); };
+    const u3 = onSnapshot(collection(db, 'teklifler'), (snap) => {
+      const counts: Record<string, number> = {};
+      snap.docs.forEach((d) => {
+        const tid = d.data().talepId as string;
+        counts[tid] = (counts[tid] || 0) + 1;
+      });
+      setTeklifCounts(counts);
+    });
+    return () => { u1(); u2(); u3(); };
   }, []);
 
   /* Firmalara İlet — 3 kademeli eşleştirme */
@@ -2071,6 +2080,7 @@ function TaleplerTab() {
                           <div className="text-xs text-gray-500 mt-2 space-y-1">
                             <p><strong>İletildi:</strong> {talep.firmaGonderilenler.length} firmaya</p>
                             <p><strong>Kabul:</strong> {talep.firmaKabulEdenler.length} firma</p>
+                            <p><strong>Teklif Sayısı:</strong> {teklifCounts[talep.id!] || 0} teklif</p>
                           </div>
                         </div>
                       </div>

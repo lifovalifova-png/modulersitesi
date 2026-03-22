@@ -49,3 +49,46 @@ export async function sendTalepEmail(talep: {
     email:         talep.email,
   }, PUBLIC_KEY);
 }
+
+export async function sendTeklifEmail(teklif: {
+  firmaAdi:    string;
+  fiyat:       number;
+  teslimSuresi: string;
+  aciklama:    string;
+  musteriAd:   string;
+  musteriEmail: string;
+  talepId:     string;
+}) {
+  return emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+    name:          teklif.firmaAdi,
+    email:         teklif.musteriEmail,
+    musteri_email: teklif.musteriEmail,
+    aciklama:      `${teklif.firmaAdi} firması talebinize teklif verdi.\n\nFiyat: ${teklif.fiyat.toLocaleString('tr-TR')} ₺\nTeslim Süresi: ${teklif.teslimSuresi}\nAçıklama: ${teklif.aciklama}\n\nTeklifinizi görüntülemek için: https://modulerpazar.com/talepim/${teklif.talepId}`,
+    kategori:      'Hızlı Teklif',
+    sehir:         '',
+    butce:         `${teklif.fiyat.toLocaleString('tr-TR')} ₺`,
+    ad:            teklif.musteriAd,
+    telefon:       '',
+  }, PUBLIC_KEY);
+}
+
+export async function sendTeklifKabulEmail(data: {
+  firmaEmail:  string;
+  firmaAdi:    string;
+  musteriAd:   string;
+  musteriTel:  string;
+  musteriEmail: string;
+  fiyat:       number;
+}) {
+  return emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+    name:          data.musteriAd,
+    email:         data.firmaEmail,
+    musteri_email: data.firmaEmail,
+    aciklama:      `${data.musteriAd} müşterisi teklifinizi kabul etti!\n\nKabul Edilen Fiyat: ${data.fiyat.toLocaleString('tr-TR')} ₺\nMüşteri Telefon: ${data.musteriTel}\nMüşteri E-posta: ${data.musteriEmail}`,
+    kategori:      'Teklif Kabul Edildi',
+    sehir:         '',
+    butce:         `${data.fiyat.toLocaleString('tr-TR')} ₺`,
+    ad:            data.firmaAdi,
+    telefon:       data.musteriTel,
+  }, PUBLIC_KEY);
+}

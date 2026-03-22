@@ -396,6 +396,33 @@ const en: Record<string, string> = {
   'firmaPanel.acilNedenPh':       'e.g. Stock running out, buy before price increases',
   'firmaPanel.normalFiyat':       'Regular price:',
 
+  /* ── Quick Offer ───────────────────────────────────────── */
+  'teklif.quickOffer':        'Quick Offer',
+  'teklif.price':             'Price',
+  'teklif.pricePh':           'e.g. 150000',
+  'teklif.deliveryTime':      'Delivery Time',
+  'teklif.weeks':             'weeks',
+  'teklif.months':            'months',
+  'teklif.description':       'Description',
+  'teklif.descPh':            'Write details about your offer...',
+  'teklif.send':              'Send Offer',
+  'teklif.cancel':            'Cancel',
+  'teklif.sent':              'Your offer has been sent successfully!',
+  'teklif.validPrice':        'Please enter a valid price.',
+  'teklif.validDesc':         'Please enter a description.',
+  'teklif.myRequest':         'My Request',
+  'teklif.incomingOffers':    'Incoming Offers',
+  'teklif.noOffers':          'No offers yet. Offers will appear here as firms review your request.',
+  'teklif.notFound':          'Request not found.',
+  'teklif.acceptBtn':         'Accept Offer',
+  'teklif.rejectBtn':         'Reject',
+  'teklif.accepted':          'Offer accepted! The firm will be notified.',
+  'teklif.rejected':          'Offer rejected.',
+  'teklif.error':             'An error occurred.',
+  'teklif.statusPending':     'Pending',
+  'teklif.statusAccepted':    'Accepted',
+  'teklif.statusRejected':    'Rejected',
+
   /* ── İlan Süresi (ek) ──────────────────────────────────── */
   'ilanSuresi.yenileLabel':       'Renew',
 

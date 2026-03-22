@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   collection, query, where, onSnapshot,
-  updateDoc, doc, getDoc, arrayUnion, Timestamp, increment,
+  updateDoc, doc, getDoc, addDoc, arrayUnion, Timestamp, increment, serverTimestamp,
 } from 'firebase/firestore';
 import { toast } from 'sonner';
 import {
   Building2, Bell, CheckCircle, XCircle, Phone, Mail,
   MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp, User,
-  Package, AlertTriangle,
+  Package, AlertTriangle, Send, X, Clock,
 } from 'lucide-react';
 import { type Ilan, formatFiyat } from '../hooks/useIlanlar';
 import { db } from '../lib/firebase';
@@ -17,6 +17,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { CATEGORIES } from '../data/categories';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { sendTeklifEmail } from '../lib/emailjs';
 
 /* ─── Sabitler ────────────────────────────────────────────── */
 const CAT_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.name]));
@@ -55,6 +56,13 @@ interface BildirimWithTalep {
 
 type FilterTab = 'beklemede' | 'kabul' | 'red';
 
+/* ─── Teklif modal state ─────────────────────────────────── */
+interface TeklifForm {
+  fiyat: string;
+  teslimSuresi: string;
+  aciklama: string;
+}
+
 /* ─── Acil Satış form state (per-ilan) ───────────────────── */
 interface AcilForm {
   enabled: boolean;
@@ -76,6 +84,11 @@ export default function FirmaPaneliPage() {
   /* Talep cache: daha önce çekilen talepları saklar, snapshot güncellemelerinde
      yeniden Firestore'a gitmez — N+1 sorguyu O(yeni) okumaya düşürür. */
   const talepCache = useRef<Record<string, TalepData>>({});
+
+  /* Hızlı Teklif modal */
+  const [teklifModal, setTeklifModal] = useState<BildirimWithTalep | null>(null);
+  const [teklifForm, setTeklifForm]   = useState<TeklifForm>({ fiyat: '', teslimSuresi: '1-2 hafta', aciklama: '' });
+  const [teklifSending, setTeklifSending] = useState(false);
 
   /* İlanlarım */
   const [firmaIlanlar,  setFirmaIlanlar]  = useState<Ilan[]>([]);
@@ -194,6 +207,65 @@ export default function FirmaPaneliPage() {
       toast.error(t('firmaPanel.opError'));
     } finally {
       setProcessing(null);
+    }
+  };
+
+  /* ── Hızlı Teklif Gönder ──────────────────────────────── */
+  const handleTeklifGonder = async () => {
+    if (!teklifModal || !teklifModal.talep || !currentUser) return;
+    const fiyat = Number(teklifForm.fiyat);
+    if (!fiyat || fiyat <= 0) { toast.error(t('teklif.validPrice')); return; }
+    if (!teklifForm.aciklama.trim()) { toast.error(t('teklif.validDesc')); return; }
+
+    setTeklifSending(true);
+    try {
+      // Firma adını al
+      const firmaSnap = await getDoc(doc(db, 'firms', currentUser.uid));
+      const firmaAdi = firmaSnap.exists()
+        ? (firmaSnap.data().firmaAdi || firmaSnap.data().name || 'Firma')
+        : 'Firma';
+
+      // teklifler koleksiyonuna kaydet
+      await addDoc(collection(db, 'teklifler'), {
+        talepId:      teklifModal.talepId,
+        firmaId:      currentUser.uid,
+        firmaAdi,
+        musteri: {
+          ad:    teklifModal.talep.ad,
+          email: teklifModal.talep.email,
+          telefon: teklifModal.talep.telefon,
+        },
+        fiyat,
+        aciklama:     teklifForm.aciklama.trim(),
+        teslimSuresi: teklifForm.teslimSuresi,
+        durum:        'beklemede',
+        tarih:        serverTimestamp(),
+      });
+
+      // Bildirim durumunu kabul yap
+      await updateDoc(doc(db, 'bildirimler', teklifModal.id), { status: 'kabul' });
+      await updateDoc(doc(db, 'taleplar', teklifModal.talepId), {
+        firmaKabulEdenler: arrayUnion(currentUser.uid),
+      });
+
+      // E-posta bildirimi
+      sendTeklifEmail({
+        firmaAdi,
+        fiyat,
+        teslimSuresi: teklifForm.teslimSuresi,
+        aciklama:     teklifForm.aciklama.trim(),
+        musteriAd:    teklifModal.talep.ad,
+        musteriEmail: teklifModal.talep.email,
+        talepId:      teklifModal.talepId,
+      }).catch(() => { /* sessizce geç */ });
+
+      toast.success(t('teklif.sent'));
+      setTeklifModal(null);
+      setTeklifForm({ fiyat: '', teslimSuresi: '1-2 hafta', aciklama: '' });
+    } catch {
+      toast.error(t('firmaPanel.opError'));
+    } finally {
+      setTeklifSending(false);
     }
   };
 
@@ -700,7 +772,18 @@ export default function FirmaPaneliPage() {
 
                     {/* Eylem butonları — sadece beklemede */}
                     {bildirim.status === 'beklemede' && (
-                      <div className="border-t border-gray-100 px-5 py-3 flex gap-3 bg-gray-50">
+                      <div className="border-t border-gray-100 px-5 py-3 flex gap-3 bg-gray-50 flex-wrap">
+                        <button
+                          onClick={() => {
+                            setTeklifModal(bildirim);
+                            setTeklifForm({ fiyat: '', teslimSuresi: '1-2 hafta', aciklama: '' });
+                          }}
+                          disabled={isBusy}
+                          className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white text-sm py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                        >
+                          <Send className="w-4 h-4" />
+                          {t('teklif.quickOffer')}
+                        </button>
                         <button
                           onClick={() => handleKabul(bildirim)}
                           disabled={isBusy}
@@ -742,6 +825,102 @@ export default function FirmaPaneliPage() {
       </main>
 
       <Footer />
+
+      {/* ── Hızlı Teklif Modal ─────────────────────────────── */}
+      {teklifModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            {/* Başlık */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <Send className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-gray-900">{t('teklif.quickOffer')}</h3>
+              </div>
+              <button onClick={() => setTeklifModal(null)} className="p-1 hover:bg-gray-100 rounded-lg transition">
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Talep özeti */}
+            {teklifModal.talep && (
+              <div className="mx-6 mt-4 bg-gray-50 rounded-xl p-3 text-xs text-gray-600 space-y-1">
+                <p><strong>{t('firmaPanel.detailCategory')}</strong> {CAT_MAP[teklifModal.talep.kategori] ?? teklifModal.talep.kategori}</p>
+                <p><strong>{t('firmaPanel.detailCity')}</strong> {teklifModal.talep.sehir}{teklifModal.talep.ilce ? ` — ${teklifModal.talep.ilce}` : ''}</p>
+                <p><strong>{t('firmaPanel.detailBudget')}</strong> {BUDGET_LABELS[teklifModal.talep.butce] ?? teklifModal.talep.butce}</p>
+                {teklifModal.talep.aciklama && <p><strong>{t('firmaPanel.detailDesc')}</strong> {teklifModal.talep.aciklama}</p>}
+              </div>
+            )}
+
+            {/* Form */}
+            <div className="px-6 py-4 space-y-4">
+              {/* Fiyat */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('teklif.price')} (₺)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={teklifForm.fiyat}
+                  onChange={(e) => setTeklifForm((p) => ({ ...p, fiyat: e.target.value }))}
+                  placeholder={t('teklif.pricePh')}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+
+              {/* Teslim süresi */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <Clock className="w-4 h-4 inline mr-1" />
+                  {t('teklif.deliveryTime')}
+                </label>
+                <select
+                  value={teklifForm.teslimSuresi}
+                  onChange={(e) => setTeklifForm((p) => ({ ...p, teslimSuresi: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  <option value="1-2 hafta">1-2 {t('teklif.weeks')}</option>
+                  <option value="2-4 hafta">2-4 {t('teklif.weeks')}</option>
+                  <option value="1-2 ay">1-2 {t('teklif.months')}</option>
+                  <option value="2-3 ay">2-3 {t('teklif.months')}</option>
+                  <option value="3+ ay">3+ {t('teklif.months')}</option>
+                </select>
+              </div>
+
+              {/* Açıklama */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('teklif.description')}</label>
+                <textarea
+                  rows={3}
+                  value={teklifForm.aciklama}
+                  onChange={(e) => setTeklifForm((p) => ({ ...p, aciklama: e.target.value }))}
+                  placeholder={t('teklif.descPh')}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Gönder */}
+            <div className="px-6 pb-5 flex gap-3">
+              <button
+                onClick={handleTeklifGonder}
+                disabled={teklifSending}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {teklifSending
+                  ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  : <Send className="w-4 h-4" />
+                }
+                {t('teklif.send')}
+              </button>
+              <button
+                onClick={() => setTeklifModal(null)}
+                className="px-4 py-2.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition text-sm"
+              >
+                {t('teklif.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

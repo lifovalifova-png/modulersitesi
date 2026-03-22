@@ -38,6 +38,7 @@ const ProfilPage            = lazy(() => import('./pages/ProfilPage'));
 const FiyatHesaplaPage      = lazy(() => import('./pages/FiyatHesaplaPage'));
 const HakkimizdaPage        = lazy(() => import('./pages/HakkimizdaPage'));
 const GeriBildirimPage      = lazy(() => import('./pages/GeriBildirimPage'));
+const TalepDetayPage        = lazy(() => import('./pages/TalepDetayPage'));
 const NotFoundPage          = lazy(() => import('./pages/NotFoundPage'));
 
 /* ── Sayfa yüklenirken gösterilecek spinner ───────────────── */
@@ -87,6 +88,7 @@ function App() {
                 <Route path="/fiyat-hesapla"    element={<FiyatHesaplaPage />} />
                 <Route path="/hakkimizda"       element={<HakkimizdaPage />} />
                 <Route path="/geri-bildirim"   element={<GeriBildirimPage />} />
+                <Route path="/talepim/:talepId" element={<TalepDetayPage />} />
                 <Route path="/admin"            element={<AdminLoginPage />} />
                 <Route path="/admin/dashboard"  element={
                   <AdminRoute>

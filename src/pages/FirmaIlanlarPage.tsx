@@ -9,7 +9,7 @@ import { CATEGORIES } from '../data/categories';
 import { formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import { useLanguage } from '../context/LanguageContext';
 import {
-  ShieldCheck, MapPin, Tag, Star, Send, Building2,
+  ShieldCheck, MapPin, Tag, Star, Send,
   Package, ArrowLeft, AlertCircle, Eye, Calendar, Zap,
 } from 'lucide-react';
 

@@ -396,6 +396,33 @@ const tr: Record<string, string> = {
   'firmaPanel.acilNedenPh':       'Örn: Stok erken tükenecek, fiyat artmadan alın',
   'firmaPanel.normalFiyat':       'Normal fiyat:',
 
+  /* ── Hızlı Teklif ──────────────────────────────────────── */
+  'teklif.quickOffer':        'Hızlı Teklif Ver',
+  'teklif.price':             'Fiyat',
+  'teklif.pricePh':           'Örn: 150000',
+  'teklif.deliveryTime':      'Teslim Süresi',
+  'teklif.weeks':             'hafta',
+  'teklif.months':            'ay',
+  'teklif.description':       'Açıklama',
+  'teklif.descPh':            'Teklifinizle ilgili detay yazın...',
+  'teklif.send':              'Teklif Gönder',
+  'teklif.cancel':            'Vazgeç',
+  'teklif.sent':              'Teklifiniz başarıyla gönderildi!',
+  'teklif.validPrice':        'Geçerli bir fiyat giriniz.',
+  'teklif.validDesc':         'Açıklama giriniz.',
+  'teklif.myRequest':         'Talebim',
+  'teklif.incomingOffers':    'Gelen Teklifler',
+  'teklif.noOffers':          'Henüz teklif gelmedi. Firmalar inceledikçe teklifler burada görünecek.',
+  'teklif.notFound':          'Talep bulunamadı.',
+  'teklif.acceptBtn':         'Teklifi Kabul Et',
+  'teklif.rejectBtn':         'Reddet',
+  'teklif.accepted':          'Teklif kabul edildi! Firma bilgilendirilecek.',
+  'teklif.rejected':          'Teklif reddedildi.',
+  'teklif.error':             'İşlem sırasında hata oluştu.',
+  'teklif.statusPending':     'Beklemede',
+  'teklif.statusAccepted':    'Kabul Edildi',
+  'teklif.statusRejected':    'Reddedildi',
+
   /* ── İlan Süresi (ek) ──────────────────────────────────── */
   'ilanSuresi.yenileLabel':       'Yenile',
 
