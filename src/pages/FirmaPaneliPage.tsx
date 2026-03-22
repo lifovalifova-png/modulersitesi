@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import {
   Building2, Bell, CheckCircle, XCircle, Phone, Mail,
   MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp, User,
-  Package, AlertTriangle, Send, X, Clock,
+  Package, AlertTriangle, Send, X, Clock, BookOpen, Image, Map, Circle,
 } from 'lucide-react';
 import { type Ilan, formatFiyat } from '../hooks/useIlanlar';
 import { db } from '../lib/firebase';
@@ -55,6 +55,19 @@ interface BildirimWithTalep {
 }
 
 type FilterTab = 'beklemede' | 'kabul' | 'red';
+type PanelTab = 'panel' | 'rehber';
+
+interface FirmaData {
+  name?: string;
+  firmaAdi?: string;
+  city?: string;
+  sehir?: string;
+  category?: string;
+  kategoriler?: string[];
+  phone?: string;
+  eposta?: string;
+  status?: string;
+}
 
 /* ─── Teklif modal state ─────────────────────────────────── */
 interface TeklifForm {
@@ -69,6 +82,49 @@ interface AcilForm {
   fiyat: string;
   bitis: string;
   neden: string;
+}
+
+/* ─── Rehber Adım Kartı ──────────────────────────────────── */
+function StepCard({ done, step, title, desc, hint, action, icon, t }: {
+  done: boolean;
+  step: number;
+  title: string;
+  desc: string;
+  hint?: string;
+  action?: React.ReactNode;
+  icon: React.ReactNode;
+  t: (key: string) => string;
+}) {
+  return (
+    <div className={`bg-white rounded-2xl border shadow-sm p-5 flex items-start gap-4 transition ${
+      done ? 'border-emerald-200 bg-emerald-50/30' : 'border-gray-100'
+    }`}>
+      {/* Tik / Daire */}
+      <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${
+        done ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+      }`}>
+        {done ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+            done ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+          }`}>
+            {t('rehber.step')} {step}
+          </span>
+          <h3 className={`font-semibold text-sm ${done ? 'text-gray-400' : 'text-gray-900'}`}>{title}</h3>
+        </div>
+        <p className={`text-xs mt-1 ${done ? 'text-gray-400' : 'text-gray-600'}`}>{desc}</p>
+        {hint && <p className="text-xs mt-1 text-blue-600 italic">{hint}</p>}
+        {action && <div className="mt-2">{action}</div>}
+      </div>
+
+      <div className={`flex-shrink-0 ${done ? 'text-emerald-400' : 'text-gray-300'}`}>
+        {icon}
+      </div>
+    </div>
+  );
 }
 
 /* ─── Sayfa ───────────────────────────────────────────────── */
@@ -90,6 +146,10 @@ export default function FirmaPaneliPage() {
   const [teklifForm, setTeklifForm]   = useState<TeklifForm>({ fiyat: '', teslimSuresi: '1-2 hafta', aciklama: '' });
   const [teklifSending, setTeklifSending] = useState(false);
 
+  /* Firma verisi + panel sekmesi */
+  const [firmaData, setFirmaData] = useState<FirmaData | null>(null);
+  const [panelTab, setPanelTab]   = useState<PanelTab>('panel');
+
   /* İlanlarım */
   const [firmaIlanlar,  setFirmaIlanlar]  = useState<Ilan[]>([]);
   const [acilForms,     setAcilForms]     = useState<Record<string, AcilForm>>({});
@@ -105,12 +165,35 @@ export default function FirmaPaneliPage() {
     }
   }, [role, loading, navigate]);
 
+  /* ── Firma profili ──────────────────────────────────────── */
+  useEffect(() => {
+    if (!currentUser || role !== 'seller') return;
+    const q = query(collection(db, 'firms'), where('userId', '==', currentUser.uid));
+    const unsub = onSnapshot(q, (snap) => {
+      if (!snap.empty) {
+        const data = snap.docs[0].data() as FirmaData;
+        setFirmaData(data);
+        if (data.status !== 'approved') setPanelTab('rehber');
+      } else {
+        setFirmaData(null);
+      }
+    });
+    return unsub;
+  }, [currentUser, role]);
+
   /* ── Firma ilanları ──────────────────────────────────────── */
+  const firstIlanLoad = useRef(true);
   useEffect(() => {
     if (!currentUser || role !== 'seller') return;
     const q = query(collection(db, 'ilanlar'), where('firmaId', '==', currentUser.uid));
     const unsub = onSnapshot(q, (snap) => {
       const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Ilan));
+      if (firstIlanLoad.current && docs.length === 0) {
+        setPanelTab('rehber');
+        firstIlanLoad.current = false;
+      } else {
+        firstIlanLoad.current = false;
+      }
       setFirmaIlanlar(docs);
       setAcilForms((prev) => {
         const next = { ...prev };
@@ -393,7 +476,7 @@ export default function FirmaPaneliPage() {
         <div className="max-w-4xl mx-auto px-4">
 
           {/* Başlık */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
               <Building2 className="w-5 h-5 text-emerald-700" />
             </div>
@@ -403,6 +486,133 @@ export default function FirmaPaneliPage() {
             </div>
           </div>
 
+          {/* Panel / Rehber sekmeleri */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setPanelTab('panel')}
+              className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
+                panelTab === 'panel' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Bell className="w-3.5 h-3.5 inline mr-1" />
+              {t('rehber.panelTab')}
+            </button>
+            <button
+              onClick={() => setPanelTab('rehber')}
+              className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
+                panelTab === 'rehber' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 inline mr-1" />
+              {t('rehber.tabTitle')}
+            </button>
+          </div>
+
+          {/* ── Başlangıç Rehberi ─────────────────────────────── */}
+          {panelTab === 'rehber' && (() => {
+            const profilOk = !!(firmaData && (firmaData.name || firmaData.firmaAdi) && (firmaData.city || firmaData.sehir) && (firmaData.category || (firmaData.kategoriler && firmaData.kategoriler.length > 0)) && (firmaData.phone || firmaData.eposta));
+            const ilanOk = firmaIlanlar.length > 0;
+            const gorselOk = firmaIlanlar.some((ilan) => ilan.gorseller && ilan.gorseller.length > 0);
+            const talepOk = bildirimler.length > 0;
+            const haritaOk = firmaData?.status === 'approved';
+
+            const steps = [profilOk, ilanOk, gorselOk, talepOk, haritaOk];
+            const completed = steps.filter(Boolean).length;
+            const total = steps.length;
+            const pct = Math.round((completed / total) * 100);
+
+            const motivation = completed === 0
+              ? t('rehber.motivation0')
+              : completed < total
+              ? t('rehber.motivationMid').replace('{n}', String(total - completed))
+              : t('rehber.motivationDone');
+
+            return (
+              <div className="space-y-4 mb-6">
+                {/* Motivasyon + ilerleme */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <p className="text-sm font-medium text-gray-700 mb-3">{motivation}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500">{completed}/{total}</span>
+                  </div>
+                </div>
+
+                {/* Adım 1 — Firma Profili */}
+                <StepCard
+                  done={profilOk}
+                  step={1}
+                  title={t('rehber.step1Title')}
+                  desc={profilOk ? t('rehber.step1Done') : t('rehber.step1Desc')}
+                  action={!profilOk ? (
+                    <Link to="/satici-formu" className="text-xs bg-amber-500 text-white px-3 py-1.5 rounded-lg hover:bg-amber-600 transition font-medium">
+                      {t('rehber.editProfile')}
+                    </Link>
+                  ) : undefined}
+                  icon={<User className="w-5 h-5" />}
+                  t={t}
+                />
+
+                {/* Adım 2 — İlk İlan */}
+                <StepCard
+                  done={ilanOk}
+                  step={2}
+                  title={t('rehber.step2Title')}
+                  desc={ilanOk ? t('rehber.step2Done') : t('rehber.step2Desc')}
+                  action={!ilanOk ? (
+                    <Link to="/ilan-olustur" className="text-xs bg-amber-500 text-white px-3 py-1.5 rounded-lg hover:bg-amber-600 transition font-medium">
+                      {t('rehber.createListing')}
+                    </Link>
+                  ) : undefined}
+                  icon={<Package className="w-5 h-5" />}
+                  t={t}
+                />
+
+                {/* Adım 3 — Görseller */}
+                <StepCard
+                  done={gorselOk}
+                  step={3}
+                  title={t('rehber.step3Title')}
+                  desc={gorselOk ? t('rehber.step3Done') : t('rehber.step3Desc')}
+                  hint={!gorselOk ? t('rehber.step3Hint') : undefined}
+                  icon={<Image className="w-5 h-5" />}
+                  t={t}
+                />
+
+                {/* Adım 4 — Teklif Talepleri */}
+                <StepCard
+                  done={talepOk}
+                  step={4}
+                  title={t('rehber.step4Title')}
+                  desc={talepOk ? t('rehber.step4Done') : t('rehber.step4Desc')}
+                  action={!talepOk ? (
+                    <button onClick={() => setPanelTab('panel')} className="text-xs bg-amber-500 text-white px-3 py-1.5 rounded-lg hover:bg-amber-600 transition font-medium">
+                      {t('rehber.goToRequests')}
+                    </button>
+                  ) : undefined}
+                  icon={<Bell className="w-5 h-5" />}
+                  t={t}
+                />
+
+                {/* Adım 5 — Harita */}
+                <StepCard
+                  done={haritaOk}
+                  step={5}
+                  title={t('rehber.step5Title')}
+                  desc={haritaOk ? t('rehber.step5Done') : t('rehber.step5Desc')}
+                  icon={<Map className="w-5 h-5" />}
+                  t={t}
+                />
+              </div>
+            );
+          })()}
+
+          {panelTab === 'panel' && <>
           {/* İstatistik kartları */}
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[
@@ -821,6 +1031,7 @@ export default function FirmaPaneliPage() {
               {t('firmaPanel.backHome')}
             </Link>
           </div>
+          </>}
         </div>
       </main>
 

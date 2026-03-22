@@ -423,6 +423,33 @@ const tr: Record<string, string> = {
   'teklif.statusAccepted':    'Kabul Edildi',
   'teklif.statusRejected':    'Reddedildi',
 
+  /* ── Başlangıç Rehberi ─────────────────────────────────── */
+  'rehber.panelTab':       'Panel',
+  'rehber.tabTitle':       'Başlangıç Rehberi',
+  'rehber.step':           'Adım',
+  'rehber.motivation0':    'Hoş geldiniz! Başlamak için aşağıdaki adımları takip edin.',
+  'rehber.motivationMid':  'Harika gidiyorsunuz! {n} adım kaldı.',
+  'rehber.motivationDone': 'Tebrikler! Profiliniz eksiksiz. 🎉',
+  'rehber.step1Title':     'Firma Profilini Tamamla',
+  'rehber.step1Desc':      'Firma adı, şehir, kategori ve iletişim bilgilerinizi eksiksiz doldurun.',
+  'rehber.step1Done':      'Firma profiliniz eksiksiz.',
+  'rehber.editProfile':    'Profili Düzenle',
+  'rehber.step2Title':     'İlk İlanını Ver',
+  'rehber.step2Desc':      'İlk ilanınızı oluşturup müşterilere ulaşmaya başlayın.',
+  'rehber.step2Done':      'İlk ilanınız yayında!',
+  'rehber.createListing':  'İlan Oluştur',
+  'rehber.step3Title':     'Görseller Ekle',
+  'rehber.step3Desc':      'İlanınıza en az 1 görsel ekleyin.',
+  'rehber.step3Done':      'İlanlarınızda görseller mevcut.',
+  'rehber.step3Hint':      'Görselli ilanlar 3x daha fazla teklif alır!',
+  'rehber.step4Title':     'Teklif Taleplerini Takip Et',
+  'rehber.step4Desc':      'Müşteriler teklif talep ettiğinde Panel sekmesinden takip edebilirsiniz.',
+  'rehber.step4Done':      'Teklif talepleriniz gelmeye başladı!',
+  'rehber.goToRequests':   'Taleplere Git',
+  'rehber.step5Title':     'Firma Haritasında Görün',
+  'rehber.step5Desc':      'Firmanız onay sürecinde. Onaylandıktan sonra haritada görüneceksiniz.',
+  'rehber.step5Done':      'Firmanız onaylı ve haritada görünüyor!',
+
   /* ── İlan Süresi (ek) ──────────────────────────────────── */
   'ilanSuresi.yenileLabel':       'Yenile',
 

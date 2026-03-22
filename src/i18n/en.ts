@@ -423,6 +423,33 @@ const en: Record<string, string> = {
   'teklif.statusAccepted':    'Accepted',
   'teklif.statusRejected':    'Rejected',
 
+  /* ── Getting Started Guide ─────────────────────────────── */
+  'rehber.panelTab':       'Panel',
+  'rehber.tabTitle':       'Getting Started',
+  'rehber.step':           'Step',
+  'rehber.motivation0':    'Welcome! Follow the steps below to get started.',
+  'rehber.motivationMid':  'Great progress! {n} steps remaining.',
+  'rehber.motivationDone': 'Congratulations! Your profile is complete. 🎉',
+  'rehber.step1Title':     'Complete Your Company Profile',
+  'rehber.step1Desc':      'Fill in your company name, city, category, and contact information.',
+  'rehber.step1Done':      'Your company profile is complete.',
+  'rehber.editProfile':    'Edit Profile',
+  'rehber.step2Title':     'Post Your First Listing',
+  'rehber.step2Desc':      'Create your first listing and start reaching customers.',
+  'rehber.step2Done':      'Your first listing is live!',
+  'rehber.createListing':  'Create Listing',
+  'rehber.step3Title':     'Add Images',
+  'rehber.step3Desc':      'Add at least 1 image to your listing.',
+  'rehber.step3Done':      'Your listings have images.',
+  'rehber.step3Hint':      'Listings with images receive 3x more offers!',
+  'rehber.step4Title':     'Track Quote Requests',
+  'rehber.step4Desc':      'When customers request quotes, you can track them from the Panel tab.',
+  'rehber.step4Done':      'Quote requests have started coming in!',
+  'rehber.goToRequests':   'Go to Requests',
+  'rehber.step5Title':     'Appear on the Firm Map',
+  'rehber.step5Desc':      'Your firm is under review. You will appear on the map once approved.',
+  'rehber.step5Done':      'Your firm is approved and visible on the map!',
+
   /* ── İlan Süresi (ek) ──────────────────────────────────── */
   'ilanSuresi.yenileLabel':       'Renew',
 
