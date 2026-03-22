@@ -16,10 +16,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Talepler — herkes oluşturabilir, admin tümünü yönetir,
-    // ilgili firma (firmaGonderilenler'de UID'si olanlar) okuyabilir ve güncelleyebilir
+    // Talepler — zorunlu alan kontrolüyle oluşturulabilir (giriş zorunlu değil),
+    // admin tümünü yönetir, ilgili firma okuyabilir/güncelleyebilir
     match /taleplar/{id} {
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasAll(['kategori', 'sehir', 'ad', 'email'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0;
       allow read: if request.auth != null && (
         isAdmin() ||
         resource.data.firmaGonderilenler.hasAny([request.auth.uid])
@@ -39,9 +41,11 @@ service cloud.firestore {
         && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
-    // Quotes — herkes oluşturabilir, sadece admin okur/silebilir
+    // Quotes — zorunlu alan kontrolüyle oluşturulabilir (giriş zorunlu değil), sadece admin okur/silebilir
     match /quotes/{id} {
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasAll(['firmIds', 'ad', 'email'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0;
       allow read, delete: if request.auth != null && isAdmin();
     }
 
