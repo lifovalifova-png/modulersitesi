@@ -2,129 +2,116 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Kullanıcı kendi profilini okuyabilir/yazabilir
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isUnmodified(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    match /admins/{uid} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // İlanlar — herkes okur, sadece seller yazabilir, admin silebilir
     match /ilanlar/{id} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null
-        && (resource.data.firmaId == request.auth.uid || isAdmin());
-      allow delete: if isAdmin();
+      allow create: if request.auth != null
+        && request.resource.data.firmaId == request.auth.uid;
+      allow update: if request.auth != null && (
+        isAdmin() ||
+        (resource.data.firmaId == request.auth.uid && isUnmodified('firmaId'))
+      );
+      allow delete: if request.auth != null && (
+        resource.data.firmaId == request.auth.uid || isAdmin()
+      );
     }
 
-    // Talepler — zorunlu alan kontrolüyle oluşturulabilir (giriş zorunlu değil),
-    // admin tümünü yönetir, ilgili firma okuyabilir/güncelleyebilir
-    match /taleplar/{id} {
-      allow create: if request.resource.data.keys().hasAll(['kategori', 'sehir', 'ad', 'email'])
-        && request.resource.data.email is string
-        && request.resource.data.email.size() > 0;
+    match /firms/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (
+        isAdmin() ||
+        (resource.data.userId == request.auth.uid && isUnmodified('userId'))
+      );
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    match /teklifler/{id} {
+      allow create: if request.auth != null;
       allow read: if request.auth != null && (
         isAdmin() ||
-        resource.data.firmaGonderilenler.hasAny([request.auth.uid])
+        resource.data.firmaId == request.auth.uid ||
+        (resource.data.musteriEmail != null &&
+         request.auth.token.email == resource.data.musteriEmail)
       );
       allow update: if request.auth != null && (
         isAdmin() ||
-        resource.data.firmaGonderilenler.hasAny([request.auth.uid])
+        resource.data.firmaId == request.auth.uid ||
+        (resource.data.musteriEmail != null &&
+         request.auth.token.email == resource.data.musteriEmail)
       );
       allow delete: if request.auth != null && isAdmin();
     }
 
-    // Firmalar — herkes okur, sahip ve admin yazar
-    match /firms/{id} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null
-        && (resource.data.userId == request.auth.uid || isAdmin());
+    match /taleplar/{id} {
+      allow create: if request.resource.data.keys().hasAll(['kategori','sehir','ad','email'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0;
+      allow read, update, delete: if request.auth != null && isAdmin();
     }
 
-    // Quotes — zorunlu alan kontrolüyle oluşturulabilir (giriş zorunlu değil), sadece admin okur/silebilir
     match /quotes/{id} {
-      allow create: if request.resource.data.keys().hasAll(['firmIds', 'ad', 'email'])
+      allow create: if request.resource.data.keys().hasAll(['firmIds','ad','email'])
         && request.resource.data.email is string
         && request.resource.data.email.size() > 0;
       allow read, delete: if request.auth != null && isAdmin();
     }
 
-    // Yorumlar — herkes okur, giriş yapanlar yorum ekleyebilir, admin yönetir
     match /yorumlar/{id} {
       allow read: if true;
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null && isAdmin();
     }
 
-    // Site ayarları ve özellik bayrakları — herkes okur, sadece admin yazar
     match /settings/{docId} {
       allow read: if true;
       allow write: if request.auth != null && isAdmin();
     }
 
-    // Blog içerikleri — herkes okur, sadece admin yazar/siler
     match /blog/{docId} {
       allow read: if true;
       allow write, delete: if request.auth != null && isAdmin();
     }
 
-    // Blog ayarları ve fiyat bilgileri — herkes okur, sadece admin yazar
     match /blogSettings/{docId} {
       allow read: if true;
       allow write: if request.auth != null && isAdmin();
     }
 
-    // Hakkımızda sayfası içeriği — herkes okur, sadece admin yazar
     match /hakkimizda/{docId} {
       allow read: if true;
       allow write: if request.auth != null && isAdmin();
     }
 
-    // Bildirimler — ilgili firma (firmaId alanı) ve admin okuyabilir;
-    // satıcı kendi bildirimini güncelleyebilir (kabul/red), admin tümünü yönetir
     match /bildirimler/{id} {
       allow read: if request.auth != null
-        && (resource.data.firmaId == request.auth.uid || isAdmin());
-      allow create, delete: if request.auth != null && isAdmin();
-      allow update: if request.auth != null
-        && (resource.data.firmaId == request.auth.uid || isAdmin());
+        && (resource.data.firmaUserId == request.auth.uid || isAdmin());
+      allow create, update, delete: if request.auth != null && isAdmin();
     }
 
-    // Teklifler — firma oluşturur, firma ve ilgili müşteri okuyabilir, müşteri kabul/red güncelleyebilir, admin tümünü yönetir
-    match /teklifler/{id} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null && (
-        isAdmin() ||
-        resource.data.firmaId == request.auth.uid ||
-        resource.data.musteriEmail != null
-      );
-      allow update: if request.auth != null && (
-        isAdmin() ||
-        resource.data.firmaId == request.auth.uid
-      );
-      allow delete: if request.auth != null && isAdmin();
-    }
-
-    // Geri bildirimler — giriş yapan kullanıcılar oluşturabilir, sadece admin okur/günceller/siler
     match /geri_bildirimler/{id} {
       allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null && isAdmin();
-    }
-
-    // Admin koleksiyonu
-    match /admins/{uid} {
-      // Kullanıcı kendi admin durumunu okuyabilir
-      allow read: if request.auth != null && request.auth.uid == uid;
-      // İlk kurulum: kullanıcı kendi admin kaydını oluşturabilir (bootstrap)
-      // setDoc ile yalnızca CREATE izni var; belge zaten varsa update denemesi sessizce reddedilir
-      allow create: if request.auth != null && request.auth.uid == uid;
-      allow update, delete: if false;
-    }
-
-    // Admin kontrolü
-    function isAdmin() {
-      return request.auth != null
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
   }
 }
