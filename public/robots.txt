@@ -5,4 +5,4 @@ Disallow: /admin/dashboard
 Disallow: /firma-paneli
 Disallow: /profil
 
-Sitemap: https://modulerpazar.com/sitemap.xml
+Sitemap: https://www.modulerpazar.com/sitemap.xml

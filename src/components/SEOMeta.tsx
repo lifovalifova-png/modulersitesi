@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const BASE_URL      = 'https://modulerpazar.com';
+const BASE_URL      = 'https://www.modulerpazar.com';
 const DEFAULT_TITLE = "ModülerPazar — Türkiye'nin En Büyük Modüler Yapı Pazarı";
 const DEFAULT_DESC  = 'Prefabrik ev, çelik yapı, konteyner ve tiny house ilanları. Türkiye genelinde 2500+ ilan, 850+ firma. Aynı anda 2 firmadan teklif alın.';
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.svg`;

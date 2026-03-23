@@ -1,6 +1,6 @@
 export const SITE_CONFIG = {
   name: 'ModülerPazar',
-  url: 'https://modulerpazar.com',
+  url: 'https://www.modulerpazar.com',
   email: 'modulerpazar@yandex.com',
   address: 'Maslak Mah. AOS 55. Sk. 42 Maslak, Sarıyer/İstanbul',
 } as const;
