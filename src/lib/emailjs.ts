@@ -92,3 +92,20 @@ export async function sendTeklifKabulEmail(data: {
     telefon:       data.musteriTel,
   }, PUBLIC_KEY);
 }
+
+export async function sendFirmaOnayEmail(firma: {
+  firmaEmail: string;
+  firmaAdi:   string;
+}) {
+  return emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+    name:          firma.firmaAdi,
+    email:         firma.firmaEmail,
+    musteri_email: firma.firmaEmail,
+    aciklama:      `Tebrikler! "${firma.firmaAdi}" firma başvurunuz onaylandı.\n\nArtık ModülerPazar'da ilan verebilir ve teklif gönderebilirsiniz.\n\nHemen başlayın: https://www.modulerpazar.com/firma-paneli`,
+    kategori:      'Firma Onayı',
+    sehir:         '',
+    butce:         '',
+    ad:            firma.firmaAdi,
+    telefon:       '',
+  }, PUBLIC_KEY);
+}

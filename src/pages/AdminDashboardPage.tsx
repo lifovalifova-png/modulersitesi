@@ -37,6 +37,7 @@ import SEOMeta from '../components/SEOMeta';
 import logoSrc from '../assets/logo.svg';
 import { auth, db } from '../lib/firebase';
 import { seedFirestore, clearSeedData } from '../scripts/seedFirestore';
+import { sendFirmaOnayEmail } from '../lib/emailjs';
 import {
   BarChart   as _BarChart,
   Bar        as _Bar,
@@ -1717,6 +1718,16 @@ function FirmsTab() {
     try {
       await updateDoc(doc(db, 'firms', id), { status, verified: status === 'approved' });
       toast.success(status === 'approved' ? 'Firma onaylandı.' : 'Firma reddedildi.');
+
+      // Onay sonrası firmaya e-posta gönder
+      if (status === 'approved') {
+        const firmSnap = await import('firebase/firestore').then(({ getDoc: gd }) => gd(doc(db, 'firms', id)));
+        const data = firmSnap.data();
+        const firmaEmail = data?.eposta || data?.email || '';
+        if (firmaEmail) {
+          sendFirmaOnayEmail({ firmaEmail, firmaAdi: data?.name || '' }).catch(() => {});
+        }
+      }
     } catch {
       toast.error('İşlem başarısız.');
     }
