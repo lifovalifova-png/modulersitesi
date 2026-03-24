@@ -18,6 +18,7 @@ import { CATEGORIES } from '../data/categories';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { sendTeklifEmail } from '../lib/emailjs';
+import { Helmet } from 'react-helmet-async';
 
 /* ─── Sabitler ────────────────────────────────────────────── */
 const CAT_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.name]));
@@ -470,6 +471,10 @@ export default function FirmaPaneliPage() {
   /* ── Render ─────────────────────────────────────────────── */
   return (
     <div className="flex flex-col min-h-screen">
+      <Helmet>
+        <title>Firma Paneli | ModülerPazar</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Header />
 
       <main className="flex-1 bg-gray-50 py-10">

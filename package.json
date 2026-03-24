@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port 9002 --host 0.0.0.0",
     "build": "tsc -b && vite build",
+    "postbuild": "node scripts/prerender.mjs",
     "build:prod": "tsc -b && BUILD_MODE=prod vite build",
     "lint": "eslint .",
     "test": "vitest",
@@ -58,6 +59,7 @@
     "react": "^18.3.1",
     "react-day-picker": "8.10.1",
     "react-dom": "^18.3.1",
+    "react-helmet-async": "^3.0.0",
     "react-hook-form": "^7.72.0",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.9",
@@ -87,11 +89,28 @@
     "playwright": "1.58.2",
     "playwright-core": "1.58.2",
     "postcss": "8.4.49",
+    "react-snap": "^1.23.0",
     "tailwindcss": "3.4.16",
     "typescript": "~5.6.3",
     "typescript-eslint": "^8.57.2",
     "vite": "^6.4.1",
     "vite-plugin-source-identifier": "^1.1.2",
     "vitest": "^2.1.9"
+  },
+  "reactSnap": {
+    "source": "dist",
+    "destination": "dist",
+    "include": [
+      "/", "/kategori/prefabrik", "/kategori/celik-yapilar",
+      "/kategori/yasam-konteynerleri", "/kategori/tiny-house",
+      "/kategori/ahsap-yapilar", "/kategori/ikinci-el",
+      "/firmalar", "/firmalar-harita", "/blog",
+      "/talep-olustur", "/sss", "/hakkimizda",
+      "/fiyat-hesapla", "/kvkk", "/gizlilik",
+      "/kullanim-kosullari", "/giris", "/kayit"
+    ],
+    "minifyHtml": { "collapseWhitespace": false },
+    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+    "skipThirdPartyRequests": true
   }
 }

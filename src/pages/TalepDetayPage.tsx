@@ -13,6 +13,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { sendTeklifKabulEmail } from '../lib/emailjs';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import { CATEGORIES } from '../data/categories';
 
 const CAT_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.name]));
@@ -173,6 +174,11 @@ export default function TalepDetayPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="Talep Detayı"
+        description="Teklif talebinizin detaylarını görüntüleyin."
+        url="/talepim"
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50 py-10">

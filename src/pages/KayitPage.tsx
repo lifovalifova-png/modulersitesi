@@ -11,6 +11,7 @@ import { CATEGORIES } from '../data/categories';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import logoSrc from '../assets/logo.svg';
+import SEOMeta from '../components/SEOMeta';
 
 /* ── Google logosu ──────────────────────────────────────── */
 function GoogleIcon() {
@@ -197,6 +198,11 @@ export default function KayitPage() {
 
   return (
     <>
+      <SEOMeta
+        title="Kayıt Ol"
+        description="ModülerPazar'a ücretsiz kayıt olun. Prefabrik ev ilanlarına göz atın, teklif alın."
+        url="/kayit"
+      />
       <Header />
 
       <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4">

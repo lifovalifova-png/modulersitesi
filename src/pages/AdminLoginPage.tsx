@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from '../lib/firebase';
 import { Building2, Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 function getErrorMessage(code: string): string {
   switch (code) {
@@ -51,6 +52,10 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">
+      <Helmet>
+        <title>Admin Girişi | ModülerPazar</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8">
 
         {/* Brand */}

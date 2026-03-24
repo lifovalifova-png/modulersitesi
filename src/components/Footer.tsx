@@ -129,8 +129,8 @@ export default function Footer() {
           '@context': 'https://schema.org',
           '@type': 'Organization',
           name: 'ModülerPazar',
-          url: 'https://modulerpazar.com',
-          logo: 'https://modulerpazar.com/favicon.svg',
+          url: 'https://www.modulerpazar.com',
+          logo: 'https://www.modulerpazar.com/favicon.svg',
           description: 'Türkiye\'nin en büyük modüler yapı pazarı. Prefabrik ev, çelik yapı, konteyner ev, tiny house fiyatları ve firmaları.',
           contactPoint: {
             '@type': 'ContactPoint',
@@ -146,6 +146,26 @@ export default function Footer() {
             addressCountry: 'TR',
           },
           sameAs: [sosyal.linkedin, sosyal.instagram, sosyal.facebook, sosyal.twitter, sosyal.youtube].filter(Boolean),
+        }) }}
+      />
+
+      {/* schema.org WebSite markup */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: 'ModülerPazar',
+          url: 'https://www.modulerpazar.com',
+          description: 'Türkiye\'nin modüler yapı pazaryeri',
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: {
+              '@type': 'EntryPoint',
+              urlTemplate: 'https://www.modulerpazar.com/kategori/prefabrik?q={search_term_string}',
+            },
+            'query-input': 'required name=search_term_string',
+          },
         }) }}
       />
     </footer>

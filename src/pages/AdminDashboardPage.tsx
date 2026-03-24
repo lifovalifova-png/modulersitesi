@@ -35,6 +35,7 @@ import {
 import { type FeatureFlags, DEFAULT_FLAGS } from '../hooks/useFeatureFlags';
 import logoSrc from '../assets/logo.svg';
 import { auth, db } from '../lib/firebase';
+import { Helmet } from 'react-helmet-async';
 import { seedFirestore, clearSeedData } from '../scripts/seedFirestore';
 import {
   BarChart   as _BarChart,
@@ -3140,6 +3141,10 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
+      <Helmet>
+        <title>Admin Paneli | ModülerPazar</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
 
       {/* ── Top bar ─────────────────────────────────────── */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">

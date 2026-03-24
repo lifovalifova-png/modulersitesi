@@ -5,6 +5,7 @@ import { useAuth, authErrorMessage } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { trackEvent } from '../lib/analytics';
+import SEOMeta from '../components/SEOMeta';
 import logoSrc from '../assets/logo.svg';
 
 /* ── Google logosu ──────────────────────────────────────── */
@@ -85,6 +86,11 @@ export default function GirisPage() {
 
   return (
     <>
+      <SEOMeta
+        title="Giriş Yap"
+        description="ModülerPazar hesabınıza giriş yapın."
+        url="/giris"
+      />
       <Header />
 
       <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4">

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { sanitizeText } from '../utils/sanitize';
+import SEOMeta from '../components/SEOMeta';
 
 type Tip = 'istek' | 'sikayet';
 
@@ -47,6 +48,11 @@ export default function GeriBildirimPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
+      <SEOMeta
+        title="Geri Bildirim"
+        description="ModülerPazar hakkında görüş ve önerilerinizi paylaşın."
+        url="/geri-bildirim"
+      />
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">İstek & Şikayet</h1>
         <p className="text-gray-500 mb-8">
