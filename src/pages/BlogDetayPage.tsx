@@ -141,6 +141,35 @@ export default function BlogDetayPage() {
         type="article"
       />
 
+      {/* BlogPosting JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: post.baslik,
+          description: post.ozet,
+          image: post.kapakGorseli,
+          datePublished: post.tarih,
+          author: {
+            '@type': 'Person',
+            name: post.yazar,
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'ModülerPazar',
+            url: 'https://www.modulerpazar.com',
+            logo: { '@type': 'ImageObject', url: 'https://www.modulerpazar.com/favicon.svg' },
+          },
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `https://www.modulerpazar.com/blog/${post.slug}`,
+          },
+          wordCount: icerik ? icerik.split(/\s+/).length : undefined,
+          timeRequired: `PT${post.okumaSuresi}M`,
+        }) }}
+      />
+
       <main className="flex-1 bg-gray-50">
 
         {/* ── Hero / kapak ─────────────────────────────── */}
