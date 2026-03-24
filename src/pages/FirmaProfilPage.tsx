@@ -337,6 +337,31 @@ export default function FirmaProfilPage() {
         description={seoDesc}
         url={`/firma/${id}`}
       />
+
+      {/* LocalBusiness JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'LocalBusiness',
+          name: firma.name,
+          description: seoDesc,
+          url: `https://www.modulerpazar.com/firma/${id}`,
+          ...(sehir && { address: { '@type': 'PostalAddress', addressLocality: sehir, addressCountry: 'TR' } }),
+          ...(firma.phone && { telephone: firma.phone }),
+          ...(firma.eposta && { email: firma.eposta }),
+          ...(firma.website && { sameAs: [firma.website] }),
+          ...(avgPuan > 0 && yorumlar.length > 0 && {
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: avgPuan.toFixed(1),
+              reviewCount: yorumlar.length,
+              bestRating: 5,
+              worstRating: 1,
+            },
+          }),
+        }) }}
+      />
       <Header />
 
       <main className="flex-1">
