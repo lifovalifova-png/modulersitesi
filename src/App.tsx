@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { HelmetProvider }      from 'react-helmet-async';
 import { AuthProvider }        from './context/AuthContext';
 import { TeklifSepetProvider } from './context/TeklifSepetContext';
 import { LanguageProvider }    from './context/LanguageContext';
@@ -52,6 +53,7 @@ function PageLoader() {
 
 function App() {
   return (
+    <HelmetProvider>
     <LanguageProvider>
       <AuthProvider>
         <TeklifSepetProvider>
@@ -103,6 +105,7 @@ function App() {
         </TeklifSepetProvider>
       </AuthProvider>
     </LanguageProvider>
+    </HelmetProvider>
   );
 }
 
