@@ -4,6 +4,7 @@ import { Mail, AlertCircle, CheckCircle, Loader2, ArrowLeft } from 'lucide-react
 import { useAuth, authErrorMessage } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import logoSrc from '../assets/logo.svg';
 
 export default function SifreSifirlaPage() {
@@ -30,6 +31,11 @@ export default function SifreSifirlaPage() {
 
   return (
     <>
+      <SEOMeta
+        title="Şifre Sıfırla"
+        description="ModülerPazar hesabınızın şifresini sıfırlayın."
+        url="/sifre-sifirla"
+      />
       <Header />
 
       <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4">

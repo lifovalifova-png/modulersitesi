@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Download, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 
 /* ─── SVG sources embedded for canvas export ───────────────── */
 
@@ -147,6 +148,11 @@ export default function LogoKitPage() {
 
   return (
     <>
+      <SEOMeta
+        title="Logo Kit"
+        description="ModülerPazar logo ve marka dosyalarını indirin. SVG ve PNG formatlarında logo kiti."
+        url="/logo-kit"
+      />
       <Header />
       <main className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 py-10">

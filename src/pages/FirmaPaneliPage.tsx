@@ -17,6 +17,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { CATEGORIES } from '../data/categories';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import { sendTeklifEmail } from '../lib/emailjs';
 
 /* ─── Sabitler ────────────────────────────────────────────── */
@@ -470,6 +471,11 @@ export default function FirmaPaneliPage() {
   /* ── Render ─────────────────────────────────────────────── */
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOMeta
+        title="Firma Paneli"
+        description="ModülerPazar firma paneli. İlanlarınızı, tekliflerinizi ve talepleri yönetin."
+        url="/firma-paneli"
+      />
       <Header />
 
       <main className="flex-1 bg-gray-50 py-10">

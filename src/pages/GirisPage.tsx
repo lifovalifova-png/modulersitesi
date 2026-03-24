@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth, authErrorMessage } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import { trackEvent } from '../lib/analytics';
 import logoSrc from '../assets/logo.svg';
 
@@ -85,6 +86,11 @@ export default function GirisPage() {
 
   return (
     <>
+      <SEOMeta
+        title="Giriş Yap"
+        description="ModülerPazar hesabınıza giriş yapın. Modüler yapı ilanlarını yönetin ve teklif alın."
+        url="/giris"
+      />
       <Header />
 
       <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4">

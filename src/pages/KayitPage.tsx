@@ -10,6 +10,7 @@ import { useAuth, authErrorMessage } from '../context/AuthContext';
 import { CATEGORIES } from '../data/categories';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEOMeta from '../components/SEOMeta';
 import logoSrc from '../assets/logo.svg';
 
 /* ── Google logosu ──────────────────────────────────────── */
@@ -197,6 +198,11 @@ export default function KayitPage() {
 
   return (
     <>
+      <SEOMeta
+        title="Kayıt Ol"
+        description="ModülerPazar'a ücretsiz kayıt olun. Modüler yapı ilanı verin veya alıcı olarak teklif alın."
+        url="/kayit"
+      />
       <Header />
 
       <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4">
