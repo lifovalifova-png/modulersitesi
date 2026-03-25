@@ -325,12 +325,18 @@ const QUOTES = [
    SEED — her çalıştırmada benzersiz ID üretir (üst üste eklenebilir)
 ══════════════════════════════════════════════════════════ */
 export async function seedFirestore(): Promise<void> {
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    throw new Error('Seed işlemi için giriş yapmalısınız.');
+  }
+  const uid = currentUser.uid;
+
   const ts   = Date.now();
   const rand = Math.random().toString(36).substr(2, 5);
   const mkId = (prefix: string, n: number) =>
     `seed_${prefix}_${ts}_${rand}_${String(n).padStart(2, '0')}`;
 
-  console.log('[seed] Seed başladı...', { ts, rand });
+  console.log('[seed] Seed başladı...', { ts, rand, uid });
 
   /* Statik id → dinamik id haritaları */
   const firmIdMap: Record<string, string> = {};
@@ -339,14 +345,14 @@ export async function seedFirestore(): Promise<void> {
   const ilanIdMap: Record<string, string> = {};
   ILANLAR.forEach(({ id }, i) => { ilanIdMap[id] = mkId('ilan', i + 1); });
 
-  /* 1. Firms */
+  /* 1. Firms — userId olarak giriş yapan admin'in UID'sini kullan (firestore.rules uyumu) */
   const firmBatch = writeBatch(db);
   FIRMS.forEach(({ id, ...data }, i) => {
     firmBatch.set(doc(db, 'firms', firmIdMap[id]), {
       ...data,
       verified: true,
       status: 'approved',
-      userId: `seed_user_${String(i + 1).padStart(2, '0')}`,
+      userId: uid,
       _seed: true,
       createdAt: daysAgo(90 - i * 5),
     });
@@ -354,7 +360,7 @@ export async function seedFirestore(): Promise<void> {
   await firmBatch.commit();
   console.log('[seed] firms yazıldı (10 adet)');
 
-  /* 2. İlanlar */
+  /* 2. İlanlar — firmaId olarak admin UID'sini kullan (firestore.rules: firmaId == auth.uid) */
   const ilanBatch = writeBatch(db);
   ILANLAR.forEach(({ id, firmaId, ...data }, i) => {
     const firm = FIRMS.find((f) => f.id === firmaId)!;
@@ -364,7 +370,7 @@ export async function seedFirestore(): Promise<void> {
       kategoriSlug: firm.kategoriSlug,
       sehir: firm.sehir,
       firmaAdi: firm.name,
-      firmaId: firmIdMap[firmaId],
+      firmaId: uid,
       firmaDogrulanmis: true,
       gorseller: IMGS[firm.kategoriSlug] ?? IMGS['prefabrik'],
       status: 'aktif',
