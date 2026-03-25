@@ -12,6 +12,7 @@ import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import Disclaimer from '../components/Disclaimer';
 import { trackEvent } from '../lib/analytics';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 
 /* ─── Sabitler ────────────────────────────────────────────── */
 const CITIES = [
@@ -70,6 +71,7 @@ const LS_KEY = `talepLimit_${TODAY}`;
 
 export default function TalepOlusturPage() {
   const navigate = useNavigate();
+  const { flags, loading: flagsLoading } = useFeatureFlags();
   const [form,             setForm]             = useState<FormState>(EMPTY);
   const [done,             setDone]             = useState(false);
   const [submitting,       setSubmitting]       = useState(false);
@@ -81,6 +83,11 @@ export default function TalepOlusturPage() {
   );
 
   useEffect(() => {
+    // sinirsizTalep flag'i açıksa limiti devre dışı bırak
+    if (flags.sinirsizTalep) {
+      setLimitAsimi(false);
+      return;
+    }
     const count = Number(localStorage.getItem(LS_KEY) ?? 0);
     // Günlük limit'i Firestore'dan oku, ardından karşılaştır
     getDoc(doc(db, 'settings', 'limits')).then((snap) => {
@@ -92,7 +99,7 @@ export default function TalepOlusturPage() {
     }).catch(() => {
       setLimitAsimi(count >= 1);
     });
-  }, []);
+  }, [flags.sinirsizTalep]);
 
   const set = (field: keyof FormState, val: string | boolean) =>
     setForm((p) => ({ ...p, [field]: val }));
@@ -197,6 +204,32 @@ export default function TalepOlusturPage() {
   const Err  = ({ f }: { f: keyof FormState }) =>
     errors[f] ? <p className="text-xs text-red-500 mt-1">{errors[f]}</p> : null;
   const today = new Date().toISOString().split('T')[0];
+
+  /* ── Talep Havuzu kapalıysa bilgi mesajı göster ───────── */
+  if (!flagsLoading && !flags.talepHavuzu) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <SEOMeta title="Talep Oluştur — ModülerPazar" description="Modüler yapı teklif talebi oluşturun." />
+        <Header />
+        <main className="flex-1 bg-gray-50 flex items-center justify-center py-16 px-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md w-full text-center">
+            <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Bu özellik şu anda kullanılamıyor</h2>
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">
+              Talep Havuzu özelliği geçici olarak kapatılmıştır. Lütfen daha sonra tekrar deneyin.
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition"
+            >
+              Ana Sayfaya Dön
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   /* ── Başarı ekranı ────────────────────────────────────── */
   if (done) {

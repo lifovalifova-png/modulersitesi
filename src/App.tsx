@@ -8,6 +8,7 @@ import { LanguageProvider }    from './context/LanguageContext';
 import AdminRoute      from './components/AdminRoute';
 import TeklifSepeti   from './components/TeklifSepeti';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { useFeatureFlags } from './hooks/useFeatureFlags';
 import './App.css';
 
 /* ── Lazy page imports (her sayfa ayrı chunk) ─────────────── */
@@ -42,6 +43,13 @@ const GeriBildirimPage      = lazy(() => import('./pages/GeriBildirimPage'));
 const TalepDetayPage        = lazy(() => import('./pages/TalepDetayPage'));
 const NotFoundPage          = lazy(() => import('./pages/NotFoundPage'));
 
+/* ── Feature flag gated TeklifSepeti ───────────────────────── */
+function GatedTeklifSepeti() {
+  const { flags } = useFeatureFlags();
+  if (!flags.teklifSepeti) return null;
+  return <TeklifSepeti />;
+}
+
 /* ── Sayfa yüklenirken gösterilecek spinner ───────────────── */
 function PageLoader() {
   return (
@@ -59,7 +67,7 @@ function App() {
         <TeklifSepetProvider>
           <Router>
             <Toaster position="top-right" richColors />
-            <TeklifSepeti />
+            <GatedTeklifSepeti />
             <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes>

@@ -516,10 +516,11 @@ function FeaturesTab() {
       <div className="space-y-3">
         {FEATURE_DEFS.map((def) => {
           const enabled = flags[def.key];
+          const isComingSoon = def.key === 'onecikarIlan';
           return (
             <div
               key={def.key}
-              className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4 hover:border-gray-300 transition"
+              className={`bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4 hover:border-gray-300 transition ${isComingSoon ? 'opacity-60' : ''}`}
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
@@ -531,6 +532,11 @@ function FeaturesTab() {
                   }`}>
                     {def.tier}
                   </span>
+                  {isComingSoon && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                      (Yakında)
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500">{def.description}</p>
               </div>
@@ -538,7 +544,7 @@ function FeaturesTab() {
               {/* Toggle switch */}
               <button
                 onClick={() => handleToggle(def.key)}
-                disabled={saving}
+                disabled={saving || isComingSoon}
                 aria-label={`${def.label} ${enabled ? 'kapat' : 'aç'}`}
                 className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-60 ${
                   enabled ? 'bg-emerald-600' : 'bg-gray-200'

@@ -16,6 +16,7 @@ import SEOMeta from '../components/SEOMeta';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
 import { CATEGORIES } from '../data/categories';
 import { useLanguage } from '../context/LanguageContext';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 
 /* ─── CountUp: 0'dan hedefe sayma animasyonu ────────────── */
 function StatCounter({ target, suffix, active }: { target: number; suffix: string; active: boolean }) {
@@ -85,6 +86,7 @@ function extractSlug(text: string): string {
 export default function HomePage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { flags } = useFeatureFlags();
   const [activeTab, setActiveTab] = useState<'customer' | 'producer'>('customer');
 
   /* ─── Firestore gerçek sayılar ───────────────────────────── */
@@ -239,38 +241,46 @@ export default function HomePage() {
               </div>
 
               {/* ── AI Mini Input ──────────────────────────── */}
-              <form onSubmit={handleAsk} className="flex gap-2">
-                <div className="relative flex-1">
-                  <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" aria-hidden="true" />
-                  <input
-                    type="text"
-                    value={aiQuery}
-                    onChange={(e) => setAiQuery(e.target.value)}
-                    placeholder={aiRemaining === 0 ? 'Yarın tekrar deneyin…' : t('ai.placeholder')}
-                    disabled={aiRemaining === 0}
-                    className="w-full pl-9 pr-3 py-3 bg-white/15 backdrop-blur border border-white/30 rounded-xl text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={!aiQuery.trim() || aiLoading || aiRemaining === 0}
-                  className="flex-shrink-0 flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold px-4 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
-                >
-                  {aiLoading
-                    ? <span className="w-4 h-4 border-2 border-amber-700/30 border-t-amber-900 rounded-full animate-spin" />
-                    : <Sparkles className="w-4 h-4" aria-hidden="true" />
-                  }
-                  <span className="hidden sm:inline">{t('ai.btnAsk')}</span>
-                </button>
-              </form>
+              {flags.aiAsistan ? (
+                <>
+                  <form onSubmit={handleAsk} className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" aria-hidden="true" />
+                      <input
+                        type="text"
+                        value={aiQuery}
+                        onChange={(e) => setAiQuery(e.target.value)}
+                        placeholder={aiRemaining === 0 ? 'Yarın tekrar deneyin…' : t('ai.placeholder')}
+                        disabled={aiRemaining === 0}
+                        className="w-full pl-9 pr-3 py-3 bg-white/15 backdrop-blur border border-white/30 rounded-xl text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!aiQuery.trim() || aiLoading || aiRemaining === 0}
+                      className="flex-shrink-0 flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold px-4 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+                    >
+                      {aiLoading
+                        ? <span className="w-4 h-4 border-2 border-amber-700/30 border-t-amber-900 rounded-full animate-spin" />
+                        : <Sparkles className="w-4 h-4" aria-hidden="true" />
+                      }
+                      <span className="hidden sm:inline">{t('ai.btnAsk')}</span>
+                    </button>
+                  </form>
 
-              {/* Kalan hak göstergesi */}
-              <p className="mt-2 text-xs text-white/50">
-                {aiRemaining === 0
-                  ? t('ai.queryExhausted')
-                  : t('ai.queryRemaining').replace('{n}', String(aiRemaining))
-                }
-              </p>
+                  {/* Kalan hak göstergesi */}
+                  <p className="mt-2 text-xs text-white/50">
+                    {aiRemaining === 0
+                      ? t('ai.queryExhausted')
+                      : t('ai.queryRemaining').replace('{n}', String(aiRemaining))
+                    }
+                  </p>
+                </>
+              ) : (
+                <p className="mt-2 text-xs text-white/50">
+                  Bu özellik şu anda kullanılamıyor.
+                </p>
+              )}
             </div>
 
             {/* Stats */}
@@ -288,7 +298,7 @@ export default function HomePage() {
         </section>
 
         {/* ── AI Sonuç Kutusu (hero altında, beyaz bg) ─────── */}
-        {(aiResponse || aiLoading || aiError) && (
+        {flags.aiAsistan && (aiResponse || aiLoading || aiError) && (
           <div ref={resultRef} className="bg-white border-b border-gray-200 shadow-sm">
             <div className="max-w-3xl mx-auto px-4 py-6">
 

@@ -17,6 +17,7 @@ import {
   ArrowLeft, Zap, ShoppingBag,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 
 /* ── Kategori badge renkleri ────────────────────────────── */
 const CAT_COLORS: Record<string, string> = {
@@ -283,6 +284,7 @@ export default function IlanDetayPage() {
   const navigate   = useNavigate();
   const { t }      = useLanguage();
   const { addFirm, isInSepet, isFull, openDrawer } = useTeklifSepet();
+  const { flags } = useFeatureFlags();
 
   const [ilan,    setIlan]    = useState<Ilan | null>(null);
   const [fetching, setFetching] = useState(true);
@@ -681,33 +683,35 @@ export default function IlanDetayPage() {
                   <Send className="w-4 h-4" />{t('listing.getQuote')}
                 </button>
 
-                {isInSepet(ilan.id) ? (
-                  <button onClick={openDrawer}
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm">
-                    <CheckCircle className="w-4 h-4" />{t('listing.inBasket')}
-                  </button>
-                ) : isFull ? (
-                  <button onClick={openDrawer}
-                    className="w-full bg-gray-100 text-gray-500 font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-gray-200 transition">
-                    <ShoppingBag className="w-4 h-4" />{t('listing.basketFull')}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      const result = addFirm(ilan);
-                      if (result === 'added') {
-                        setSepetFeedback('added');
-                        setTimeout(() => setSepetFeedback('idle'), 2500);
+                {flags.teklifSepeti && (
+                  isInSepet(ilan.id) ? (
+                    <button onClick={openDrawer}
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm">
+                      <CheckCircle className="w-4 h-4" />{t('listing.inBasket')}
+                    </button>
+                  ) : isFull ? (
+                    <button onClick={openDrawer}
+                      className="w-full bg-gray-100 text-gray-500 font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-gray-200 transition">
+                      <ShoppingBag className="w-4 h-4" />{t('listing.basketFull')}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        const result = addFirm(ilan);
+                        if (result === 'added') {
+                          setSepetFeedback('added');
+                          setTimeout(() => setSepetFeedback('idle'), 2500);
+                        }
+                      }}
+                      className={`w-full font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm ${
+                        sepetFeedback === 'added' ? 'bg-emerald-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'
+                      }`}>
+                      {sepetFeedback === 'added'
+                        ? <><CheckCircle className="w-4 h-4" />{t('listing.added')}</>
+                        : <><Zap className="w-4 h-4" />{t('listing.getQuote2')}</>
                       }
-                    }}
-                    className={`w-full font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm ${
-                      sepetFeedback === 'added' ? 'bg-emerald-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'
-                    }`}>
-                    {sepetFeedback === 'added'
-                      ? <><CheckCircle className="w-4 h-4" />{t('listing.added')}</>
-                      : <><Zap className="w-4 h-4" />{t('listing.getQuote2')}</>
-                    }
-                  </button>
+                    </button>
+                  )
                 )}
 
                 <p className="text-[11px] text-gray-400 text-center leading-relaxed px-1">
