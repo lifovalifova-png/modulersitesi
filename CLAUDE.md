@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Dil
+Her zaman Türkçe cevap ver. Commit mesajları, açıklamalar ve sorular Türkçe olsun.
+
 ## Commands
 
 ```bash
