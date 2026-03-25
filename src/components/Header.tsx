@@ -500,7 +500,7 @@ export default function Header() {
                   >
                     <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {currentUser.photoURL ? (
-                        <img src={currentUser.photoURL} alt="" className="w-full h-full object-cover" />
+                        <img src={currentUser.photoURL} alt="Profil fotoğrafı" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-emerald-700 font-bold text-sm">
                           {(currentUser.displayName || currentUser.email || 'K').charAt(0).toUpperCase()}

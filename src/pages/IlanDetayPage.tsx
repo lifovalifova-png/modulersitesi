@@ -490,7 +490,7 @@ export default function IlanDetayPage() {
                         className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition ${
                           i === activeImg ? 'border-emerald-500 ring-1 ring-emerald-400' : 'border-transparent hover:border-gray-300'
                         }`}>
-                        <img src={img} alt="" loading="lazy" width={80} height={56} className="w-full h-full object-cover" />
+                        <img src={img} alt={`İlan görseli ${i + 1}`} loading="lazy" width={80} height={56} className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
