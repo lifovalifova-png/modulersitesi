@@ -39,17 +39,67 @@ export default function TeklifSepeti() {
     }
   }, [isOpen]);
 
-  /* Karşılaştırma tablosu — 2 firma yan yana */
+  /* Karşılaştırma tablosu — 2 firma yan yana (6 kriter) */
   const CompareTable = () => {
     if (firms.length < 2) return null;
     const [a, b] = firms;
-    const rows: { label: string; a: string; b: string }[] = [
-      { label: t('basket.colFirmName'),  a: a.firmaAdi,                                            b: b.firmaAdi },
-      { label: t('basket.colCategory'),  a: a.kategori,                                             b: b.kategori },
-      { label: t('basket.colCity'),      a: a.sehir,                                                b: b.sehir },
-      { label: t('basket.colPrice'),     a: new Intl.NumberFormat('tr-TR').format(a.fiyat) + ' ₺', b: new Intl.NumberFormat('tr-TR').format(b.fiyat) + ' ₺' },
-      { label: t('basket.colVerified'),  a: a.firmaDogrulanmis ? t('basket.yes') : '—',             b: b.firmaDogrulanmis ? t('basket.yes') : '—' },
+
+    const fmt = (n: number) => new Intl.NumberFormat('tr-TR').format(n) + ' ₺';
+
+    /* m² başına fiyat hesapla */
+    const m2Of = (ilan: typeof a) => {
+      const raw = ilan.ozellikler?.metrekare;
+      if (!raw) return null;
+      const n = parseInt(raw.replace(/\D/g, ''), 10);
+      return n > 0 ? n : null;
+    };
+    const m2a = m2Of(a);
+    const m2b = m2Of(b);
+    const m2PriceA = m2a ? Math.round(a.fiyat / m2a) : null;
+    const m2PriceB = m2b ? Math.round(b.fiyat / m2b) : null;
+
+    /* Satır verisi: label, a değeri, b değeri, highlight ("a" | "b" | null) */
+    type Row = { label: string; a: string; b: string; highlight?: 'a' | 'b' | null };
+    const rows: Row[] = [
+      { label: t('basket.colFirmName'),  a: a.firmaAdi, b: b.firmaAdi },
+      { label: t('basket.colCategory'),  a: a.kategori, b: b.kategori },
+      { label: t('basket.colCity'),      a: a.sehir,    b: b.sehir },
+      {
+        label: t('basket.colPrice'),
+        a: fmt(a.fiyat),
+        b: fmt(b.fiyat),
+        highlight: a.fiyat < b.fiyat ? 'a' : a.fiyat > b.fiyat ? 'b' : null,
+      },
+      {
+        label: 'm² Fiyat',
+        a: m2PriceA ? fmt(m2PriceA) + '/m²' : 'Belirtilmemiş',
+        b: m2PriceB ? fmt(m2PriceB) + '/m²' : 'Belirtilmemiş',
+        highlight: m2PriceA && m2PriceB ? (m2PriceA < m2PriceB ? 'a' : m2PriceA > m2PriceB ? 'b' : null) : null,
+      },
+      {
+        label: 'Metrekare',
+        a: a.ozellikler?.metrekare || 'Belirtilmemiş',
+        b: b.ozellikler?.metrekare || 'Belirtilmemiş',
+      },
+      {
+        label: 'Teslim Süresi',
+        a: a.ozellikler?.teslimSuresi || 'Belirtilmemiş',
+        b: b.ozellikler?.teslimSuresi || 'Belirtilmemiş',
+      },
+      {
+        label: t('basket.colVerified'),
+        a: a.firmaDogrulanmis ? t('basket.yes') : '—',
+        b: b.firmaDogrulanmis ? t('basket.yes') : '—',
+        highlight: a.firmaDogrulanmis && !b.firmaDogrulanmis ? 'a' : !a.firmaDogrulanmis && b.firmaDogrulanmis ? 'b' : null,
+      },
     ];
+
+    const cellClass = (row: Row, side: 'a' | 'b') => {
+      const base = 'px-3 py-2.5 text-xs font-semibold';
+      if (row.highlight === side) return `${base} text-emerald-700 bg-emerald-50`;
+      return `${base} text-gray-800`;
+    };
+
     return (
       <div className="p-5">
         <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -72,8 +122,8 @@ export default function TeklifSepeti() {
               {rows.map((row, i) => (
                 <tr key={i} className={`border-b border-gray-100 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                   <td className="px-3 py-2.5 text-xs font-medium text-gray-500">{row.label}</td>
-                  <td className="px-3 py-2.5 text-xs text-gray-800 font-semibold">{row.a}</td>
-                  <td className="px-3 py-2.5 text-xs text-gray-800 font-semibold">{row.b}</td>
+                  <td className={cellClass(row, 'a')}>{row.a}</td>
+                  <td className={cellClass(row, 'b')}>{row.b}</td>
                 </tr>
               ))}
             </tbody>
@@ -87,7 +137,7 @@ export default function TeklifSepeti() {
               onClick={closeDrawer}
               className="block text-center border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold py-2 rounded-lg transition"
             >
-              {f.firmaAdi.slice(0, 12)}{f.firmaAdi.length > 12 ? '…' : ''}
+              {f.firmaAdi.slice(0, 12)}{f.firmaAdi.length > 12 ? '…' : ''} — Teklif İste
             </Link>
           ))}
         </div>
