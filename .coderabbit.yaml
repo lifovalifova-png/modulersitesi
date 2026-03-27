@@ -1,0 +1,4 @@
+reviews:
+  high_level_summary: true
+  sequence_diagrams: true
+  profile: assertive
