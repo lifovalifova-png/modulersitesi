@@ -47,7 +47,7 @@ export default function GeriBildirimPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <main className="min-h-screen bg-gray-50 py-12 px-4">
       <SEOMeta
         title="Geri Bildirim"
         description="ModülerPazar hakkında istek veya şikayetlerinizi bize iletin."
@@ -175,6 +175,6 @@ export default function GeriBildirimPage() {
           </p>
         )}
       </div>
-    </div>
+    </main>
   );
 }

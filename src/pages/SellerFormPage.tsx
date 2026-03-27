@@ -262,7 +262,7 @@ export default function SellerFormPage() {
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-10 h-10 text-emerald-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">Başvurunuz Alındı!</h1>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Başvurunuz Alındı!</h2>
             <p className="text-gray-500 mb-2">Firma kaydınız incelemeye alındı.</p>
             <p className="text-gray-500 mb-8">
               <strong className="text-gray-700">24 saat içinde</strong>{' '}

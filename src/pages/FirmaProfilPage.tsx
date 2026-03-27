@@ -288,7 +288,7 @@ export default function FirmaProfilPage() {
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-4 py-20">
           <AlertCircle className="w-12 h-12 text-gray-300" />
-          <h1 className="text-xl font-bold text-gray-700">{t('firmaProfile.notFound')}</h1>
+          <h2 className="text-xl font-bold text-gray-700">{t('firmaProfile.notFound')}</h2>
           <p className="text-gray-500 text-sm max-w-xs">
             {t('firmaProfile.notFoundDesc')}
           </p>

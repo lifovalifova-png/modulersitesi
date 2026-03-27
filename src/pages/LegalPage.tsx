@@ -120,7 +120,7 @@ function CerezPolitikasi() {
     <div className="space-y-8">
       {/* Üst başlık */}
       <Card>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Çerez Politikası</h1>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Çerez Politikası</h2>
         <p className="text-emerald-600 font-medium mb-4">Son güncelleme: Mart 2025 — Versiyon 1.0</p>
         <div className="flex flex-wrap gap-2 mb-6">
           <Badge color="bg-emerald-100 text-emerald-700">KVKK Uyumlu</Badge>
@@ -338,7 +338,7 @@ function MesafeliSatisSozlesmesi() {
     <div className="space-y-8">
       {/* Üst başlık */}
       <Card>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Mesafeli Satış Sözleşmesi</h1>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Mesafeli Satış Sözleşmesi</h2>
         <p className="text-emerald-600 font-medium mb-4">Son güncelleme: Mart 2025 — Versiyon 1.0</p>
         <div className="flex flex-wrap gap-2 mb-6">
           <Badge color="bg-emerald-100 text-emerald-700">6502 Sayılı Kanun Uyumlu</Badge>

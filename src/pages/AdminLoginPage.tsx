@@ -51,7 +51,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">
+    <main className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">
       <SEOMeta
         title="Admin Giriş"
         description="ModülerPazar yönetim paneli giriş sayfası."
@@ -152,6 +152,6 @@ export default function AdminLoginPage() {
           Bu sayfa yalnızca yetkili yöneticilere açıktır.
         </p>
       </div>
-    </div>
+    </main>
   );
 }
