@@ -15,7 +15,6 @@ import './App.css';
 const HomePage              = lazy(() => import('./pages/HomePage'));
 const CategoryPage          = lazy(() => import('./pages/CategoryPage'));
 const IlanDetayPage         = lazy(() => import('./pages/IlanDetayPage'));
-const FirmalarHaritaPage    = lazy(() => import('./pages/FirmalarHaritaPage'));
 const SellerFormPage        = lazy(() => import('./pages/SellerFormPage'));
 const IlanOlusturPage       = lazy(() => import('./pages/IlanOlusturPage'));
 const TalepOlusturPage      = lazy(() => import('./pages/TalepOlusturPage'));
@@ -76,7 +75,6 @@ function App() {
                 <Route path="/"                  element={<HomePage />} />
                 <Route path="/kategori/:slug"    element={<CategoryPage />} />
                 <Route path="/ilan/:id"          element={<IlanDetayPage />} />
-                <Route path="/firmalar-harita"   element={<FirmalarHaritaPage />} />
                 <Route path="/firmalar"          element={<FirmalarPage />} />
                 <Route path="/firmalar/:firmaId/ilanlar" element={<FirmaIlanlarPage />} />
                 <Route path="/firmalar/:firmaId" element={<FirmaProfilPage />} />

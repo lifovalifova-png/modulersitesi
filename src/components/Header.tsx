@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, Mail, Map, Building2, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, Mail, Building2, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
 import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { SITE_CONFIG } from '../config/site';
@@ -184,13 +184,6 @@ export default function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3 flex-shrink-0">
-            <Link
-              to="/firmalar-harita"
-              className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-emerald-600 transition"
-            >
-              <Map className="w-5 h-5" aria-hidden="true" />
-              <span className="hidden lg:inline">{t('header.firmMap')}</span>
-            </Link>
             {role !== 'seller' && (
               <button
                 onClick={handleTeklifIste}
@@ -358,15 +351,6 @@ export default function Header() {
             {/* Separator */}
             <div className="flex-shrink-0 w-px h-5 bg-gray-300 mx-1" aria-hidden="true" />
 
-            {/* Map link in nav bar */}
-            <Link
-              to="/firmalar-harita"
-              className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
-            >
-              <Map className="w-4 h-4" aria-hidden="true" />
-              {t('header.firmMap')}
-            </Link>
-
             <Link
               to="/firmalar"
               className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
@@ -442,14 +426,6 @@ export default function Header() {
             >
               {t('header.freePostAd')}
             </button>
-            <Link
-              to="/firmalar-harita"
-              className="flex items-center gap-2 w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Map className="w-5 h-5" aria-hidden="true" />
-              {t('header.firmMap')}
-            </Link>
             <Link
               to="/firmalar"
               className="flex items-center gap-2 w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"

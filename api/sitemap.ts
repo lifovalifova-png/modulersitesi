@@ -40,7 +40,6 @@ const STATIC_PAGES = [
   { loc: '/',                   changefreq: 'daily',   priority: '1.0' },
   { loc: '/blog',               changefreq: 'weekly',  priority: '0.8' },
   { loc: '/firmalar',           changefreq: 'daily',   priority: '0.8' },
-  { loc: '/firmalar-harita',    changefreq: 'daily',   priority: '0.8' },
   { loc: '/talep-olustur',      changefreq: 'monthly', priority: '0.7' },
   { loc: '/sss',                changefreq: 'monthly', priority: '0.7' },
   { loc: '/nasil-kullanilir',   changefreq: 'monthly', priority: '0.7' },

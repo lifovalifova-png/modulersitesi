@@ -293,7 +293,7 @@ export default function FirmaProfilPage() {
             {t('firmaProfile.notFoundDesc')}
           </p>
           <Link
-            to="/firmalar-harita"
+            to="/firmalar"
             className="flex items-center gap-2 text-emerald-600 hover:underline text-sm font-medium mt-2"
           >
             <ArrowLeft className="w-4 h-4" /> {t('firmaProfile.backToAll')}
@@ -374,7 +374,7 @@ export default function FirmaProfilPage() {
             <nav className="text-xs text-white/60 mb-6 flex items-center gap-1.5">
               <Link to="/" className="hover:text-white transition">{t('common.home')}</Link>
               <span>/</span>
-              <Link to="/firmalar-harita" className="hover:text-white transition">{t('firmaProfile.breadcrumbFirms')}</Link>
+              <Link to="/firmalar" className="hover:text-white transition">{t('firmaProfile.breadcrumbFirms')}</Link>
               <span>/</span>
               <span className="text-white/90 truncate max-w-[160px]">{firmaAdi}</span>
             </nav>
@@ -736,7 +736,7 @@ export default function FirmaProfilPage() {
 
               {/* Tüm Firmalara Dön */}
               <Link
-                to="/firmalar-harita"
+                to="/firmalar"
                 className="flex items-center justify-center gap-2 w-full border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 py-2.5 rounded-xl transition text-xs font-medium"
               >
                 <ArrowLeft className="w-3.5 h-3.5" /> {t('firmaProfile.seeAll')}
