@@ -43,6 +43,7 @@ const STATIC_PAGES = [
   { loc: '/firmalar-harita',    changefreq: 'daily',   priority: '0.8' },
   { loc: '/talep-olustur',      changefreq: 'monthly', priority: '0.7' },
   { loc: '/sss',                changefreq: 'monthly', priority: '0.7' },
+  { loc: '/nasil-kullanilir',   changefreq: 'monthly', priority: '0.7' },
   { loc: '/hakkimizda',         changefreq: 'monthly', priority: '0.6' },
   { loc: '/fiyat-hesapla',      changefreq: 'monthly', priority: '0.7' },
   { loc: '/satici-formu',       changefreq: 'monthly', priority: '0.6' },
@@ -64,6 +65,7 @@ const BLOG_SLUGS = [
   'moduler-yapi-sektorunde-surdurulebilirlik',
   'prefabrik-evlerde-enerji-verimliligi',
   'moduler-yapilarda-deprem-guvenligi',
+  'modulerpazar-nasil-kullanilir-rehber',
 ];
 
 function urlEntry(loc: string, changefreq: string, priority: string, lastmod = TODAY) {

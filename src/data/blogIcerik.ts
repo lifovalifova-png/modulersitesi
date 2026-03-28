@@ -329,4 +329,96 @@ Sezonu iyi seçin; ilkbahar başı montaj siparişleri kış aylarına göre dah
 ## Sonuç
 
 100 m²lik prefabrik ev yaptırmak, doğru planlama yapıldığında betonarme alternatiflere kıyasla hem hızlı hem de ekonomik bir seçenektir. Ancak gizli maliyetlere karşı hazırlıklı olunması ve tüm kalemlerin baştan netleştirilmesi kritik önem taşır.`,
+
+  'modulerpazar-nasil-kullanilir-rehber': `## ModülerPazar Nedir?
+
+ModülerPazar, Türkiye'nin en büyük modüler yapı pazar yeridir. Prefabrik evler, çelik yapılar, konteyner evler, tiny house'lar ve ahşap yapılar için alıcıları onaylı üretici firmalarla buluşturan dijital bir platformdur. 2024 yılında yayına giren platform, binlerce ilan ve yüzlerce doğrulanmış firma ile her geçen gün büyümektedir.
+
+Bu rehber, ModülerPazar'ı ilk kez kullananlar için hem alıcı hem de satıcı perspektifinden kapsamlı bir kılavuz niteliği taşımaktadır. Platformu nasıl kullanacağınızı adım adım anlattıktan sonra fiyatlandırma modelini ve sık sorulan soruları ele alacağız.
+
+## Alıcılar İçin Nasıl Kullanılır?
+
+### 1. Kayıt Olun veya Ziyaretçi Olarak İnceleyin
+
+ModülerPazar'ı üye olmadan da kullanabilirsiniz. Ana sayfaya girerek kategori sayfalarına erişebilir, ilanları inceleyebilir ve firma profillerini görebilirsiniz. Ancak teklif talebinde bulunmak, Talep Havuzu'na proje eklemek ve bildirimleri takip etmek için ücretsiz üyelik gereklidir.
+
+Kayıt işlemi birkaç dakika sürer: e-posta adresinizi girin, şifrenizi belirleyin ve hesabınızı doğrulayın. Google hesabıyla tek tıkta giriş yapma seçeneği de mevcuttur.
+
+### 2. İlan Arama ve Filtreleme
+
+Ana sayfa arama çubuğundan anahtar kelime girebilir (örn. "100 m² prefabrik ev"), kategori ve şehir filtrelerini uygulayabilirsiniz. Kategori sayfalarında ek filtreler —fiyat aralığı, teslim süresi, garanti koşulları— ile aramanızı daraltabilirsiniz.
+
+Platform üzerinde yedi ana kategori bulunmaktadır: Prefabrik Yapılar, Çelik Yapılar, Yaşam Konteynerleri, Tiny House, Ahşap Yapılar, İkinci El ve Özel Projeler. Her kategori sayfasında aktif ilanlar ve ilgili firma bilgileri yer almaktadır.
+
+### 3. Teklif Sepeti ile Teklif Alma
+
+Beğendiğiniz bir ilanı teklif sepetine ekleyerek farklı firmalardan teklif alabilirsiniz. Sistem, aynı anda en fazla iki firmaya teklif talebi göndermenize olanak tanır. Bu sınır, fiyatları karşılaştırmanızı kolaylaştırmak ve süreci yönetilebilir tutmak amacıyla tasarlanmıştır.
+
+Teklif talebinizi gönderirken proje detaylarınızı belirtin: kaç metrekare olacak, hangi şehirde inşa edilecek, teslim tarihi ne olsun, bütçeniz nedir? Ne kadar ayrıntılı bilgi verirseniz, aldığınız teklifler o kadar isabetli olur.
+
+### 4. Talep Havuzu
+
+Belirli bir ilan seçmek yerine projenizi sisteme girerek uygun firmaların sizi bulmasını sağlayabilirsiniz. Talep Havuzu, tersine açık artırma mantığıyla çalışır: siz projeyi tanımlarsınız, platformdaki tüm uygun firmalar projenizi görür ve ilgilenenlerin teklifleri size ulaşır.
+
+Bu yöntem özellikle proje kapsamı geniş veya alışılmışın dışında olan yapılar için idealdir. Özel boyutlu konteyner ev dönüşümleri, endüstriyel depolar, tatil köyü projeleri gibi işlerde Talep Havuzu çok daha geniş bir kitleye ulaşır.
+
+### 5. Teklifleri Karşılaştırma
+
+Gelen teklifleri firma panelinde yan yana görebilirsiniz. Değerlendirirken şu kriterlere dikkat edin: fiyat ve KDV durumu, teslim süresi, dahil olan hizmetler (nakliye, montaj, temel hazırlığı), garanti koşulları ve referans projeler. İtinayla karşılaştırma yapın; en düşük fiyat her zaman en iyi seçenek olmayabilir.
+
+## Satıcılar ve Firmalar İçin Nasıl Kullanılır?
+
+### 1. Firma Hesabı Açma ve Doğrulama
+
+"Ücretsiz İlan Ver" butonuna tıklayarak satıcı kayıt formunu doldurun. Temel bilgilerin yanı sıra firmanızı doğrulamak için belge yüklemeniz gerekir: ticaret sicil gazetesi, vergi levhası ve imza sirküleri. Bu belgeler, platformda doğrulanmış firma rozeti almanızı sağlar; bu da müşteri güvenini artırır.
+
+Doğrulama süreci genellikle 1–3 iş günü içinde tamamlanır. Eksik veya hatalı belge durumunda e-posta ile bilgilendirilirsiniz.
+
+### 2. İlan Oluşturma
+
+Firma panelinize girdikten sonra "Yeni İlan Ekle" seçeneğiyle ilanınızı oluşturun. Etkili bir ilan için şunlara dikkat edin.
+
+Başlık açısından; alıcıların arama sorgularıyla örtüşecek net ve açıklayıcı bir başlık seçin. "Prefabrik ev" yerine "50–120 m² Sandviç Panel Prefabrik Ev — Anahtar Teslim" gibi spesifik bir başlık çok daha fazla ilgi çeker.
+
+Fotoğraflar konusunda; en az 5–8 kaliteli fotoğraf ekleyin. Dış cephe, iç mekan, detay çekimleri ve tamamlanmış referans projeler ilanı güçlendirir.
+
+Teknik detaylar bakımından; panel tipi, yalıtım kalınlığı, çelik profil kesiti, garanti süresi gibi bilgileri ekleyin. Teknik bilgi veren ilanlar daha güvenilir algılanır ve daha fazla teklif talebi alır.
+
+Fiyat açısından ise; fiyat aralığı belirtmek, alakasız sorgular yerine gerçekten ilgilenen alıcıları çeker.
+
+### 3. Teklif Taleplerini Yönetme
+
+Firma Paneli'nde (/firma-paneli) gelen tüm teklif taleplerini görebilirsiniz. Her talep için müşterinin proje detaylarını inceleyin: konum, alan, bütçe ve özel istekler. Kabul ettiğinizde müşterinin iletişim bilgileri açılır; reddettiğinizde talep arşive kaldırılır.
+
+Hızlı dönüş yapmanız önemlidir. Müşteriler aynı anda en fazla iki firmaya teklif gönderdiğinden, rakibinizden önce kaliteli bir teklif sunmak avantaj sağlar. ModülerPazar istatistiklerine göre ilk 24 saat içinde yanıt veren firmaların teklif kabul oranı iki kat daha yüksektir.
+
+### 4. Paket Seçimi ve Öne Çıkarma
+
+Ücretsiz planda bir aktif ilan hakkınız bulunur. Daha fazla ilan ve öne çıkma için Standart ve Premium paketlere geçebilirsiniz. Premium pakette sınırsız ilan, kategori başı yer garantisi ve Talep Havuzu'nda öncelik gibi avantajlar sunulmaktadır.
+
+## Platform Güvenliği ve Güven
+
+ModülerPazar, alıcı ve satıcı arasındaki güveni sağlamak için çeşitli mekanizmalar kullanır. Satıcı doğrulaması, her firmanın gerçek ve yasal bir işletme olduğunu teyit eder. İlan moderasyonu, yanıltıcı içeriklerin yayına girmesini önler. Şikayet sistemi, sorunlu ilanları veya firmaları raporlamanıza olanak tanır.
+
+Ödeme platformdan geçmez; bu nedenle büyük miktarlı yapı projelerinde noter onaylı sözleşme ve teminat mektubu kullanmanızı şiddetle öneriyoruz.
+
+## ModülerPazar'ı Neden Tercih Etmelisiniz?
+
+Geniş seçenek sunması bakımından; Türkiye genelinde onlarca şehirde aktif firma ve binlerce ilan bulunmaktadır. Onaylı firmalar sayesinde; belgeli ve doğrulanmış satıcılar sayesinde güvenli alışveriş ortamı sağlanmaktadır. Karşılaştırmalı teklif özelliğiyle; aynı anda iki firmadan teklif alarak en iyisini seçme imkânı sunulmaktadır. Alıcılar için tamamen ücretsiz olması; platform satıcı aboneliklerinden gelir elde ettiği için alıcılara hiçbir ücret yansıtılmamaktadır. Talep Havuzu aracılığıyla; özel projenizi platforma ekleyerek uygun tüm firmaların size ulaşmasını sağlayabilirsiniz. SEO dostu ilanlar sayesinde ise; firmaların ilanları Google'da organik olarak görünür ve ekstra reklam gideri gerekmez.
+
+## Sıkça Yapılan Hatalar ve Önleme Yolları
+
+Yetersiz proje tanımı yapmak yaygın bir hatadır. Teklif talebinde proje detaylarını eksik bırakmak, size uygun olmayan teklifler almanıza yol açar. Konum, alan, bütçe ve özel gereksinimlerinizi mutlaka belirtin.
+
+Yalnızca fiyata odaklanmak da sık yapılan bir yanlışlıktır. En ucuz teklif, en iyi değeri her zaman sunmaz. Garanti koşullarını, kullanılan malzeme kalitesini ve firmanın referanslarını da inceleyin.
+
+Acele karar vermek süreçte sorunlara yol açabilir. Teklif karşılaştırması için yeterli zaman ayırın. Platform, herhangi bir süre baskısı yaratmaz.
+
+Sözleşme imzalamamak ise ciddi riskler taşır. Anlaşmayı yalnızca sözlü veya mesaj üzerinden bırakmayın. Her büyük yapı projesi için yazılı sözleşme zorunludur.
+
+## Sonuç
+
+ModülerPazar, modüler yapı sektöründe alıcı ve satıcıları doğrudan buluşturan, Türkiye'nin en kapsamlı dijital pazar yeridir. İster prefabrik ev yaptırmak isteyen bir alıcı olun, ister ürünlerinizi geniş bir müşteri kitlesine ulaştırmak isteyen bir firma; platform her iki taraf için de güçlü araçlar sunmaktadır.
+
+Hemen kayıt olarak Türkiye genelindeki yüzlerce onaylı firmayı keşfedin, ilanları karşılaştırın ve projeniz için en doğru teklife ulaşın. ModülerPazar ile modüler yapı dünyasını keşfetmeye başlamak hiç bu kadar kolay olmamıştı.`,
 };

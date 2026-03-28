@@ -135,4 +135,15 @@ export const BLOG_POSTS: BlogPost[] = [
     yazar: 'ModülerPazar Editörü',
     kapakGorseli: 'https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?w=800&h=500&fit=crop',
   },
+  {
+    id: 12,
+    slug: 'modulerpazar-nasil-kullanilir-rehber',
+    baslik: 'ModülerPazar Nasıl Kullanılır? Eksiksiz Alıcı ve Satıcı Rehberi (2026)',
+    ozet: 'ModülerPazar\'da ilan aramak, teklif almak ve firma olarak kayıt olmak için adım adım rehber. Platform özelliklerini ve fiyatlandırmayı keşfedin.',
+    kategori: 'genel',
+    tarih: '2026-03-28',
+    okumaSuresi: 8,
+    yazar: 'ModülerPazar Editörü',
+    kapakGorseli: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=500&fit=crop',
+  },
 ];

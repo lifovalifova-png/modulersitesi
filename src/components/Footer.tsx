@@ -69,6 +69,7 @@ export default function Footer() {
               <li><Link to="/satici-formu" className="hover:text-emerald-400 transition">{t('footer.postAd')}</Link></li>
               <li><Link to="/blog" className="hover:text-emerald-400 transition">{t('footer.blog')}</Link></li>
               <li><Link to="/sss" className="hover:text-emerald-400 transition">{t('footer.faq')}</Link></li>
+              <li><Link to="/nasil-kullanilir" className="hover:text-emerald-400 transition">Nasıl Kullanılır?</Link></li>
               {flags.fiyatHesaplama && (
                 <li><Link to="/fiyat-hesapla" className="hover:text-emerald-400 transition">{t('nav.fiyatHesapla')}</Link></li>
               )}
