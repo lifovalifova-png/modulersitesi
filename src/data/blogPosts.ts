@@ -67,7 +67,7 @@ export const BLOG_POSTS: BlogPost[] = [
     tarih: '2025-02-03',
     okumaSuresi: 8,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&h=500&fit=crop',
   },
   {
     id: 6,
@@ -89,7 +89,7 @@ export const BLOG_POSTS: BlogPost[] = [
     tarih: '2025-02-14',
     okumaSuresi: 7,
     yazar: 'ModülerPazar Editörü',
-    kapakGorseli: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=500&fit=crop',
+    kapakGorseli: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=500&fit=crop',
   },
   {
     id: 8,
