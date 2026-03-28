@@ -160,97 +160,222 @@ Deprem riski, bu bölgedeki en belirleyici etkendir. Marmara Denizi kuzeyinde ak
 
 Türkiye'de yapı tipi seçimi; yalnızca bütçe değil, yaşanacak bölgenin iklim ve zemin koşulları gözetilerek yapılmalıdır. ModülerPazar'ın Yapı Asistanı, şehrinizi ve ihtiyacınızı girdikten sonra size özel öneri sunabilir.`,
 
-  'moduler-yapilarda-dask-ve-sigorta': `## DASK Nedir ve Kimler Yaptırmak Zorunda?
+  'moduler-yapilarda-dask-ve-sigorta': `## DASK Nedir ve Neden Zorunludur?
 
-Doğal Afet Sigortaları Kurumu (DASK), Türkiye'de yaşanan büyük depremlerin ardından 1999 yılında kurulmuştur. DASK zorunlu deprem sigortasını yönetmekte ve Türkiye'deki tüm konut binalarını kapsamaktadır.
+Doğal Afet Sigortaları Kurumu (DASK), 17 Ağustos 1999 Marmara Depremi'nde yaklaşık 100.000 binanın yıkılması ve devletin çok ağır bir mali yük altına girmesi üzerine 2000 yılında kurulmuştur. 587 sayılı Kanun Hükmünde Kararname ile zorunlu hale getirilen DASK, Türkiye'de belediye sınırları içindeki tüm konut yapıları için yaptırılması zorunlu bir sigorta türüdür.
+
+DASK'ın temel amacı, devletin afet sonrası tazminat yükünü azaltmak ve konut sahiplerinin deprem hasarlarını karşılamalarını sağlamaktır. Türkiye, aktif fay hatları üzerinde yer alan bir ülke olduğundan bu sigorta uygulamada son derece kritik bir işlev üstlenmektedir. TCIP (Türkiye Doğal Afet Sigortaları Kurumu) verilerine göre 2024 yılı itibarıyla Türkiye'de yaklaşık 12 milyon konut için DASK poliçesi düzenlenmiş olup penetrasyon oranı hâlâ yüzde 55 civarındadır; bu durum, pek çok konuta hâlâ bu güvencenin sağlanmadığı anlamına gelmektedir.
 
 ## Modüler Yapılar DASK Kapsamında Mı?
 
-Bu sorunun yanıtı, yapının tapu ve ruhsat durumuna bağlıdır.
+Bu sorunun yanıtı doğrudan ve nettir: Tapu ve inşaat ruhsatı bulunan her modüler yapı DASK kapsamına girer. Yapının prefabrik, çelik karkas veya konteyner dönüşümü olması fark yaratmaz; belirleyici olan hukuki statüsüdür.
 
-Tapu ve inşaat ruhsatı olan modüler yapılar için; imarlı arazide inşaat ruhsatıyla yapılmış prefabrik evler, çelik yapılar ve konteyner evler DASK kapsamındadır.
+**Ruhsatlı ve tapulu modüler yapılar:** İmarlı arazide inşaat ruhsatıyla yapılmış prefabrik evler, çelik yapılar ve konteyner konutlar, geleneksel betonarme binalarla aynı yasal statüde değerlendirilir ve DASK zorunluluğu aynen geçerlidir.
 
-Tapusuz veya ruhsatsız yapılar için; bu durumda DASK yaptırılamaz. Olası bir afet sonrasında devlet desteğinden ve sigorta tazminatından yararlanmak mümkün olmaz.
+**Ruhsatsız veya tapusuz yapılar:** Bu kategorideki yapılar için DASK poliçesi düzenlenemez. Deprem, sel veya diğer afetlerde herhangi bir sigorta tazminatı talep etmek mümkün olmaz. Ayrıca bu yapılar, afet sonrası devlet konut yardımlarından da yararlanamaz.
 
-Seyyar tiny house'lar için; araç tescili yapılmış tekerlekli tiny house'lar taşınmaz değil, taşıt statüsündedir; bu nedenle DASK yerine araç sigortası ve ihtiyarî kasko uygulanır.
+**Seyyar tiny house'lar:** Araç tescili yaptırılmış tekerlekli tiny house modelleri taşınmaz değil taşıt statüsünde kabul edilir. Bu yapılar için DASK yerine araç sigortası ve ihtiyarî kasko uygulanır. Sabit kurulu tiny house'lar ise ruhsat durumuna göre genel DASK mevzuatına tabidir.
 
-## Modüler Yapı için Hangi Sigortalar Gerekli?
+## DASK Güvencesi: Neleri Kapsar, Neleri Kapsamaz?
 
-DASK (Zorunlu Deprem Sigortası): Ruhsatlı mesken yapılar için zorunludur.
+DASK'ın kapsadığı riskler deprem, depreme bağlı yangın, infilak, tsunami ve yer kaymasıdır. Poliçe, bina yapısını korur; mobilya ve eşya için ayrı bir konut sigortası gereklidir.
 
-Konut Sigortası (İhtiyarî): DASK'ın karşılamadığı yangın, sel, fırtına, hırsızlık ve cam kırılmasını kapsar.
+DASK kapsamı dışında kalan başlıca durumlar şunlardır: depreme bağlı olmayan yangın, su baskını ve sel hasarı, fırtına ve rüzgar zararı, hırsızlık, üçüncü şahısların verdiği zararlar ve araç çarpması.
 
-İnşaat All-Risk Sigortası: Yapım aşamasındaki riskleri karşılar. Büyük projelerde taşeron veya firma tarafından yapılması önerilir.
+DASK tazminat tavanı, Hazine ve Maliye Bakanlığı tarafından belirlenen azami teminat bedeli ile sınırlıdır. 2026 yılı itibarıyla bu tavan konut başına 1.250.000 TL olarak uygulanmaktadır. Eğer konutunuzun gerçek değeri bu tavanı aşıyorsa, aradaki farkı kapsamak için ek konut sigortası yaptırmanız önerilir.
+
+## Modüler Yapı için Hangi Sigortalar Gereklidir?
+
+### 1. DASK — Zorunlu Deprem Sigortası
+Yukarıda ayrıntılı olarak açıklandığı üzere, ruhsatlı mesken yapılar için zorunludur. Bankadan konut kredisi kullanıyorsanız kredi sözleşmesi imzalanmadan önce DASK poliçesi ibraz etmek zorundasınızdır.
+
+### 2. Konut Sigortası (İhtiyarî)
+DASK'ın kapsamadığı yangın (depreme bağlı olmayan), sel, fırtına, hırsızlık, cam kırılması ve üçüncü şahıs zararlarını karşılar. Modüler yapılar için bu sigorta özellikle önerilir; zira prefabrik veya çelik yapılarda bazı sigorta şirketleri farklı risk değerlendirmesi yapabilir. Poliçeyi imzalamadan önce sigorta şirketinin "prefabrik/modüler yapı" için ek koşul getirip getirmediğini mutlaka sorgulayın.
+
+### 3. İnşaat All-Risk Sigortası
+Yapım aşamasındaki tüm riskleri — taşıma hasarı, montaj kazaları, hava koşulları, üçüncü şahıs zararı — karşılar. Anahtar teslim çalışan büyük projelerde genellikle yüklenici firma tarafından yaptırılır; ancak sipariş aşamasında bu sigortanın kimin tarafından temin edileceğini netleştirmeniz gerekir.
+
+### 4. Hayat ve Ferdi Kaza Sigortası
+Yapı projesi kapsamında olmamakla birlikte, konut kredisi kullananlar için bankalar genellikle hayat sigortasını zorunlu koşul olarak talep etmektedir.
+
+## Sigorta Değeri Nasıl Hesaplanır?
+
+Modüler yapılarda sigorta değerinin doğru belirlenmesi önemlidir. Sigorta şirketi, yapıyı "yeniden inşa maliyeti" üzerinden değerlendirir. Bu maliyet; m² birim fiyatı, yapı tipi, kullanılan malzeme kalitesi ve bölgesel işçilik ücretlerine göre değişir.
+
+2026 yılı için yaklaşık referans değerler şunlardır: Standart sandviç panel prefabrik için m² başına 12.000–18.000 TL, çelik karkas prefabrik için m² başına 18.000–28.000 TL ve konteyner dönüşüm konut için m² başına 15.000–25.000 TL.
 
 ## Sıkça Yapılan Hatalar
 
-Hasar bedelini düşük beyan etmek önemli bir hatadır; bu durumda "eksik sigorta" koşulu devreye girer. Poliçe adresini güncel tutmamak da sorun yaratabilir. Son olarak, sigorta primini son güne bırakmak da yaygın bir hatadır.
+**Hasar bedelini düşük beyan etmek:** DASK poliçelerinde en yaygın hatalardan biridir. Gerçek değerin altında sigortalama yapıldığında "eksik sigorta" koşulu devreye girer ve tazminat oransal olarak düşer. Örneğin 1.000.000 TL değerindeki bir yapıyı 600.000 TL üzerinden sigortalarsanız, hasar anında tazminatınız da %60 oranında hesaplanır.
+
+**Poliçe adresini güncel tutmamak:** Yapının tapuya kayıtlı adresi ile poliçedeki adresin örtüşmesi zorunludur. Taşınma, yeniden yapılanma veya tapu değişikliği sonrasında poliçenizi mutlaka güncelleyin.
+
+**Yenileme tarihini kaçırmak:** Sigorta süresi dolduğunda güvence otomatik olarak sona erer. Özellikle tapu devri yapılan ikinci el modüler yapı alımlarında, eski sahibin poliçesinin devam edip etmediğini ve yenileme tarihini kontrol edin.
+
+**Konut sigortasını ihmal etmek:** DASK tek başına yeterli değildir. DASK yalnızca yapı hasarını ve yalnızca depreme bağlı riskleri karşılar. Eşya, iç kaplama ve deprem dışı riskleri kapsamaz.
+
+## Tapu Yoksa Ne Yapabilirsiniz?
+
+Tapusu olmayan modüler yapılar için DASK yaptırılamaz. Bu sorunu çözmek için iki yol vardır. İlk yol yasal düzenleme yoluna gitmektir: yapının üzerinde bulunduğu arsanın imar durumuna uygun mimari ve statik proje hazırlatılarak belediyeden ruhsat alınabilir. Ruhsat sonrasında iskân ve ardından tapu çıkartmak mümkündür. İkinci yol ise risk kabulüdür: bu durumda sigortasız konutta yaşamayı kabul etmek demektir; bu tercih özellikle deprem bölgelerinde büyük mali risk taşır.
 
 ## Sonuç
 
-Modüler yapılarda sigorta; geleneksel binayla özünde aynı mantığa dayanır. Önemli olan, yapınızın yasal statüsünün net olması ve poliçenizin bu statüye uygun şekilde düzenlenmesidir.`,
+Modüler yapılarda sigorta, geleneksel betonarme binayla özünde aynı mantığa dayanmaktadır. Belirleyici olan, yapının yasal statüsünün —ruhsat ve tapu— açık olmasıdır. Prefabrik evinizi yaptırmadan önce firmayla imzalayacağınız sözleşmede "anahtar teslim" hizmetin ruhsat sürecini kapsayıp kapsamadığını netleştirin; çünkü ruhsatsız teslim edilen bir yapı hem sigortasız hem de tapu açısından sorunlu olacaktır.
+
+ModülerPazar'da listelenen onaylı firmalar yalnızca yasal süreçlere uygun üretim yapmaktadır. Birden fazla firmadan teklif alarak proje detaylarını ve sigorta koşullarını karşılaştırabilirsiniz.`,
 
   'prefabrik-ev-izinleri-ruhsat-surecleri': `## Prefabrik Ev İçin Ruhsat Gerekiyor mu?
 
-Sıkça sorulan bu sorunun cevabı kesinlikle evet'tir. Türkiye İmar Kanunu (3194 sayılı) çerçevesinde prefabrik yapılar, geleneksel betonarme ya da yığma yapılarla aynı hukuki statüdedir. Belediye sınırları içinde veya mücavir alanda yapı yapılabilmesi için inşaat ruhsatı alınması zorunludur.
+Sıkça sorulan bu sorunun cevabı kesinlikle evettir. Türkiye İmar Kanunu (3194 Sayılı Kanun) çerçevesinde prefabrik yapılar, geleneksel betonarme ya da yığma yapılarla tamamen aynı hukuki statüde değerlendirilmektedir. Belediye sınırları içinde veya mücavir alanda herhangi bir yapı inşaatına başlamadan önce yetkili mercilerden inşaat ruhsatı alınması zorunludur.
 
-## Ruhsat Başvurusu: Adım Adım
+Bu kural, yapı sisteminden bağımsız olarak geçerliliğini korur: sandviç panel prefabrik, çelik karkas prefabrik, ahşap iskelet sistem veya konteyner dönüşümü olsun, ruhsat zorunluluğu değişmez. "Prefabrik yapı fabrikadan geliyor, sahada montaj oluyor, ruhsat gerekmez" şeklindeki yaygın yanılgı ciddi hukuki sorunlara yol açmaktadır.
 
-İlk adım olarak tapu ve imar durumu belgesi edinme gerekir. Tapu senedi veya tapu kayıt örneğiyle belediyeden imar durumu belgesi alınır.
+## Yasal Çerçeve: İlgili Mevzuat
 
-İkinci adımda mimari proje hazırlatma işlemi yapılır. Mimar veya mühendis tarafından hazırlanan proje; kat planları, cephe görünüşleri ve vaziyet planını kapsar.
+Prefabrik ev ruhsatına ilişkin temel yasal dayanak 3194 sayılı İmar Kanunu'dur. Bu kanunun 21. maddesi, istisnalar dışında her yapı için ruhsat alınmasını zorunlu kılmaktadır. Ayrıca Planlı Alanlar İmar Yönetmeliği, yapı türlerine göre detaylı teknik şartları belirlemektedir.
 
-Üçüncü adımda zemin etüdü ve statik proje alınır. Zemin etüdü raporu jeoloji mühendisi tarafından hazırlanır.
+İmar mevzuatı kapsamında bazı geçici veya küçük yapılar ruhsattan muaf tutulabilir; ancak bu istisnalar oldukça sınırlıdır. Belediye sınırları dışında, köy yerleşim alanlarında prefabrik yapılar için köy muhtarlığından "yapı izni" alınması yeterli olabilir; ancak bu durum bile proje onayı gerektirmektedir.
 
-Dördüncü adımda belediyeye başvuru yapılır. Proje dosyası, zemin etüdü, statik proje ve tapu bilgileriyle belediye imar müdürlüğüne başvurulur.
+## Arazi Seçimi: Ruhsat Sürecinin Temeli
 
-Beşinci adımda harç ödemesi ve ruhsat alımı gerçekleştirilir. Bu aşama ortalama 15-60 iş günü sürebilir.
+Ruhsat sürecinin en kritik aşaması, arazi satın almadan önce yapılması gereken imar araştırmasıdır. İmar durumu belgesi, arsa üzerine hangi tür yapıların yapılabileceğini, maksimum yapı yüksekliğini ve taban alanı katsayısını (TAKS) gösterir.
 
-Altıncı adımda yapı denetimi başlar. İnşaat başladıktan sonra yapı denetim kuruluşu süreci izler.
+Dikkat edilmesi gereken arsa tipleri şunlardır:
 
-Yedinci adım olarak iskan (yapı kullanma izni) belgesi alınır. Bu belge olmadan yapı tapuya bağımsız bölüm olarak kaydedilemez.
+**İmarlı arsa (konut alanı):** Prefabrik konut inşaatı için en uygun seçenek. İmar planında konut, villa veya ticari alan olarak belirlenmiş parseller ruhsat sürecini kolaylaştırır.
+
+**Tarım arazisi:** Türk hukuku uyarınca tarım arazisine kalıcı konut inşa etmek kural olarak yasaktır. 5403 sayılı Toprak Koruma ve Arazi Kullanımı Kanunu bu sınırlamayı açıkça düzenlemektedir. İstisna olarak 2 hektar ve üzerindeki tarım arazileri için "tarımsal amaçlı yapı" izni alınabilir; ancak bu yapı konut değil, tarımsal faaliyet için kullanılmak zorundadır.
+
+**Orman arazisi:** Orman ve çevre mevzuatı kapsamında orman arazisine yapılaşma son derece sınırlıdır ve özel izin gerektirmektedir.
+
+**Arazi vasıflı mera veya hazine arazisi:** Bu tür arazilere yapı yapılması mümkün değildir.
+
+## Ruhsat Başvurusu: Adım Adım Rehber
+
+### Adım 1: Tapu ve İmar Durumu Belgesi Edinimi
+Satın almayı düşündüğünüz ya da sahibi olduğunuz arsanın tapu senedi veya tapu kayıt örneğiyle ilgili belediyenin imar müdürlüğüne başvurarak imar durumu belgesi talep edin. Bu belge ücretsiz veya düşük bir harç karşılığında verilmektedir. İmar durumu belgesi; yapılaşma şartlarını, emsal değerlerini ve varsa özel koşulları içerir.
+
+### Adım 2: Mimari Proje Hazırlatma
+Ruhsat sürecinin en önemli belgesi mimari projedir. Bu projeyi hazırlamak için TMMOB'a kayıtlı bir mimar veya mühendis ile çalışmanız zorunludur. Mimari proje; zemin kat planı, diğer kat planları (varsa), cephe görünüşleri, kesitler ve vaziyet planını kapsar.
+
+Prefabrik yapılar için mimari projenin fabrikadaki üretim detaylarıyla örtüşmesi kritiktir. Bu nedenle çalışacağınız prefabrik firmasının teknik çizimleri mimar tarafından kullanılmalıdır.
+
+### Adım 3: Zemin Etüdü ve Statik Proje
+3194 sayılı Kanun ve Deprem Yönetmeliği uyarınca yapı inşaatı öncesinde zemin etüdü yaptırılması zorunludur. Zemin etüdü, sondaj ve laboratuvar testleri içeren kapsamlı bir jeolojik rapordur. Bu rapor, yapının hangi tip temel sistemiyle inşa edileceğini belirler.
+
+Statik proje, zemin etüdü sonuçlarına dayanılarak hazırlanır. Prefabrik çelik yapılarda statik hesaplar deprem yönetmeliği (TBDY 2018) şartlarına uygun olmalıdır.
+
+### Adım 4: Belediyeye Başvuru
+Mimari proje, zemin etüdü, statik proje ve tapu belgesiyle ilgili belediyenin imar müdürlüğüne başvurulur. Başvuru esnasında harç ödemesi yapılır; harç miktarı yapı büyüklüğüne ve belediyeye göre farklılık gösterir.
+
+### Adım 5: Ruhsat Bekleme Süreci
+İncelemeler tamamlandıktan sonra ruhsat verilir. Bu süre belediyeden belediyeye değişmekle birlikte ortalama 15–60 iş günü arasında değişir. Büyükşehir belediyelerinde süreç daha uzun, küçük belediyelerde daha kısa olabilir. Eksiklik halinde e-Devlet üzerinden bildirim gelir.
+
+### Adım 6: İnşaat Başlangıcı ve Yapı Denetimi
+Ruhsat alındıktan sonra yapı denetim firması seçimi zorunludur. Yapı denetim firması, inşaat sürecini baştan sona denetler: temel betonundan çatı örtüsüne kadar her aşamada kabul tutanağı düzenlenir. Bu tutanaklar, ileride iskân belgesi alabilmek için zorunludur.
+
+### Adım 7: İskân (Yapı Kullanma İzni) Belgesi
+Yapı tamamlandıktan sonra belediyeye iskân belgesi başvurusunda bulunulur. Yapı denetim firmasının olumlu sonuç raporu ve tapu müdürlüğünün incelemesiyle iskân belgesi düzenlenir. İskân belgesi olmadan yapı elektrik ve su aboneliği açtırılamaz; ayrıca tapu sicilinde "konut" olarak kayıt yaptırılamaz.
+
+## Ruhsat Harçları: Tahmini Maliyetler
+
+Ruhsat harçları; yapı alanı, sınıfı ve belediye büyüklüğüne göre farklılık göstermektedir. 2026 yılı için yaklaşık referans değerler şöyledir: 100 m² prefabrik konut için ruhsat harcı 15.000–40.000 TL, zemin etüdü maliyeti 15.000–30.000 TL, mimari ve statik proje hazırlama 30.000–80.000 TL, yapı denetim ücreti ise toplam yapı maliyetinin yüzde 1–2'si oranındadır.
+
+## Köy Alanlarında Farklı Süreç
+
+Belediye sınırları dışındaki köy ve bağlı mülki alanlarda imar uygulaması farklıdır. Bu bölgelerde köy muhtarlığı ve il özel idaresinin onayı yeterli olabilmektedir. Ancak 5490 sayılı Nüfus Hizmetleri Kanunu kapsamında köy yerleşim alanlarında da yapı inşa etmek için önceden izin alınması gerekmektedir.
 
 ## Sık Yapılan Hatalar
 
-Ön proje yapmadan arazi almak ciddi bir hatadır. Tarım arazisine konut inşa etmek yasal değildir. Prefabrik üreticisinin ruhsat alacağını sanmak da yanılgı yaratabilir; ruhsat sorumluluğu arazi sahibine aittir.
+**Ön proje yapmadan arazi almak:** Arsanın imar durumunu öğrenmeden satın almak, ileride "bu araziye yapı yapılamaz" gerçeğiyle yüz yüze gelmenize neden olabilir.
+
+**Tarım arazisine konut yapmaya çalışmak:** Bu durum yasal olarak mümkün değildir ve yıkım kararıyla sonuçlanabilir.
+
+**Ruhsat sorumluluğunu firmaya yüklemek:** Prefabrik firmaları üretimi yapar; ruhsat alımı arazi sahibine aittir. "Firmam halleder" anlayışı ciddi sorunlara yol açar.
+
+**İskânı ertelemek:** Ruhsatlı ama iskânsız yapılarda elektrik ve su aboneliği açılamaz; bu durum yaşanabilirliği doğrudan etkiler.
 
 ## Sonuç
 
-Prefabrik ev sahibi olmak, ruhsat süreçleri doğru yönetildiğinde geleneksel yapıdan çok daha hızlı ve sorunsuz bir deneyim sunar. ModülerPazar üzerinden onaylı firmalarla çalışmak; hem proje hazırlama hem de ruhsat süreçlerinde deneyimli yönlendirme almanızı kolaylaştırır.`,
+Prefabrik ev sahibi olmak, ruhsat süreçleri doğru yönetildiğinde geleneksel yapıdan çok daha hızlı ve sorunsuz bir deneyim sunar. Temel kural şudur: önce imar araştırması, sonra arazi alımı, ardından proje ve ruhsat, en son montaj.
+
+ModülerPazar üzerinden onaylı firmalarla çalışmak, ruhsat ve proje süreçlerinde hangi adımların kime ait olduğunu baştan netleştirmenizi kolaylaştırır. Birden fazla firmadan teklif alarak hem fiyatları hem de proje danışmanlık hizmetlerini karşılaştırabilirsiniz.`,
 
   'ahsap-celik-yapi-karsilastirmasi': `## İki Köklü Malzeme: Ahşap ve Çelik
 
-Ahşap ve çelik, modüler yapı sektörünün iki temel malzemesidir. Her ikisi de prefabrik sistemlere uyarlanabilir, her ikisinin de güçlü ve zayıf yönleri vardır. Hangisinin "daha dayanıklı" olduğu sorusu, aslında "hangi koşulda?" sorusuna bağlıdır.
+Ahşap ve çelik, modüler yapı sektörünün iki temel malzemesidir ve aralarındaki tercih, yapı projelerinde en sık tartışılan konulardan biri olmaya devam etmektedir. Her ikisi de prefabrik sistemlere kolayca uyarlanabilir; her ikisinin de güçlü ve zayıf yönleri vardır. "Hangisi daha dayanıklı?" sorusu, aslında "hangi koşulda?" sorusuna bağlıdır.
+
+Bu rehberde ahşap ve çelik yapıları deprem dayanımı, yangın direnci, nem ve korozyon, ısıl performans, maliyet ve çevresel etki açılarından karşılaştırıyor; Türkiye özelinde hangi durumda hangisinin tercih edilmesi gerektiğini ele alıyoruz.
 
 ## Deprem Dayanımı
 
-Çelik açısından değerlendirildiğinde; çelik sünektir, yani deprem enerjisini kırılmadan absorbe edebilir. Bu özellik, birinci derece deprem bölgelerinde çeliği tercih edilen malzeme yapar.
+Türkiye, dünyanın en aktif deprem kuşaklarından birinin üzerinde yer almaktadır. 1999 Marmara Depremi'nden bu yana yapı sektöründe sismik dayanım en önemli tasarım kriteri haline gelmiştir.
 
-Ahşap açısından ise; doğru tasarlanmış ahşap çerçeve yapılar da depreme karşı iyi performans gösterebilir. Japonya gibi yüksek deprem riskli bölgelerde ahşap karkas yaygın olarak kullanılmaktadır.
+**Çelik:** Çelik, mükemmel süneklik özelliğine sahiptir. Süneklik; malzemenin ani kırılmadan önce büyük deformasyona uğrayabilmesi, yani enerjiyi absorbe edebilmesi anlamına gelir. Bu özellik, deprem kuşaklarında çeliği birincil tercih haline getirir. Türkiye Bina Deprem Yönetmeliği (TBDY 2018), çelik yapılar için özel bağlantı detayları ve tasarım esasları belirlemiş olup bu kurallara uyan çelik karkas yapılar 1. derece deprem bölgelerinde güvenle kullanılabilmektedir.
+
+**Ahşap:** Doğru tasarlanmış ahşap çerçeve yapılar da sismik yükleri oldukça iyi karşılayabilir. Platform çerçeve (platform frame) ve ballon frame gibi sistemler, çok sayıda bağlantı ve sürekli elemanlarla dağıtılmış bir yapı oluşturur. Japonya ve Yeni Zelanda gibi yüksek deprem riskli ülkelerde ahşap karkas yapılar yaygın olarak ve başarılı biçimde kullanılmaktadır.
+
+**Sonuç:** Marmara, Ege ve Doğu Anadolu gibi yüksek riskli bölgelerde çelik karkas sistemi daha güvenilir bir tercih olarak öne çıkmaktadır. Karadeniz gibi görece düşük sismik risk taşıyan bölgelerde ise ahşap karkas da kabul edilebilir bir alternatif sunar.
 
 ## Yangına Dayanıklılık
 
-Çelik 500°C üzerinde taşıyıcılık kapasitesini kaybetmeye başlar. Bu nedenle büyük çelik yapılarda yangına dayanıklı kaplama uygulanması zorunludur.
+Yapı yangınları, malzeme seçiminde göz ardı edilemeyecek bir parametredir.
 
-Büyük kesitli masif ahşap elemanlar, yüzeylerinde oluşan kömür katmanı sayesinde iç çekirdeklerini uzun süre korur; bu özellik "charring" olarak bilinir.
+**Çelik:** Çelik yanmaz; ancak ısıya karşı hassastır. Taşıyıcı çelik elemanlar 500°C'nin üzerinde akma sınırının önemli ölçüde altına iner ve yapısal kapasitesini yitirir. Bu nedenle taşıyıcı çelik kolonlar ve kirişler, yangına dayanıklı özel boyalar (intümesans boya), kaplama levhaları veya sıva ile korunmak zorundadır. Büyük endüstriyel yapılarda bu önlemlerin ihmal edilmesi son derece tehlikelidir.
 
-## Nem ve Korozyon
+**Ahşap:** Ahşap yanar; ancak büyük kesitli masif ahşap elemanlar (glulam veya solid timber), yüzeyde oluşan kömür (char) tabakası sayesinde iç çekirdeklerini uzun süre korur. Bu "charring" etkisi, ahşabın yangın altında beklenenden daha uzun süre taşıyıcılığını korumasını sağlar. Ahşap çerçeve yapılarda ise ince elemanların yanma hızı yüksektir; bu nedenle yangına dayanıklı alçıpan gibi kaplamalar kullanılmalıdır.
 
-Çelik, korumasız bırakıldığında oksijenle reaksiyona girerek paslanır. Galvaniz kaplama veya paslanmaz çelik kullanımıyla bu risk kontrol altına alınabilir.
+**Sonuç:** Her iki malzeme de doğru önlemler alınmadığında yangına karşı savunmasızdır. Yangın güvenliği malzeme seçiminden çok tasarım detayları ve kaplamayla sağlanmaktadır.
 
-Ahşap ise nem emme ve salma döngüsüne bağlı olarak çatlayabilir ve uzun vadede çürüyebilir. Emprenye işlemi ve yüzey koruma ürünleriyle bu riskler azaltılabilir.
+## Nem ve Korozyon Direnci
 
-## Isı Performansı
+Türkiye'nin farklı iklimleri, nem yönetimini kritik bir tasarım konusu haline getirmektedir.
 
-Çelik, yüksek ısı iletkenliğine sahiptir. Ahşap ise doğal bir yalıtkan olup ısı iletkenliği çeliğin çok altındadır.
+**Çelik:** Korumasız çelik, nem ve oksijen varlığında paslanır (oksidasyon). Bu süreç, kesit kaybına ve uzun vadede taşıyıcılık sorununa yol açar. Galvaniz (çinko kaplama), elektrostatik toz boya veya epoksi primer ile yapılan koruma bu riski minimize eder. Özellikle sahil bölgelerinde ve tuzlu deniz havası ortamlarında bakım ve yeniden boyama döngüleri daha sık yapılmalıdır.
 
-## Çevresel Etki
+**Ahşap:** Ahşap, döngüsel nem emme ve salma süreciyle genişleyip büzülebilir. Bu hareket çatlaklar ve şekil bozuklukları oluşturabilir. Uzun süreli yüksek nem ise mantarlaşma ve çürümeye zemin hazırlar. Emprenye (basınçlı kimyasal emdirme), yüzey koruma ürünleri ve doğru detaylandırmayla bu riskler kontrol altına alınabilir.
 
-Çelik üretimi enerji yoğun bir süreçtir. Ahşap ise büyüdükçe karbon depolayan yenilenebilir bir malzemedir.
+**Sonuç:** Karadeniz sahil şeridinde her iki malzeme de özel önlemler gerektirmektedir. Çelik için galvaniz + düzenli boya, ahşap için emprenye + havalandırmalı cephe detayı zorunludur.
+
+## Isıl Performans ve Enerji Verimliliği
+
+**Çelik:** Çelik, ısı iletkenliği çok yüksek bir malzemedir (50 W/m·K). Bu durum, ısı köprüsü oluşturma riskini beraberinde getirir. Çelik karkas yapılarda doğrusal ısı köprüleri —kolonlar, kirişler ve bağlantılar boyunca gerçekleşen ısı kaybı— A enerji sınıfına ulaşmanın önündeki en büyük engeldir. Bu sorunu çözmek için "continuous insulation" (sürekli yalıtım) sistemleri veya kertikli profil (thermal break) uygulamaları gereklidir.
+
+**Ahşap:** Ahşabın ısıl iletkenliği çeliğin yaklaşık 350–400 katı daha düşüktür (0,12–0,14 W/m·K). Bu doğal yalıtım özelliği, ahşap yapılarda ısı köprüsü sorununu büyük ölçüde azaltır ve yüksek enerji performansına ulaşmayı kolaylaştırır. İskandinav ve Alp ülkelerinde A+ ve Pasif Ev standartlarına ulaşan yapıların önemli bir bölümü ahşap iskelettir.
+
+**Sonuç:** Salt enerji verimliliği açısından ahşap çeliğe belirgin üstünlük sağlar. Bununla birlikte, doğru detaylandırılmış çelik karkas yapılar da A enerji sınıfına ulaşabilir; bu durum ek maliyeti ve tasarım titizliğini gerektirir.
+
+## Maliyet Karşılaştırması
+
+Maliyetler bölgeye, proje büyüklüğüne ve seçilen detaylandırma düzeyine göre büyük farklılıklar göstermektedir. 2026 yılı Türkiye referans değerleri şöyledir:
+
+Ahşap iskelet prefabrik yapılar için m² başına 15.000–22.000 TL (orta segment) maliyeti öngörülmektedir. Büyük panel ya da CLT (çapraz lamine ahşap) sistemler ise m² başına 22.000–35.000 TL arasında fiyatlanmaktadır. Çelik karkas üzeri panel sistemlerde ise m² başına 12.000–20.000 TL (sanayi tipi), konut amaçlı anahtar teslim çelik karkas için ise m² başına 18.000–30.000 TL beklenmektedir.
+
+Uzun vadeli bakım maliyetleri de hesaba katılmalıdır. Ahşap yapılar periyodik dış cephe boyası ve emprenye yenilemesi gerektirirken çelik yapılarda korozyon önleyici boya bakımı yapılmalıdır.
+
+## Çevresel Etki: Sürdürülebilirlik Açısından
+
+Çelik üretimi, demir cevheri eritme süreçlerini içerdiğinden yüksek karbon ayak izine sahiptir. Ancak çelik, geri dönüştürülebilirlik oranı en yüksek yapı malzemelerinden biridir; küresel çelik üretiminin yaklaşık yüzde 30'u geri dönüştürülmüş hurda çelikten elde edilmektedir.
+
+Ahşap, fotosntez yoluyla atmosferden CO₂ absorbe ederek büyür; bu nedenle yenilenebilir ve karbon depolayan bir malzemedir. Sertifikalı ormanlardan (FSC, PEFC) temin edilen ahşap, en düşük çevresel etkili yapı malzemeleri arasında gösterilmektedir. Türkiye'deki ahşap prefabrik sektörü hâlâ büyük ölçüde ithal ahşap kullanmaktadır; bu durum karbon hesabını karmaşıklaştırır.
+
+## Hangi Bölgede Hangi Malzeme?
+
+**İstanbul ve Marmara:** Yüksek deprem riski göz önünde bulundurulduğunda çelik karkas + yalıtımlı cephe sistemi önerilir.
+
+**İzmir ve Ege:** Deprem riski ile ılıman iklimin birleşiminde çelik karkas tercih edilebilir; ahşap da iyi detaylandırmayla uygulanabilir.
+
+**Karadeniz:** Yoğun yağış ve nem nedeniyle her iki malzemede de özel nem yönetimi şarttır. Ahşap yapılarda emprenye ve havalandırmalı cephe zorunludur.
+
+**İç Anadolu:** Gece-gündüz ve mevsimsel büyük sıcaklık farkları enerji verimliliğini ön plana çıkarır; ahşap iskeletin ısıl avantajı bu bölgede belirginleşir.
+
+**Doğu ve Güneydoğu:** Yüksek sismik risk ve ekstrem iklim koşullarında güçlü çelik karkas sistemi önerilir.
 
 ## Sonuç
 
-"Hangisi daha dayanıklı?" sorusunun tek bir yanıtı yoktur. Doğru malzeme; projenizin lokasyonuna, iklim koşullarına, bütçenize ve estetik beklentinize göre belirlenir. ModülerPazar'da hem ahşap hem de çelik yapı konusunda uzmanlaşmış onaylı firmalardan eş zamanlı teklif alarak en uygun seçimi kendi koşullarınıza göre yapabilirsiniz.`,
+"Ahşap mı yoksa çelik mi?" sorusunun tek bir doğru yanıtı yoktur. Doğru malzeme; projenizin lokasyonuna, iklim koşullarına, deprem riskine, bütçenize ve estetik beklentinize göre belirlenir. Marmara veya Ege'deyseniz ve deprem güvenliği önceliğinizse çelik karkas açık öne çıkmaktadır. Karadeniz veya enerji verimliliğinin kritik olduğu bir proje söz konusuysa ahşap iskeletin ısıl avantajları değerlendirilebilir.
+
+ModülerPazar üzerinden hem ahşap hem de çelik yapı konusunda uzmanlaşmış onaylı firmalardan eş zamanlı teklif alarak malzeme bazlı fiyat ve performans karşılaştırması yapabilir; koşullarınıza en uygun sistemi seçebilirsiniz.`,
 
   'prefabrik-ev-kredisi-nasil-alinir': `## Bankalar Prefabrik Eve Kredi Verir mi?
 
