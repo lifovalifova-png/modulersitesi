@@ -21,8 +21,10 @@ const en: Record<string, string> = {
   'auth.myAds':    'My Ads',
 
   /* ── Nav ─────────────────────────────────────── */
-  'nav.blog': 'Blog',
-  'nav.faq':  'FAQ',
+  'nav.blog':      'Blog',
+  'nav.faq':       'FAQ',
+  'nav.haberler':  'News',
+  'nav.howToUse':  'How to Use',
 
   /* ── Hero ────────────────────────────────────── */
   'hero.badge':      'Get quotes from 2 firms at once, choose the best!',
@@ -107,7 +109,9 @@ const en: Record<string, string> = {
   'footer.secondHand': '2nd Hand Listings',
   'footer.postAd':     'Post Ad',
   'footer.blog':       'Blog',
+  'footer.haberler':   'News',
   'footer.faq':        'FAQ',
+  'footer.howToUse':   'How to Use',
   'footer.rights':     'All rights reserved.',
   'footer.kvkk':       'KVKK Disclosure Text',
   'footer.privacy':    'Privacy Policy',

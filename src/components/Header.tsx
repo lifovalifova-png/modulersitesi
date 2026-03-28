@@ -386,7 +386,7 @@ export default function Header() {
               to="/haberler"
               className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
             >
-              Haberler
+              {t('nav.haberler')}
             </Link>
 
             <Link
@@ -400,7 +400,7 @@ export default function Header() {
               to="/nasil-kullanilir"
               className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
             >
-              Nasıl Kullanılır?
+              {t('nav.howToUse')}
             </Link>
 
             {flags.fiyatHesaplama && (
@@ -470,7 +470,7 @@ export default function Header() {
               className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Haberler
+              {t('nav.haberler')}
             </Link>
             <Link
               to="/sss"
@@ -484,7 +484,7 @@ export default function Header() {
               className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Nasıl Kullanılır?
+              {t('nav.howToUse')}
             </Link>
             {flags.fiyatHesaplama && (
               <Link

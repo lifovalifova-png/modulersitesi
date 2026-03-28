@@ -21,8 +21,10 @@ const tr: Record<string, string> = {
   'auth.myAds':    'İlanlarım',
 
   /* ── Nav ─────────────────────────────────────── */
-  'nav.blog': 'Blog',
-  'nav.faq':  'SSS',
+  'nav.blog':      'Blog',
+  'nav.faq':       'SSS',
+  'nav.haberler':  'Haberler',
+  'nav.howToUse':  'Nasıl Kullanılır?',
 
   /* ── Hero ────────────────────────────────────── */
   'hero.badge':      'Aynı anda 2 firmadan teklif al, en iyisini seç!',
@@ -107,7 +109,9 @@ const tr: Record<string, string> = {
   'footer.secondHand': '2. El İlanlar',
   'footer.postAd':     'İlan Ver',
   'footer.blog':       'Blog',
+  'footer.haberler':   'Haberler',
   'footer.faq':        'SSS',
+  'footer.howToUse':   'Nasıl Kullanılır?',
   'footer.rights':     'Tüm hakları saklıdır.',
   'footer.kvkk':       'KVKK Aydınlatma Metni',
   'footer.privacy':    'Gizlilik Politikası',
