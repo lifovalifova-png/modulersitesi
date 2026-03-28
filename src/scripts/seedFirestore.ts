@@ -432,6 +432,86 @@ export async function seedFirestore(): Promise<void> {
   await blogBatch.commit();
   console.log('[seed] blog yazıldı (8 adet)');
 
+  /* ── Haberler ───────────────────────────────────────── */
+  const HABERLER = [
+    {
+      id: 'seed_haber_01',
+      baslik: "Türkiye'de prefabrik ev talebi 2026'da yüzde 40 arttı",
+      kaynak: 'Anadolu Ajansı',
+      kaynakUrl: 'https://www.aa.com.tr',
+      ozet: "Türkiye İstatistik Kurumu verilerine göre 2026 yılının ilk çeyreğinde prefabrik konut talebinde geçen yılın aynı dönemine kıyasla yüzde 40'lık artış kaydedildi. Uzmanlar, bu artışı yükselen inşaat maliyetleri ve hızlı teslim avantajına bağlıyor. Sektör temsilcileri, talebin özellikle Marmara ve Ege bölgelerinde yoğunlaştığını belirtiyor.",
+      kategori: 'prefabrik',
+      gorselUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=500&fit=crop',
+      yayinda: true,
+      _seed: true,
+    },
+    {
+      id: 'seed_haber_02',
+      baslik: 'Deprem bölgelerinde modüler yapı kullanımı zorunlu hale gelebilir',
+      kaynak: 'Hürriyet',
+      kaynakUrl: 'https://www.hurriyet.com.tr',
+      ozet: "Türk Mühendis ve Mimar Odaları Birliği'nin hazırladığı rapora göre yüksek deprem riskli bölgelerde çelik karkas prefabrik yapıların zorunlu tutulması için yasal düzenleme yapılması gündemdedir. Rapor, 1999 Marmara Depremi sonrası yapılan araştırmalara dayanarak çelik yapıların beton alternatiflerine göre üç kat daha iyi sismik performans gösterdiğini ortaya koyuyor.",
+      kategori: 'genel',
+      gorselUrl: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&h=500&fit=crop',
+      yayinda: true,
+      _seed: true,
+    },
+    {
+      id: 'seed_haber_03',
+      baslik: 'Konteyner evler Avrupa\'da lüks konut alternatifi oluyor',
+      kaynak: 'Reuters',
+      kaynakUrl: 'https://www.reuters.com',
+      ozet: "Avrupa'nın önde gelen şehirlerinde dönüştürülmüş konteyner evler, sürdürülebilirlik ve tasarım odaklı bir yaşam alanı olarak yüksek talep görüyor. Amsterdam, Berlin ve İsveç'in büyük kentlerinde metrekare başına 5.000 euro'yu aşan fiyatlarla satışa sunulan konteyner villa projeleri, geleneksel konut piyasasını zorluyor.",
+      kategori: 'konteyner',
+      gorselUrl: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=500&fit=crop',
+      yayinda: true,
+      _seed: true,
+    },
+    {
+      id: 'seed_haber_04',
+      baslik: 'Tiny house yasası: İmar planlarında küçük ev düzenlemesi geliyor',
+      kaynak: 'Sabah',
+      kaynakUrl: 'https://www.sabah.com.tr',
+      ozet: "Çevre, Şehircilik ve İklim Değişikliği Bakanlığı, 50 metrekarenin altındaki seyyar ve sabit tiny house yapılarını düzenleyen yasal çerçeve üzerinde çalışmalar yürüttüğünü açıkladı. Yeni düzenlemeyle tekerlekli tiny house'ların belediye sınırları içindeki park ve kamp alanlarında konumlandırılması için özel izin rejimi getirilmesi planlanıyor.",
+      kategori: 'tiny-house',
+      gorselUrl: 'https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&h=500&fit=crop',
+      yayinda: true,
+      _seed: true,
+    },
+    {
+      id: 'seed_haber_05',
+      baslik: 'Çelik yapı sektörü ihracatta rekor kırdı',
+      kaynak: 'İMSAD',
+      kaynakUrl: 'https://www.imsad.org',
+      ozet: "İnşaat Malzemesi Sanayicileri Derneği verilerine göre 2025 yılında Türkiye'nin çelik yapı ihracatı bir önceki yıla kıyasla yüzde 28 artarak 1,4 milyar dolar seviyesine ulaştı. Prefabrik çelik yapı ve modüler konut sistemleri, ihracatta en büyük payı oluştururken Orta Doğu ve Afrika pazarlarındaki talep yüzde 60 büyüdü.",
+      kategori: 'celik-yapi',
+      gorselUrl: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&h=500&fit=crop',
+      yayinda: true,
+      _seed: true,
+    },
+    {
+      id: 'seed_haber_06',
+      baslik: "Modüler yapı sektörü 2026 Türkiye inşaat fuarında büyük ilgi gördü",
+      kaynak: 'İnşaat Dünyası',
+      kaynakUrl: 'https://www.insaatdunyasi.com.tr',
+      ozet: "İstanbul'da düzenlenen Yapı Fuarı 2026'da prefabrik, konteyner ve tiny house üreticileri en büyük ilgiyi çeken stantlar arasında yer aldı. Fuar direktörü, bu yılki katılımın yüzde 35 artışla rekor kırdığını açıkladı. ModülerPazar'ın fuar organizasyon ortağı olarak yer aldığı etkinlikte birden fazla proje yatırım anlaşması imzalandı.",
+      kategori: 'genel',
+      gorselUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop',
+      yayinda: true,
+      _seed: true,
+    },
+  ];
+
+  const haberlerBatch = writeBatch(db);
+  HABERLER.forEach((haber) => {
+    haberlerBatch.set(doc(db, 'haberler', haber.id), {
+      ...haber,
+      tarih: daysAgo(Math.floor(Math.random() * 30)),
+    });
+  });
+  await haberlerBatch.commit();
+  console.log('[seed] haberler yazıldı (6 adet)');
+
   console.log('[seed] Tamamlandı ✓');
 }
 
@@ -458,7 +538,7 @@ export async function clearSeedData(): Promise<void> {
     }
   }
 
-  const colls = ['firms', 'ilanlar', 'taleplar', 'quotes', 'blog'] as const;
+  const colls = ['firms', 'ilanlar', 'taleplar', 'quotes', 'blog', 'haberler'] as const;
   for (const coll of colls) {
     try {
       const snap = await getDocs(query(collection(db, coll), where('_seed', '==', true)));

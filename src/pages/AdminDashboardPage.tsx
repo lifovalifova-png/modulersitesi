@@ -30,7 +30,7 @@ import {
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
   Send, Eye, EyeOff, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
   Inbox, BookOpen, BarChart2, Download, Sliders, Star, ThumbsUp, Flame,
-  Facebook, Instagram, Twitter, Linkedin, Youtube,
+  Facebook, Instagram, Twitter, Linkedin, Youtube, Newspaper,
 } from 'lucide-react';
 import { type FeatureFlags, DEFAULT_FLAGS } from '../hooks/useFeatureFlags';
 import SEOMeta from '../components/SEOMeta';
@@ -138,7 +138,7 @@ interface AdminIlan {
   aktif?:            boolean;
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda' | 'acilIlanlar' | 'geriBildirimler';
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda' | 'acilIlanlar' | 'geriBildirimler' | 'haberler';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
@@ -2903,6 +2903,253 @@ interface AdminGeriBildirim {
   durum: 'beklemede' | 'inceleniyor' | 'cozuldu';
 }
 
+/* ═══════════════════════════════════════════════════════════
+   HABERLER TAB
+════════════════════════════════════════════════════════════ */
+interface AdminHaber {
+  id?:        string;
+  baslik:     string;
+  kaynak:     string;
+  kaynakUrl:  string;
+  ozet:       string;
+  kategori:   string;
+  gorselUrl:  string;
+  yayinda:    boolean;
+  _seed?:     boolean;
+}
+
+const BOSH_HABER: Omit<AdminHaber, 'id'> = {
+  baslik: '', kaynak: '', kaynakUrl: 'https://', ozet: '',
+  kategori: 'genel', gorselUrl: '', yayinda: false,
+};
+
+const HABER_KATEGORILER = ['prefabrik', 'konteyner', 'tiny-house', 'celik-yapi', 'genel'];
+
+function HaberlerTab() {
+  const [liste,     setListe]     = useState<AdminHaber[]>([]);
+  const [loading,   setLoading]   = useState(true);
+  const [modalAcik, setModalAcik] = useState(false);
+  const [duzenle,   setDuzenle]   = useState<AdminHaber | null>(null);
+  const [form,      setForm]      = useState<Omit<AdminHaber, 'id'>>(BOSH_HABER);
+  const [kaydediyor, setKaydediyor] = useState(false);
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'haberler'),
+      (snap) => {
+        setListe(
+          snap.docs
+            .map((d) => ({ id: d.id, ...d.data() } as AdminHaber))
+            .sort((a, b) => {
+              const ta = (a as unknown as { tarih?: { seconds: number } }).tarih?.seconds ?? 0;
+              const tb = (b as unknown as { tarih?: { seconds: number } }).tarih?.seconds ?? 0;
+              return tb - ta;
+            }),
+        );
+        setLoading(false);
+      },
+    );
+    return unsub;
+  }, []);
+
+  function acModal(haber?: AdminHaber) {
+    if (haber) {
+      setDuzenle(haber);
+      setForm({ baslik: haber.baslik, kaynak: haber.kaynak, kaynakUrl: haber.kaynakUrl,
+        ozet: haber.ozet, kategori: haber.kategori, gorselUrl: haber.gorselUrl ?? '',
+        yayinda: haber.yayinda });
+    } else {
+      setDuzenle(null);
+      setForm(BOSH_HABER);
+    }
+    setModalAcik(true);
+  }
+
+  async function handleKaydet() {
+    if (!form.baslik.trim() || !form.kaynak.trim() || !form.kaynakUrl.trim()) {
+      toast.error('Başlık, kaynak ve kaynak URL zorunludur.');
+      return;
+    }
+    setKaydediyor(true);
+    try {
+      if (duzenle?.id) {
+        await updateDoc(doc(db, 'haberler', duzenle.id), { ...form, guncellenmeTarih: serverTimestamp() });
+        toast.success('Haber güncellendi.');
+      } else {
+        await addDoc(collection(db, 'haberler'), { ...form, tarih: serverTimestamp() });
+        toast.success('Haber eklendi.');
+      }
+      setModalAcik(false);
+    } catch {
+      toast.error('Kayıt sırasında hata oluştu.');
+    } finally {
+      setKaydediyor(false);
+    }
+  }
+
+  async function handleSil(id: string) {
+    if (!window.confirm('Bu haberi silmek istiyor musunuz?')) return;
+    await deleteDoc(doc(db, 'haberler', id));
+    toast.success('Haber silindi.');
+  }
+
+  async function handleToggle(id: string, yayinda: boolean) {
+    await updateDoc(doc(db, 'haberler', id), { yayinda: !yayinda });
+    toast.success(!yayinda ? 'Haber yayına alındı.' : 'Haber taslağa alındı.');
+  }
+
+  if (loading) return <div className="p-6 text-sm text-gray-500">Yükleniyor…</div>;
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">Haberler</h2>
+          <p className="text-sm text-gray-500 mt-0.5">{liste.length} kayıt</p>
+        </div>
+        <button
+          onClick={() => acModal()}
+          className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition"
+        >
+          <Plus className="w-4 h-4" /> Yeni Haber Ekle
+        </button>
+      </div>
+
+      {liste.length === 0 ? (
+        <div className="text-center py-12 text-gray-400 text-sm">Henüz haber yok.</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 text-xs text-gray-500 uppercase tracking-wide">
+                <th className="text-left py-3 pr-4">Başlık</th>
+                <th className="text-left py-3 pr-4">Kaynak</th>
+                <th className="text-left py-3 pr-4">Kategori</th>
+                <th className="text-left py-3 pr-4">Durum</th>
+                <th className="text-right py-3">İşlemler</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {liste.map((h) => (
+                <tr key={h.id} className="hover:bg-gray-50">
+                  <td className="py-3 pr-4 max-w-xs">
+                    <p className="font-medium text-gray-800 truncate">{h.baslik}</p>
+                    <a href={h.kaynakUrl} target="_blank" rel="noopener noreferrer"
+                       className="text-xs text-emerald-600 hover:underline truncate block">{h.kaynakUrl}</a>
+                  </td>
+                  <td className="py-3 pr-4 text-gray-600">{h.kaynak}</td>
+                  <td className="py-3 pr-4">
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full capitalize">{h.kategori}</span>
+                  </td>
+                  <td className="py-3 pr-4">
+                    <button
+                      onClick={() => handleToggle(h.id!, h.yayinda)}
+                      className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition ${
+                        h.yayinda
+                          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {h.yayinda ? <><Eye className="w-3 h-3" /> Yayında</> : <><EyeOff className="w-3 h-3" /> Taslak</>}
+                    </button>
+                  </td>
+                  <td className="py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => acModal(h)}
+                        className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleSil(h.id!)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal */}
+      {modalAcik && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setModalAcik(false)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-gray-800 text-lg">{duzenle ? 'Haberi Düzenle' : 'Yeni Haber Ekle'}</h3>
+              <button onClick={() => setModalAcik(false)} className="p-1 text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Başlık *</label>
+                <input value={form.baslik} onChange={(e) => setForm({ ...form, baslik: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="Haber başlığı" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Kaynak Adı *</label>
+                  <input value={form.kaynak} onChange={(e) => setForm({ ...form, kaynak: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="AA, Hürriyet..." />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                  <select value={form.kategori} onChange={(e) => setForm({ ...form, kategori: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    {HABER_KATEGORILER.map((k) => (
+                      <option key={k} value={k}>{k}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kaynak URL *</label>
+                <input value={form.kaynakUrl} onChange={(e) => setForm({ ...form, kaynakUrl: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="https://..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Görsel URL</label>
+                <input value={form.gorselUrl} onChange={(e) => setForm({ ...form, gorselUrl: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="https://images.unsplash.com/..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Özet</label>
+                <textarea value={form.ozet} onChange={(e) => setForm({ ...form, ozet: e.target.value })}
+                  rows={4}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  placeholder="3-4 cümle özet..." />
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.yayinda} onChange={(e) => setForm({ ...form, yayinda: e.target.checked })}
+                  className="w-4 h-4 rounded text-emerald-600" />
+                <span className="text-sm text-gray-700">Yayına al</span>
+              </label>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setModalAcik(false)}
+                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
+                İptal
+              </button>
+              <button onClick={handleKaydet} disabled={kaydediyor}
+                className="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-50">
+                {kaydediyor ? 'Kaydediliyor…' : duzenle ? 'Güncelle' : 'Kaydet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 type GBDurum = 'all' | 'beklemede' | 'inceleniyor' | 'cozuldu';
 
 function GeriBildirimlerTab() {
@@ -3047,6 +3294,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'hakkimizda', label: 'Hakkımızda',    icon: <BookOpen   className="w-4 h-4" /> },
   { key: 'acilIlanlar',      label: 'Acil İlanlar',    icon: <Flame className="w-4 h-4 text-red-500" /> },
   { key: 'geriBildirimler', label: 'Geri Bildirimler', icon: <Inbox className="w-4 h-4" /> },
+  { key: 'haberler',        label: 'Haberler',         icon: <Newspaper className="w-4 h-4" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -3287,6 +3535,7 @@ export default function AdminDashboardPage() {
           {tab === 'hakkimizda' && <HakkimizdaTab />}
           {tab === 'acilIlanlar'      && <AcilIlanlarTab />}
           {tab === 'geriBildirimler' && <GeriBildirimlerTab />}
+          {tab === 'haberler'       && <HaberlerTab />}
         </main>
       </div>
     </div>
