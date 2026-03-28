@@ -2915,49 +2915,89 @@ interface AdminHaber {
   kategori:   string;
   gorselUrl:  string;
   yayinda:    boolean;
+  arsivlendi: boolean;
   _seed?:     boolean;
 }
 
 const BOSH_HABER: Omit<AdminHaber, 'id'> = {
   baslik: '', kaynak: '', kaynakUrl: 'https://', ozet: '',
-  kategori: 'genel', gorselUrl: '', yayinda: false,
+  kategori: 'genel', gorselUrl: '', yayinda: false, arsivlendi: false,
 };
 
 const HABER_KATEGORILER = ['prefabrik', 'konteyner', 'tiny-house', 'celik-yapi', 'genel'];
 
+type HaberDurum = 'all' | 'taslak' | 'yayinda' | 'arsiv';
+
+interface Onerilen { baslik: string; kaynak: string; kaynakUrl: string; ozet: string; kategori: string; tarih: string }
+
+function haberDurumHesapla(h: AdminHaber): 'taslak' | 'yayinda' | 'arsiv' {
+  if (h.arsivlendi) return 'arsiv';
+  if (h.yayinda)    return 'yayinda';
+  return 'taslak';
+}
+
 function HaberlerTab() {
-  const [liste,     setListe]     = useState<AdminHaber[]>([]);
-  const [loading,   setLoading]   = useState(true);
-  const [modalAcik, setModalAcik] = useState(false);
-  const [duzenle,   setDuzenle]   = useState<AdminHaber | null>(null);
-  const [form,      setForm]      = useState<Omit<AdminHaber, 'id'>>(BOSH_HABER);
-  const [kaydediyor, setKaydediyor] = useState(false);
+  const [liste,         setListe]         = useState<AdminHaber[]>([]);
+  const [loading,       setLoading]       = useState(true);
+  const [modalAcik,     setModalAcik]     = useState(false);
+  const [duzenle,       setDuzenle]       = useState<AdminHaber | null>(null);
+  const [form,          setForm]          = useState<Omit<AdminHaber, 'id'>>(BOSH_HABER);
+  const [kaydediyor,    setKaydediyor]    = useState(false);
+  const [filtre,        setFiltre]        = useState<HaberDurum>('all');
+  const [aiYukleniyor,  setAiYukleniyor]  = useState(false);
+  const [onerilenler,   setOnerilenler]   = useState<Onerilen[]>([]);
+  const [aiPanelAcik,   setAiPanelAcik]  = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'haberler'),
-      (snap) => {
-        setListe(
-          snap.docs
-            .map((d) => ({ id: d.id, ...d.data() } as AdminHaber))
-            .sort((a, b) => {
-              const ta = (a as unknown as { tarih?: { seconds: number } }).tarih?.seconds ?? 0;
-              const tb = (b as unknown as { tarih?: { seconds: number } }).tarih?.seconds ?? 0;
-              return tb - ta;
-            }),
-        );
+      async (snap) => {
+        const haberler = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() } as AdminHaber))
+          .sort((a, b) => {
+            const ta = (a as unknown as { tarih?: { seconds: number } }).tarih?.seconds ?? 0;
+            const tb = (b as unknown as { tarih?: { seconds: number } }).tarih?.seconds ?? 0;
+            return tb - ta;
+          });
+        setListe(haberler);
         setLoading(false);
+
+        /* GÖREV 3c — 6 aydan eski taslakları otomatik arşivle */
+        const altiAyOnce = Date.now() - 180 * 24 * 60 * 60 * 1000;
+        const eskiTaslaklar = haberler.filter((h) => {
+          if (h.yayinda || h.arsivlendi) return false;
+          const sn = (h as unknown as { tarih?: { seconds: number } }).tarih?.seconds;
+          return sn != null && sn * 1000 < altiAyOnce;
+        });
+        for (const h of eskiTaslaklar) {
+          await updateDoc(doc(db, 'haberler', h.id!), { arsivlendi: true });
+        }
+        if (eskiTaslaklar.length > 0) {
+          toast.success(`${eskiTaslaklar.length} eski taslak otomatik arşivlendi.`);
+        }
       },
     );
     return unsub;
   }, []);
 
+  const goruntule = filtre === 'all'
+    ? liste
+    : liste.filter((h) => haberDurumHesapla(h) === filtre);
+
+  const sayilar = {
+    taslak:  liste.filter((h) => haberDurumHesapla(h) === 'taslak').length,
+    yayinda: liste.filter((h) => haberDurumHesapla(h) === 'yayinda').length,
+    arsiv:   liste.filter((h) => haberDurumHesapla(h) === 'arsiv').length,
+  };
+
   function acModal(haber?: AdminHaber) {
     if (haber) {
       setDuzenle(haber);
-      setForm({ baslik: haber.baslik, kaynak: haber.kaynak, kaynakUrl: haber.kaynakUrl,
+      setForm({
+        baslik: haber.baslik, kaynak: haber.kaynak, kaynakUrl: haber.kaynakUrl,
         ozet: haber.ozet, kategori: haber.kategori, gorselUrl: haber.gorselUrl ?? '',
-        yayinda: haber.yayinda });
+        yayinda: haber.yayinda, arsivlendi: haber.arsivlendi ?? false,
+      });
     } else {
       setDuzenle(null);
       setForm(BOSH_HABER);
@@ -2976,8 +3016,10 @@ function HaberlerTab() {
         await updateDoc(doc(db, 'haberler', duzenle.id), { ...form, guncellenmeTarih: serverTimestamp() });
         toast.success('Haber güncellendi.');
       } else {
-        await addDoc(collection(db, 'haberler'), { ...form, tarih: serverTimestamp() });
-        toast.success('Haber eklendi.');
+        await addDoc(collection(db, 'haberler'), {
+          ...form, yayinda: false, arsivlendi: false, tarih: serverTimestamp(),
+        });
+        toast.success('Haber taslak olarak eklendi.');
       }
       setModalAcik(false);
     } catch {
@@ -2993,12 +3035,55 @@ function HaberlerTab() {
     toast.success('Haber silindi.');
   }
 
-  async function handleToggle(id: string, yayinda: boolean) {
-    await updateDoc(doc(db, 'haberler', id), { yayinda: !yayinda });
-    toast.success(!yayinda ? 'Haber yayına alındı.' : 'Haber taslağa alındı.');
+  async function handleOnayla(id: string) {
+    await updateDoc(doc(db, 'haberler', id), { yayinda: true, arsivlendi: false });
+    toast.success('Haber yayına alındı.');
+  }
+
+  async function handleArsivle(id: string) {
+    await updateDoc(doc(db, 'haberler', id), { yayinda: false, arsivlendi: true });
+    toast.success('Haber arşive taşındı.');
+  }
+
+  async function handleTaslaga(id: string) {
+    await updateDoc(doc(db, 'haberler', id), { yayinda: false, arsivlendi: false });
+    toast.success('Haber taslağa alındı.');
+  }
+
+  async function handleAiOner() {
+    setAiYukleniyor(true);
+    setAiPanelAcik(true);
+    try {
+      const res = await fetch('/api/fetch-news');
+      if (!res.ok) throw new Error('API hatası');
+      const data = await res.json() as { haberler: Onerilen[] };
+      setOnerilenler(data.haberler ?? []);
+    } catch {
+      toast.error('Haberler alınamadı.');
+      setAiPanelAcik(false);
+    } finally {
+      setAiYukleniyor(false);
+    }
+  }
+
+  async function handleOneriEkle(o: Onerilen) {
+    await addDoc(collection(db, 'haberler'), {
+      baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
+      ozet: o.ozet, kategori: o.kategori, gorselUrl: '',
+      yayinda: false, arsivlendi: false, tarih: serverTimestamp(),
+    });
+    toast.success('Taslak olarak eklendi.');
+    setOnerilenler((prev) => prev.filter((x) => x.kaynakUrl !== o.kaynakUrl));
   }
 
   if (loading) return <div className="p-6 text-sm text-gray-500">Yükleniyor…</div>;
+
+  const FILTRE_TANIMLARI: { key: HaberDurum; label: string }[] = [
+    { key: 'all',     label: `Tümü (${liste.length})` },
+    { key: 'taslak',  label: `Taslak (${sayilar.taslak})` },
+    { key: 'yayinda', label: `Yayında (${sayilar.yayinda})` },
+    { key: 'arsiv',   label: `Arşiv (${sayilar.arsiv})` },
+  ];
 
   return (
     <div className="p-6">
@@ -3007,16 +3092,75 @@ function HaberlerTab() {
           <h2 className="text-xl font-bold text-gray-800">Haberler</h2>
           <p className="text-sm text-gray-500 mt-0.5">{liste.length} kayıt</p>
         </div>
-        <button
-          onClick={() => acModal()}
-          className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition"
-        >
-          <Plus className="w-4 h-4" /> Yeni Haber Ekle
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleAiOner}
+            disabled={aiYukleniyor}
+            className="flex items-center gap-2 border border-emerald-600 text-emerald-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-50 transition disabled:opacity-50"
+          >
+            <Zap className="w-4 h-4" /> {aiYukleniyor ? 'Yükleniyor…' : 'AI ile Haber Öner'}
+          </button>
+          <button
+            onClick={() => acModal()}
+            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition"
+          >
+            <Plus className="w-4 h-4" /> Yeni Haber Ekle
+          </button>
+        </div>
       </div>
 
-      {liste.length === 0 ? (
-        <div className="text-center py-12 text-gray-400 text-sm">Henüz haber yok.</div>
+      {/* AI Öneri Paneli */}
+      {aiPanelAcik && (
+        <div className="mb-5 border border-emerald-200 rounded-xl bg-emerald-50 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-emerald-800 text-sm">AI Haber Önerileri</h3>
+            <button onClick={() => setAiPanelAcik(false)} className="text-gray-400 hover:text-gray-600">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {onerilenler.length === 0 ? (
+            <p className="text-sm text-gray-500">Öneri bulunamadı veya tümü eklendi.</p>
+          ) : (
+            <div className="space-y-2">
+              {onerilenler.map((o) => (
+                <div key={o.kaynakUrl} className="bg-white rounded-lg p-3 flex items-start justify-between gap-3 shadow-sm">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{o.baslik}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{o.kaynak} · {o.kategori} · {o.tarih}</p>
+                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">{o.ozet}</p>
+                  </div>
+                  <button
+                    onClick={() => handleOneriEkle(o)}
+                    className="flex-shrink-0 text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
+                  >
+                    Taslağa Ekle
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Filtre chips */}
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {FILTRE_TANIMLARI.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setFiltre(key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+              filtre === key
+                ? 'bg-emerald-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {goruntule.length === 0 ? (
+        <div className="text-center py-12 text-gray-400 text-sm">Bu filtreye uygun haber yok.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -3030,43 +3174,67 @@ function HaberlerTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {liste.map((h) => (
-                <tr key={h.id} className="hover:bg-gray-50">
-                  <td className="py-3 pr-4 max-w-xs">
-                    <p className="font-medium text-gray-800 truncate">{h.baslik}</p>
-                    <a href={h.kaynakUrl} target="_blank" rel="noopener noreferrer"
-                       className="text-xs text-emerald-600 hover:underline truncate block">{h.kaynakUrl}</a>
-                  </td>
-                  <td className="py-3 pr-4 text-gray-600">{h.kaynak}</td>
-                  <td className="py-3 pr-4">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full capitalize">{h.kategori}</span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <button
-                      onClick={() => handleToggle(h.id!, h.yayinda)}
-                      className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition ${
-                        h.yayinda
-                          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                      }`}
-                    >
-                      {h.yayinda ? <><Eye className="w-3 h-3" /> Yayında</> : <><EyeOff className="w-3 h-3" /> Taslak</>}
-                    </button>
-                  </td>
-                  <td className="py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => acModal(h)}
-                        className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition">
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => handleSil(h.id!)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {goruntule.map((h) => {
+                const durum = haberDurumHesapla(h);
+                return (
+                  <tr key={h.id} className="hover:bg-gray-50">
+                    <td className="py-3 pr-4 max-w-xs">
+                      <p className="font-medium text-gray-800 truncate">{h.baslik}</p>
+                      <a href={h.kaynakUrl} target="_blank" rel="noopener noreferrer"
+                         className="text-xs text-emerald-600 hover:underline truncate block">{h.kaynakUrl}</a>
+                    </td>
+                    <td className="py-3 pr-4 text-gray-600">{h.kaynak}</td>
+                    <td className="py-3 pr-4">
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full capitalize">{h.kategori}</span>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        durum === 'yayinda' ? 'bg-emerald-100 text-emerald-700' :
+                        durum === 'arsiv'   ? 'bg-gray-200 text-gray-500' :
+                                             'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {durum === 'yayinda' ? 'Yayında' : durum === 'arsiv' ? 'Arşiv' : 'Taslak'}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                        {durum === 'taslak' && (
+                          <button onClick={() => handleOnayla(h.id!)}
+                            className="text-xs px-2 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded font-medium transition">
+                            Onayla
+                          </button>
+                        )}
+                        {durum === 'yayinda' && (
+                          <button onClick={() => handleTaslaga(h.id!)}
+                            className="text-xs px-2 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded font-medium transition">
+                            Taslağa Al
+                          </button>
+                        )}
+                        {durum !== 'arsiv' && (
+                          <button onClick={() => handleArsivle(h.id!)}
+                            className="text-xs px-2 py-1 bg-gray-100 text-gray-500 hover:bg-gray-200 rounded font-medium transition">
+                            Arşivle
+                          </button>
+                        )}
+                        {durum === 'arsiv' && (
+                          <button onClick={() => handleTaslaga(h.id!)}
+                            className="text-xs px-2 py-1 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded font-medium transition">
+                            Geri Al
+                          </button>
+                        )}
+                        <button onClick={() => acModal(h)}
+                          className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleSil(h.id!)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -3126,11 +3294,6 @@ function HaberlerTab() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                   placeholder="3-4 cümle özet..." />
               </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.yayinda} onChange={(e) => setForm({ ...form, yayinda: e.target.checked })}
-                  className="w-4 h-4 rounded text-emerald-600" />
-                <span className="text-sm text-gray-700">Yayına al</span>
-              </label>
             </div>
 
             <div className="flex gap-3 mt-6">
