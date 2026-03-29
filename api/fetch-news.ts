@@ -11,6 +11,7 @@ interface HaberItem {
   kaynakUrl: string;
   ozet:      string;
   kategori:  'prefabrik' | 'konteyner' | 'tiny-house' | 'celik-yapi' | 'genel';
+  bolge:     'turkiye' | 'dunya';
   tarih:     string;
 }
 
@@ -21,6 +22,7 @@ const DEMO_HABERLER: HaberItem[] = [
     kaynakUrl: 'https://www.imsad.org',
     ozet:      'Türkiye İnşaat Malzemesi Sanayicileri Derneği verilerine göre prefabrik yapı sektörü 2025 yılında bir önceki yıla kıyasla yüzde 23 büyüdü. Deprem sonrası talep artışı ve kentsel dönüşüm projeleri büyümenin başlıca nedenleri arasında gösteriliyor.',
     kategori:  'prefabrik',
+    bolge:     'turkiye',
     tarih:     '2026-03-25',
   },
   {
@@ -29,6 +31,7 @@ const DEMO_HABERLER: HaberItem[] = [
     kaynakUrl: 'https://www.hurriyet.com.tr',
     ozet:      'Çevre, Şehircilik ve İklim Değişikliği Bakanlığı, konteyner evlerin imar ve yapı ruhsatı süreçlerini düzenleyen yönetmelik taslağını hazırladı. Kamuoyu görüşüne açılan taslak, konteyner konutları için standart ölçü ve yalıtım şartlarını belirliyor.',
     kategori:  'konteyner',
+    bolge:     'turkiye',
     tarih:     '2026-03-22',
   },
   {
@@ -37,6 +40,7 @@ const DEMO_HABERLER: HaberItem[] = [
     kaynakUrl: 'https://www.sabah.com.tr',
     ozet:      '3. Türkiye Tiny House ve Modüler Yaşam Fuarı, İstanbul Fuar Merkezi\'nde 3 gün boyunca kapılarını açtı. Fuar boyunca 120 firma 15.000\'den fazla ziyaretçiye ürünlerini tanıttı; özellikle off-grid güneş enerjili modeller yoğun ilgi gördü.',
     kategori:  'tiny-house',
+    bolge:     'turkiye',
     tarih:     '2026-03-18',
   },
   {
@@ -45,6 +49,7 @@ const DEMO_HABERLER: HaberItem[] = [
     kaynakUrl: 'https://www.dunya.com',
     ozet:      'Türkiye çelik yapı ve prefabrik modüler yapı ihracatı 2026 yılının ilk çeyreğinde 340 milyon dolara ulaştı. Başlıca pazarlar Körfez ülkeleri, Afrika ve Orta Asya ülkeleri olarak sıralandı.',
     kategori:  'celik-yapi',
+    bolge:     'turkiye',
     tarih:     '2026-03-15',
   },
   {
@@ -53,15 +58,17 @@ const DEMO_HABERLER: HaberItem[] = [
     kaynakUrl: 'https://www.aa.com.tr',
     ozet:      'TSE, prefabrik ve çelik modüler yapılar için deprem performans standartlarını TBDY 2018 revizyonuna uyumlu hale getirdi. Yeni standartlar 1 Nisan 2026\'dan itibaren tüm yeni üretim için zorunlu olacak.',
     kategori:  'genel',
+    bolge:     'turkiye',
     tarih:     '2026-03-10',
   },
   {
-    baslik:    'Enerji Kimlik Belgesi Prefabrik Evlerde Zorunlu Hale Geliyor',
-    kaynak:    'İnşaat Dünyası',
-    kaynakUrl: 'https://www.insaatdunyasi.com.tr',
-    ozet:      '2026 yılı sonundan itibaren 80 m² üzeri tüm prefabrik konutlar için Enerji Kimlik Belgesi (EKB) alınması zorunlu olacak. Düzenleme, prefabrik yapıları geleneksel yapılarla aynı enerji verimliliği mevzuatına tabi kılıyor.',
+    baslik:    'Modular Building Institute: Global Prefab Market to Reach $227B by 2028',
+    kaynak:    'Modular Building Institute',
+    kaynakUrl: 'https://www.modular.org',
+    ozet:      'The Modular Building Institute\'s 2026 annual report forecasts the global prefab and modular construction market will reach $227 billion by 2028, driven by housing shortages, sustainability mandates, and faster delivery timelines.',
     kategori:  'prefabrik',
-    tarih:     '2026-03-07',
+    bolge:     'dunya',
+    tarih:     '2026-03-20',
   },
 ];
 
@@ -90,6 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         kaynakUrl: a.url,
         ozet:      a.description ?? '',
         kategori:  'genel' as const,
+        bolge:     'turkiye' as const,
         tarih:     a.publishedAt.slice(0, 10),
       }));
       return res.status(200).json({ haberler, kaynak: 'newsapi' });

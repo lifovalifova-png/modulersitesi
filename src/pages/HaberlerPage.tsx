@@ -24,19 +24,17 @@ interface Haber {
   kaynakUrl: string;
   ozet:      string;
   kategori:  string;
+  bolge?:    string; /* 'turkiye' | 'dunya' */
   gorselUrl?: string;
   tarih:     { seconds: number; nanoseconds: number } | null;
   yayinda:   boolean;
 }
 
-/* ── Kategori Filtreleri ─────────────────────────────────── */
-const KATEGORILER = [
-  { key: 'tumü',       label: 'Tümü' },
-  { key: 'prefabrik',  label: 'Prefabrik' },
-  { key: 'konteyner',  label: 'Konteyner' },
-  { key: 'tiny-house', label: 'Tiny House' },
-  { key: 'celik-yapi', label: 'Çelik Yapı' },
-  { key: 'genel',      label: 'Genel' },
+/* ── Bölge Filtreleri ────────────────────────────────────── */
+const BOLGELER = [
+  { key: 'tumu',    label: 'Tümü'     },
+  { key: 'turkiye', label: 'Türkiye'  },
+  { key: 'dunya',   label: 'Dünyadan' },
 ];
 
 const VARSAYILAN_GORSEL =
@@ -66,13 +64,9 @@ function HaberKart({ haber }: { haber: Haber }) {
 
       {/* İçerik */}
       <div className="p-5 flex flex-col flex-1">
-        {/* Kategori chip */}
-        <span className="inline-block text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full mb-3 self-start capitalize">
-          {haber.kategori === 'tiny-house' ? 'Tiny House'
-            : haber.kategori === 'celik-yapi' ? 'Çelik Yapı'
-            : haber.kategori === 'prefabrik' ? 'Prefabrik'
-            : haber.kategori === 'konteyner' ? 'Konteyner'
-            : 'Genel'}
+        {/* Bölge chip */}
+        <span className="inline-block text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full mb-3 self-start">
+          {haber.bolge === 'dunya' ? '🌍 Dünyadan' : '🇹🇷 Türkiye'}
         </span>
 
         {/* Başlık */}
@@ -126,7 +120,7 @@ export default function HaberlerPage() {
   const [loadingMore,   setLoadingMore]   = useState(false);
   const [lastDoc,       setLastDoc]       = useState<QueryDocumentSnapshot | null>(null);
   const [hasMore,       setHasMore]       = useState(true);
-  const [aktifKat,      setAktifKat]      = useState('tumü');
+  const [aktifBolge,    setAktifBolge]    = useState('tumu');
 
   /* İlk yükleme (realtime) */
   useEffect(() => {
@@ -178,11 +172,11 @@ export default function HaberlerPage() {
     setLoadingMore(false);
   }
 
-  /* Kategori filtresi (client-side) */
+  /* Bölge filtresi (client-side) */
   const goruntulenen =
-    aktifKat === 'tumü'
+    aktifBolge === 'tumu'
       ? haberler
-      : haberler.filter((h) => h.kategori === aktifKat);
+      : haberler.filter((h) => (h.bolge ?? 'turkiye') === aktifBolge);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -205,20 +199,20 @@ export default function HaberlerPage() {
           </div>
         </section>
 
-        {/* ── Kategori Filtresi ─────────────── */}
+        {/* ── Bölge Filtresi ────────────────── */}
         <div className="bg-white border-b border-gray-200 sticky top-[56px] z-30">
           <div className="max-w-6xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar">
-            {KATEGORILER.map((k) => (
+            {BOLGELER.map((b) => (
               <button
-                key={k.key}
-                onClick={() => setAktifKat(k.key)}
+                key={b.key}
+                onClick={() => setAktifBolge(b.key)}
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition ${
-                  aktifKat === k.key
+                  aktifBolge === b.key
                     ? 'bg-emerald-600 text-white shadow'
                     : 'bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700'
                 }`}
               >
-                {k.label}
+                {b.label}
               </button>
             ))}
           </div>
@@ -244,7 +238,7 @@ export default function HaberlerPage() {
             <div className="text-center py-16">
               <Newspaper className="w-12 h-12 text-gray-300 mx-auto mb-4" aria-hidden="true" />
               <p className="text-gray-400 text-sm">
-                {aktifKat === 'tumü' ? 'Henüz haber yok.' : 'Bu kategoride haber bulunamadı.'}
+                {aktifBolge === 'tumu' ? 'Henüz haber yok.' : 'Bu bölgede haber bulunamadı.'}
               </p>
             </div>
           ) : (
@@ -255,7 +249,7 @@ export default function HaberlerPage() {
                 ))}
               </div>
 
-              {hasMore && aktifKat === 'tumü' && (
+              {hasMore && aktifBolge === 'tumu' && (
                 <div className="mt-10 text-center">
                   <button
                     onClick={handleLoadMore}
