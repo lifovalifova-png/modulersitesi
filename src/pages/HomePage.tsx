@@ -1,13 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, getCountFromServer } from 'firebase/firestore';
+import {
+  collection, query, where, getCountFromServer,
+  onSnapshot, orderBy, limit,
+} from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import {
   ArrowRight, Building, Container, Home, Hammer, TreePine, Recycle, Star,
   Zap, Search, CheckSquare, FileText, BarChart2,
   UserPlus, ClipboardList, Handshake,
   ShieldCheck, Tag, MapPin, Lock,
-  Sparkles, MessageSquare,
+  Sparkles, MessageSquare, Newspaper, Calendar,
   type LucideIcon,
 } from 'lucide-react';
 import Header from '../components/Header';
@@ -102,6 +105,42 @@ export default function HomePage() {
       setFirmaCount(firmaSnap.data().count);
     }).catch(() => { /* silent — StatCounter'da 0 kalır */ });
   }, []);
+
+  /* ─── Sektör Haberleri ───────────────────────────────────── */
+  interface MiniHaber {
+    id: string; baslik: string; kaynak: string;
+    kaynakUrl: string; gorselUrl?: string; bolge?: string;
+    tarih: { seconds: number } | null;
+  }
+  const [haberler,     setHaberler]     = useState<MiniHaber[]>([]);
+  const [haberlerTab,  setHaberlerTab]  = useState<'turkiye' | 'dunya'>('turkiye');
+  const [haberLoading, setHaberLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'haberler'),
+      where('yayinda', '==', true),
+      orderBy('tarih', 'desc'),
+      limit(20),
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setHaberler(snap.docs.map((d) => ({ id: d.id, ...d.data() } as MiniHaber)));
+      setHaberLoading(false);
+    }, () => setHaberLoading(false));
+    return unsub;
+  }, []);
+
+  const haberlerGoruntule = haberler
+    .filter((h) => (h.bolge ?? 'turkiye') === haberlerTab)
+    .slice(0, 4);
+
+  function formatHaberTarih(t: { seconds: number } | null) {
+    if (!t) return '';
+    return new Date(t.seconds * 1000).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+  }
+
+  const HABER_GORSEL =
+    'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=300&fit=crop';
 
   /* ─── Translated data arrays ────────────────────────────── */
   const STATS = [
@@ -563,6 +602,90 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ── Sektör Haberleri ─────────────────────────────── */}
+        <section className="py-10 md:py-14 bg-white border-t border-gray-100">
+          <div className="max-w-7xl mx-auto px-4">
+            {/* Başlık */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Newspaper className="w-5 h-5 text-emerald-600" aria-hidden="true" />
+                <h2 className="text-xl font-bold text-gray-900">Sektör Haberleri</h2>
+              </div>
+              <Link
+                to="/haberler"
+                className="flex items-center gap-1 text-sm text-emerald-600 hover:underline font-medium"
+              >
+                Tümünü Gör <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Link>
+            </div>
+
+            {/* Bölge Tabs */}
+            <div className="flex gap-2 mb-5">
+              {([
+                { key: 'turkiye', label: '🇹🇷 Türkiye'  },
+                { key: 'dunya',   label: '🌍 Dünyadan' },
+              ] as const).map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setHaberlerTab(key)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold transition ${
+                    haberlerTab === key
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Kartlar */}
+            {haberLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : haberlerGoruntule.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">Bu bölgede henüz haber yok.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {haberlerGoruntule.map((h) => (
+                  <a
+                    key={h.id}
+                    href={h.kaynakUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex gap-3 bg-white rounded-xl border border-gray-100 shadow-sm p-3 hover:border-emerald-200 hover:shadow-md transition group"
+                  >
+                    <div className="w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                      <img
+                        src={h.gorselUrl || HABER_GORSEL}
+                        alt=""
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).src = HABER_GORSEL; }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-emerald-600 font-medium mb-1 truncate">{h.kaynak}</p>
+                      <h3 className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-emerald-700 transition">
+                        {h.baslik}
+                      </h3>
+                      {h.tarih && (
+                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" aria-hidden="true" />
+                          {formatHaberTarih(h.tarih)}
+                        </p>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
