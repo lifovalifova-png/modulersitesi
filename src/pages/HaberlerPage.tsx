@@ -176,7 +176,7 @@ export default function HaberlerPage() {
   const goruntulenen =
     aktifBolge === 'tumu'
       ? haberler
-      : haberler.filter((h) => (h.bolge ?? 'turkiye') === aktifBolge);
+      : haberler.filter((h) => !h.bolge || h.bolge === aktifBolge);
 
   return (
     <div className="flex flex-col min-h-screen">

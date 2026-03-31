@@ -131,7 +131,7 @@ export default function HomePage() {
   }, []);
 
   const haberlerGoruntule = haberler
-    .filter((h) => (h.bolge ?? 'turkiye') === haberlerTab)
+    .filter((h) => !h.bolge || h.bolge === haberlerTab)
     .slice(0, 4);
 
   function formatHaberTarih(t: { seconds: number } | null) {
