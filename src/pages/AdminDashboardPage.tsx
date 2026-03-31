@@ -2912,6 +2912,7 @@ interface AdminHaber {
   kaynak:     string;
   kaynakUrl:  string;
   ozet:       string;
+  icerik:     string;
   kategori:   string;
   bolge:      string; /* 'turkiye' | 'dunya' */
   gorselUrl:  string;
@@ -2921,7 +2922,7 @@ interface AdminHaber {
 }
 
 const BOSH_HABER: Omit<AdminHaber, 'id'> = {
-  baslik: '', kaynak: '', kaynakUrl: 'https://', ozet: '',
+  baslik: '', kaynak: '', kaynakUrl: 'https://', ozet: '', icerik: '',
   kategori: 'genel', bolge: 'turkiye', gorselUrl: '', yayinda: false, arsivlendi: false,
 };
 
@@ -3202,7 +3203,7 @@ function HaberlerTab() {
       setDuzenle(haber);
       setForm({
         baslik: haber.baslik, kaynak: haber.kaynak, kaynakUrl: haber.kaynakUrl,
-        ozet: haber.ozet, kategori: haber.kategori, bolge: haber.bolge ?? 'turkiye',
+        ozet: haber.ozet, icerik: haber.icerik ?? '', kategori: haber.kategori, bolge: haber.bolge ?? 'turkiye',
         gorselUrl: haber.gorselUrl ?? '', yayinda: haber.yayinda, arsivlendi: haber.arsivlendi ?? false,
       });
     } else {
@@ -3515,11 +3516,18 @@ function HaberlerTab() {
                   placeholder="https://images.unsplash.com/..." />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Özet</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kısa Özet</label>
                 <textarea value={form.ozet} onChange={(e) => setForm({ ...form, ozet: e.target.value })}
-                  rows={4}
+                  rows={3}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                  placeholder="3-4 cümle özet..." />
+                  placeholder="Kartlarda görünecek kısa özet (2-3 cümle)..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">İçerik (Markdown)</label>
+                <textarea value={form.icerik} onChange={(e) => setForm({ ...form, icerik: e.target.value })}
+                  rows={8}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y font-mono"
+                  placeholder="Detay sayfasında gösterilecek uzun içerik. Markdown destekler: **kalın**, *italik*, ## başlık..." />
               </div>
             </div>
 

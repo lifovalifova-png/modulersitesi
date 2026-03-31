@@ -10,7 +10,8 @@ import {
   type DocumentSnapshot,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
-import { ExternalLink, Newspaper, Calendar, ChevronDown } from 'lucide-react';
+import { Newspaper, Calendar, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
@@ -23,6 +24,7 @@ interface Haber {
   kaynak:    string;
   kaynakUrl: string;
   ozet:      string;
+  icerik?:   string;
   kategori:  string;
   bolge?:    string; /* 'turkiye' | 'dunya' */
   gorselUrl?: string;
@@ -50,7 +52,10 @@ function formatTarih(tarih: Haber['tarih']): string {
 /* ── Haber Kartı ─────────────────────────────────────────── */
 function HaberKart({ haber }: { haber: Haber }) {
   return (
-    <article className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group">
+    <Link
+      to={`/haberler/${haber.id}`}
+      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group hover:shadow-md transition"
+    >
       {/* Görsel */}
       <div className="overflow-hidden h-48 bg-gray-100 flex-shrink-0">
         <img
@@ -97,17 +102,11 @@ function HaberKart({ haber }: { haber: Haber }) {
         </p>
 
         {/* CTA */}
-        <a
-          href={haber.kaynakUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-flex items-center justify-center gap-2 bg-emerald-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-emerald-700 transition"
-        >
-          Habere Git
-          <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
-        </a>
+        <span className="mt-4 inline-flex items-center justify-center gap-2 bg-emerald-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg group-hover:bg-emerald-700 transition">
+          Devamını Oku
+        </span>
       </div>
-    </article>
+    </Link>
   );
 }
 

@@ -654,11 +654,9 @@ export default function HomePage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {haberlerGoruntule.map((h) => (
-                  <a
+                  <Link
                     key={h.id}
-                    href={h.kaynakUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    to={`/haberler/${h.id}`}
                     className="flex gap-3 bg-white rounded-xl border border-gray-100 shadow-sm p-3 hover:border-emerald-200 hover:shadow-md transition group"
                   >
                     <div className="w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
@@ -682,7 +680,7 @@ export default function HomePage() {
                         </p>
                       )}
                     </div>
-                  </a>
+                  </Link>
                 ))}
               </div>
             )}
