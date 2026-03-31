@@ -148,6 +148,7 @@ interface PendingCounts {
   yorumlar:        number;
   quotes:          number;
   geriBildirimler: number;
+  haberTaslak:     number;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -638,7 +639,7 @@ function OverviewTab({ pendingCounts }: { pendingCounts: PendingCounts }) {
       <h2 className="text-lg font-semibold text-gray-800">Genel Bakış</h2>
 
       {/* ── Bekleyen işlem uyarıları ──────────────────────── */}
-      {(pendingCounts.talepler > 0 || pendingCounts.firms > 0 || pendingCounts.quotes > 0) && (
+      {(pendingCounts.talepler > 0 || pendingCounts.firms > 0 || pendingCounts.quotes > 0 || pendingCounts.haberTaslak > 0) && (
         <div className="space-y-2">
           {pendingCounts.talepler > 0 && (
             <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
@@ -661,6 +662,14 @@ function OverviewTab({ pendingCounts }: { pendingCounts: PendingCounts }) {
               <Inbox className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <p className="text-sm text-emerald-800">
                 <strong>{pendingCounts.quotes} adet</strong> cevaplanmamış fiyat teklif talebi var.
+              </p>
+            </div>
+          )}
+          {pendingCounts.haberTaslak > 0 && (
+            <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
+              <Newspaper className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              <p className="text-sm text-orange-800">
+                <strong>{pendingCounts.haberTaslak} haber taslağı</strong> onay bekliyor.
               </p>
             </div>
           )}
@@ -2929,7 +2938,7 @@ const BOSH_HABER: Omit<AdminHaber, 'id'> = {
 
 type HaberDurum = 'all' | 'taslak' | 'yayinda' | 'arsiv';
 
-interface Onerilen { baslik: string; kaynak: string; kaynakUrl: string; ozet: string; kategori: string; bolge: string; tarih: string }
+interface Onerilen { baslik: string; kaynak: string; kaynakUrl: string; ozet: string; icerik?: string; gorselUrl?: string; kategori: string; bolge: string; tarih: string }
 
 function haberDurumHesapla(h: AdminHaber): 'taslak' | 'yayinda' | 'arsiv' {
   if (h.arsivlendi) return 'arsiv';
@@ -3277,11 +3286,41 @@ function HaberlerTab() {
   async function handleOneriEkle(o: Onerilen) {
     await addDoc(collection(db, 'haberler'), {
       baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
-      ozet: o.ozet, kategori: o.kategori, bolge: o.bolge ?? 'turkiye', gorselUrl: '',
+      ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
+      bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
       yayinda: false, arsivlendi: false, tarih: serverTimestamp(),
     });
     toast.success('Taslak olarak eklendi.');
     setOnerilenler((prev) => prev.filter((x) => x.kaynakUrl !== o.kaynakUrl));
+  }
+
+  async function handleTumunuTaslaga() {
+    if (onerilenler.length === 0) return;
+    let eklenen = 0;
+    for (const o of onerilenler) {
+      await addDoc(collection(db, 'haberler'), {
+        baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
+        ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
+        bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
+        yayinda: false, arsivlendi: false, tarih: serverTimestamp(),
+      });
+      eklenen++;
+    }
+    setOnerilenler([]);
+    toast.success(`${eklenen} haber taslak olarak eklendi.`);
+  }
+
+  async function handleTaslakTumunuOnayla() {
+    const taslaklar = liste.filter((h) => !h.yayinda && !h.arsivlendi);
+    if (taslaklar.length === 0) {
+      toast.info('Onaylanacak taslak yok.');
+      return;
+    }
+    if (!window.confirm(`${taslaklar.length} taslak haberi yayına almak istiyor musunuz?`)) return;
+    for (const h of taslaklar) {
+      await updateDoc(doc(db, 'haberler', h.id!), { yayinda: true });
+    }
+    toast.success(`${taslaklar.length} haber yayına alındı.`);
   }
 
   if (loading && altTab === 'haberler') return <div className="p-6 text-sm text-gray-500">Yükleniyor…</div>;
@@ -3323,6 +3362,40 @@ function HaberlerTab() {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={async () => {
+              setAiYukleniyor(true);
+              try {
+                const res = await fetch('/api/fetch-news');
+                if (!res.ok) throw new Error('API hatası');
+                const data = await res.json() as { haberler: Onerilen[] };
+                const haberler = data.haberler ?? [];
+                let eklenen = 0;
+                for (const o of haberler) {
+                  const mevcutMu = liste.some((h) => h.kaynakUrl === o.kaynakUrl);
+                  if (!mevcutMu) {
+                    await addDoc(collection(db, 'haberler'), {
+                      baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
+                      ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
+                      bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
+                      yayinda: false, arsivlendi: false, tarih: serverTimestamp(),
+                    });
+                    eklenen++;
+                  }
+                }
+                if (eklenen > 0) toast.success(`${eklenen} haber taslak olarak eklendi.`);
+                else toast.info('Yeni haber bulunamadı (mevcut haberlerle aynı).');
+              } catch {
+                toast.error('Haberler alınamadı.');
+              } finally {
+                setAiYukleniyor(false);
+              }
+            }}
+            disabled={aiYukleniyor}
+            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-600 transition disabled:opacity-50"
+          >
+            <Newspaper className="w-4 h-4" /> {aiYukleniyor ? 'Getiriliyor…' : 'Günlük Haberleri Getir'}
+          </button>
+          <button
             onClick={handleAiOner}
             disabled={aiYukleniyor}
             className="flex items-center gap-2 border border-emerald-600 text-emerald-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-50 transition disabled:opacity-50"
@@ -3338,32 +3411,66 @@ function HaberlerTab() {
         </div>
       </div>
 
+      {/* Taslak uyarı banner */}
+      {sayilar.taslak > 0 && (
+        <div className="mb-5 flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <p className="text-sm text-amber-800">
+            <strong>{sayilar.taslak} haber</strong> onay bekliyor.
+          </p>
+          <button
+            onClick={handleTaslakTumunuOnayla}
+            className="text-xs px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition font-semibold"
+          >
+            Tümünü Onayla
+          </button>
+        </div>
+      )}
+
       {/* AI Öneri Paneli */}
       {aiPanelAcik && (
         <div className="mb-5 border border-emerald-200 rounded-xl bg-emerald-50 p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-emerald-800 text-sm">AI Haber Önerileri</h3>
-            <button onClick={() => setAiPanelAcik(false)} className="text-gray-400 hover:text-gray-600">
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              {onerilenler.length > 0 && (
+                <button
+                  onClick={handleTumunuTaslaga}
+                  className="text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
+                >
+                  Tümünü Taslağa Ekle
+                </button>
+              )}
+              <button onClick={() => setAiPanelAcik(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           {onerilenler.length === 0 ? (
             <p className="text-sm text-gray-500">Öneri bulunamadı veya tümü eklendi.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {onerilenler.map((o) => (
-                <div key={o.kaynakUrl} className="bg-white rounded-lg p-3 flex items-start justify-between gap-3 shadow-sm">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{o.baslik}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{o.kaynak} · {o.bolge === 'dunya' ? 'Dünyadan' : 'Türkiye'} · {o.tarih}</p>
-                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">{o.ozet}</p>
+                <div key={o.kaynakUrl} className="bg-white rounded-lg p-3 shadow-sm">
+                  <div className="flex gap-3">
+                    {o.gorselUrl && (
+                      <div className="w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                        <img src={o.gorselUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 line-clamp-1">{o.baslik}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{o.kaynak} · {o.bolge === 'dunya' ? 'Dünyadan' : 'Türkiye'} · {o.tarih}</p>
+                    </div>
+                    <button
+                      onClick={() => handleOneriEkle(o)}
+                      className="flex-shrink-0 self-start text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
+                    >
+                      Taslağa Ekle
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleOneriEkle(o)}
-                    className="flex-shrink-0 text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
-                  >
-                    Taslağa Ekle
-                  </button>
+                  {o.icerik && (
+                    <p className="text-xs text-gray-600 mt-2 line-clamp-3">{o.icerik.slice(0, 200)}{o.icerik.length > 200 ? '…' : ''}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -3704,7 +3811,7 @@ export default function AdminDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [seedBusy,      setSeedBusy]      = useState(false);
   const [clearBusy,     setClearBusy]     = useState(false);
-  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ talepler: 0, firms: 0, yorumlar: 0, quotes: 0, geriBildirimler: 0 });
+  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ talepler: 0, firms: 0, yorumlar: 0, quotes: 0, geriBildirimler: 0, haberTaslak: 0 });
 
   async function handleSeed() {
     toast.info('10 firma, 30 ilan, 15 talep, 10 teklif eklenecek…');
@@ -3790,7 +3897,14 @@ export default function AdminDashboardPage() {
       query(collection(db, 'geri_bildirimler'), where('durum', '==', 'beklemede')),
       (s) => setPendingCounts((p) => ({ ...p, geriBildirimler: s.size })),
     );
-    return () => { u1(); u2(); u3(); u4(); };
+    const u5 = onSnapshot(
+      query(collection(db, 'haberler'), where('yayinda', '==', false)),
+      (s) => {
+        const taslakSayisi = s.docs.filter((d) => !d.data().arsivlendi).length;
+        setPendingCounts((p) => ({ ...p, haberTaslak: taslakSayisi }));
+      },
+    );
+    return () => { u1(); u2(); u3(); u4(); u5(); };
   }, [user]);
 
   const handleSignOut = async () => {
@@ -3860,7 +3974,8 @@ export default function AdminDashboardPage() {
               const badge =
                 t.key === 'talepler'        ? pendingCounts.talepler :
                 t.key === 'firms'           ? pendingCounts.firms    :
-                t.key === 'geriBildirimler' ? pendingCounts.geriBildirimler : 0;
+                t.key === 'geriBildirimler' ? pendingCounts.geriBildirimler :
+                t.key === 'haberler'        ? pendingCounts.haberTaslak : 0;
               return (
                 <button
                   key={t.key}
