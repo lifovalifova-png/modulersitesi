@@ -30,7 +30,7 @@ import {
   Save, X, Menu, ShieldCheck, Clock, Link as LinkIcon,
   Send, Eye, EyeOff, MapPin, Tag, Banknote, FileText, ChevronDown, ChevronUp,
   Inbox, BookOpen, BarChart2, Download, Sliders, Star, ThumbsUp, Flame,
-  Facebook, Instagram, Twitter, Linkedin, Youtube, Newspaper,
+  Facebook, Instagram, Twitter, Linkedin, Youtube, Newspaper, Bot,
 } from 'lucide-react';
 import { type FeatureFlags, DEFAULT_FLAGS } from '../hooks/useFeatureFlags';
 import SEOMeta from '../components/SEOMeta';
@@ -2930,12 +2930,13 @@ interface AdminHaber {
   baslikEn?:  string;
   ozetEn?:    string;
   icerikEn?:  string;
+  otomatik?:  boolean;
   _seed?:     boolean;
 }
 
 const BOSH_HABER: Omit<AdminHaber, 'id'> = {
   baslik: '', kaynak: '', kaynakUrl: 'https://', ozet: '', icerik: '',
-  kategori: 'genel', bolge: 'turkiye', gorselUrl: '', yayinda: false, arsivlendi: false,
+  kategori: 'genel', bolge: 'turkiye', gorselUrl: '', yayinda: true, arsivlendi: false,
   baslikEn: '', ozetEn: '', icerikEn: '',
 };
 
@@ -3175,7 +3176,7 @@ function HaberlerTab() {
   const [duzenle,       setDuzenle]       = useState<AdminHaber | null>(null);
   const [form,          setForm]          = useState<Omit<AdminHaber, 'id'>>(BOSH_HABER);
   const [kaydediyor,    setKaydediyor]    = useState(false);
-  const [filtre,        setFiltre]        = useState<HaberDurum>('all');
+  const [filtre,        setFiltre]        = useState<HaberDurum>('yayinda');
   const [aiYukleniyor,  setAiYukleniyor]  = useState(false);
   const [onerilenler,   setOnerilenler]   = useState<Onerilen[]>([]);
   const [aiPanelAcik,   setAiPanelAcik]  = useState(false);
@@ -3250,9 +3251,9 @@ function HaberlerTab() {
         toast.success('Haber güncellendi.');
       } else {
         await addDoc(collection(db, 'haberler'), {
-          ...form, yayinda: false, arsivlendi: false, tarih: serverTimestamp(),
+          ...form, yayinda: true, arsivlendi: false, tarih: serverTimestamp(),
         });
-        toast.success('Haber taslak olarak eklendi.');
+        toast.success('Haber yayına eklendi.');
       }
       setModalAcik(false);
     } catch {
@@ -3304,13 +3305,13 @@ function HaberlerTab() {
       baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
       ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
       bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
-      yayinda: false, arsivlendi: false, tarih: serverTimestamp(),
+      yayinda: true, arsivlendi: false, otomatik: true, tarih: serverTimestamp(),
     });
-    toast.success('Taslak olarak eklendi.');
+    toast.success('Yayına eklendi.');
     setOnerilenler((prev) => prev.filter((x) => x.kaynakUrl !== o.kaynakUrl));
   }
 
-  async function handleTumunuTaslaga() {
+  async function handleTumunuYayinla() {
     if (onerilenler.length === 0) return;
     let eklenen = 0;
     for (const o of onerilenler) {
@@ -3318,12 +3319,12 @@ function HaberlerTab() {
         baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
         ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
         bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
-        yayinda: false, arsivlendi: false, tarih: serverTimestamp(),
+        yayinda: true, arsivlendi: false, otomatik: true, tarih: serverTimestamp(),
       });
       eklenen++;
     }
     setOnerilenler([]);
-    toast.success(`${eklenen} haber taslak olarak eklendi.`);
+    toast.success(`${eklenen} haber yayına eklendi.`);
   }
 
   async function handleTaslakTumunuOnayla() {
@@ -3342,10 +3343,10 @@ function HaberlerTab() {
   if (loading && altTab === 'haberler') return <div className="p-6 text-sm text-gray-500">Yükleniyor…</div>;
 
   const FILTRE_TANIMLARI: { key: HaberDurum; label: string }[] = [
-    { key: 'all',     label: `Tümü (${liste.length})` },
-    { key: 'taslak',  label: `Taslak (${sayilar.taslak})` },
     { key: 'yayinda', label: `Yayında (${sayilar.yayinda})` },
+    { key: 'taslak',  label: `Taslak (${sayilar.taslak})` },
     { key: 'arsiv',   label: `Arşiv (${sayilar.arsiv})` },
+    { key: 'all',     label: `Tümü (${liste.length})` },
   ];
 
   return (
@@ -3387,18 +3388,18 @@ function HaberlerTab() {
                 const haberler = data.haberler ?? [];
                 let eklenen = 0;
                 for (const o of haberler) {
-                  const mevcutMu = liste.some((h) => h.kaynakUrl === o.kaynakUrl);
+                  const mevcutMu = liste.some((h) => h.baslik === o.baslik || h.kaynakUrl === o.kaynakUrl);
                   if (!mevcutMu) {
                     await addDoc(collection(db, 'haberler'), {
                       baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
                       ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
                       bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
-                      yayinda: false, arsivlendi: false, tarih: serverTimestamp(),
+                      yayinda: true, arsivlendi: false, otomatik: true, tarih: serverTimestamp(),
                     });
                     eklenen++;
                   }
                 }
-                if (eklenen > 0) toast.success(`${eklenen} haber taslak olarak eklendi.`);
+                if (eklenen > 0) toast.success(`${eklenen} haber yayına eklendi.`);
                 else toast.info('Yeni haber bulunamadı (mevcut haberlerle aynı).');
               } catch {
                 toast.error('Haberler alınamadı.');
@@ -3450,10 +3451,10 @@ function HaberlerTab() {
             <div className="flex items-center gap-2">
               {onerilenler.length > 0 && (
                 <button
-                  onClick={handleTumunuTaslaga}
+                  onClick={handleTumunuYayinla}
                   className="text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
                 >
-                  Tümünü Taslağa Ekle
+                  Tümünü Yayınla
                 </button>
               )}
               <button onClick={() => setAiPanelAcik(false)} className="text-gray-400 hover:text-gray-600">
@@ -3481,7 +3482,7 @@ function HaberlerTab() {
                       onClick={() => handleOneriEkle(o)}
                       className="flex-shrink-0 self-start text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
                     >
-                      Taslağa Ekle
+                      Yayınla
                     </button>
                   </div>
                   {o.icerik && (
@@ -3531,7 +3532,10 @@ function HaberlerTab() {
                 return (
                   <tr key={h.id} className="hover:bg-gray-50">
                     <td className="py-3 pr-4 max-w-xs">
-                      <p className="font-medium text-gray-800 truncate">{h.baslik}</p>
+                      <p className="font-medium text-gray-800 truncate flex items-center gap-1.5">
+                        {h.otomatik && <Bot className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" title="Otomatik eklenen" />}
+                        {h.baslik}
+                      </p>
                       <a href={h.kaynakUrl} target="_blank" rel="noopener noreferrer"
                          className="text-xs text-emerald-600 hover:underline truncate block">{h.kaynakUrl}</a>
                     </td>
