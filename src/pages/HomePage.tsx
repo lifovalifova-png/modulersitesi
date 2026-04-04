@@ -115,7 +115,7 @@ export default function HomePage() {
       collection(db, 'haberler'),
       where('yayinda', '==', true),
       orderBy('tarih', 'desc'),
-      limit(10),
+      limit(5),
     );
     const unsub = onSnapshot(q, (snap) => {
       const docs = snap.docs.map((d) => {
@@ -236,12 +236,12 @@ export default function HomePage() {
         <section className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white">
 
           {/* ── Kayan Haber Bandı (hero içi, cam efekti) ────── */}
-          <div className="w-full bg-white/10 backdrop-blur-sm border-b border-white/20 py-2.5 overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
-              <span className="bg-amber-400 text-emerald-900 font-bold px-3 py-1 rounded-full text-sm whitespace-nowrap flex-shrink-0">
-                📰 {t('haber.sektorHaberleri')}
-              </span>
-              {haberler.length > 0 ? (
+          {haberler.length > 0 && (
+            <div className="w-full bg-white/10 backdrop-blur-sm border-b border-white/20 py-2.5 overflow-hidden">
+              <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
+                <span className="bg-amber-400 text-emerald-900 font-bold px-3 py-1 rounded-full text-sm whitespace-nowrap flex-shrink-0">
+                  📰 {t('haber.sektorHaberleri')}
+                </span>
                 <div className="overflow-hidden flex-1">
                   <div className="flex gap-6 animate-marquee whitespace-nowrap">
                     {[...haberler, ...haberler].map((h, i) => (
@@ -257,14 +257,12 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
-              ) : (
-                <span className="text-sm text-white/60">Haberler yükleniyor...</span>
-              )}
-              <Link to="/haberler" className="text-amber-400 font-semibold text-sm whitespace-nowrap flex-shrink-0 hover:text-amber-200 transition">
-                {t('haber.tumunuGor')} →
-              </Link>
+                <Link to="/haberler" className="text-amber-400 font-semibold text-sm whitespace-nowrap flex-shrink-0 hover:text-amber-200 transition">
+                  {t('haber.tumunuGor')} →
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="max-w-7xl mx-auto px-4 py-16 md:py-20">
             <div className="max-w-3xl">
