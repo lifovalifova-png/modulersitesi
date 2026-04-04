@@ -375,6 +375,7 @@ export default function BlogDetayPage() {
                         <img
                           src={p.kapakGorseli}
                           alt={p.baslik}
+                          loading="lazy"
                           className="w-16 h-14 object-cover rounded-lg flex-shrink-0"
                         />
                         <div className="min-w-0">

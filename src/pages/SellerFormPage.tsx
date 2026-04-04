@@ -530,6 +530,7 @@ export default function SellerFormPage() {
                       <img
                         src={form.gorselUrl}
                         alt="Firma görseli önizleme"
+                        loading="lazy"
                         className="w-full h-48 object-cover"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />

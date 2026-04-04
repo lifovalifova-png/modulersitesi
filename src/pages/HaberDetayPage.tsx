@@ -290,7 +290,7 @@ export default function HaberDetayPage() {
                     <div className="h-32 bg-gray-100 overflow-hidden">
                       <img
                         src={h.gorselUrl || VARSAYILAN_GORSEL}
-                        alt=""
+                        alt={lang === 'en' ? (h.baslikEn || h.baslik) : h.baslik}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                         onError={(e) => { (e.target as HTMLImageElement).src = VARSAYILAN_GORSEL; }}

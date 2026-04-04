@@ -603,7 +603,7 @@ export default function IlanOlusturPage() {
                       key={img.id}
                       className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-100"
                     >
-                      <img src={img.previewUrl} alt="İlan görseli önizleme" className="w-full h-full object-cover" />
+                      <img src={img.previewUrl} alt="İlan görseli önizleme" loading="lazy" className="w-full h-full object-cover" />
 
                       {/* Yükleme overlay */}
                       {img.status === 'uploading' && (

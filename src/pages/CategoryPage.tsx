@@ -144,6 +144,7 @@ function Sidebar({
               setPriceMin(minStr === '0' ? '' : minStr);
               setPriceMax(maxStr === 'inf' ? '' : maxStr);
             }}
+            aria-label="Fiyat aralığı"
             className={inp + ' pr-8'}
           >
             {PRICE_RANGES.map((r, i) => (
@@ -163,7 +164,7 @@ function Sidebar({
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('category.city')}</p>
         <div className="relative">
-          <select value={city} onChange={(e) => setCity(e.target.value)} className={inp + ' pr-8'}>
+          <select value={city} onChange={(e) => setCity(e.target.value)} aria-label="Şehir filtresi" className={inp + ' pr-8'}>
             <option value="">{t('category.allCities')}</option>
             {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -538,6 +539,7 @@ export default function CategoryPage() {
             <div className="flex items-center gap-2 flex-wrap">
               <div className="relative hidden sm:block">
                 <select value={sort} onChange={(e) => setSort(e.target.value)}
+                  aria-label="Sıralama"
                   className="appearance-none bg-white border border-gray-300 rounded-lg text-sm text-gray-700 px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                   {SORT_VALUES.map((val) => <option key={val} value={val}>{t(SORT_KEYS[val])}</option>)}
                 </select>

@@ -952,6 +952,7 @@ function SettingsTab() {
               <img
                 src={settings.logoUrl}
                 alt="Logo önizleme"
+                loading="lazy"
                 className="w-full h-full object-contain"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
@@ -1339,7 +1340,7 @@ function FlashDealsTab() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="https://images.unsplash.com/..." />
                 {form.image && (
-                  <img src={form.image} alt="Önizleme"
+                  <img src={form.image} alt="Önizleme" loading="lazy"
                     className="mt-2 w-full h-32 object-cover rounded-lg border border-gray-200" />
                 )}
               </div>
@@ -1653,6 +1654,7 @@ function IlanlarTab() {
                   <img
                     src={gorselUrl}
                     alt="Önizleme"
+                    loading="lazy"
                     className="mt-2 w-full h-32 object-cover rounded-lg border border-gray-200"
                   />
                 )}
@@ -2229,6 +2231,7 @@ function BlogTab() {
               <img
                 src={post.kapakGorseli}
                 alt={post.baslik}
+                loading="lazy"
                 className="w-14 h-12 object-cover rounded-lg flex-shrink-0"
               />
               <div className="flex-1 min-w-0">

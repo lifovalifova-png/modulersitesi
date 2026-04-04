@@ -721,7 +721,7 @@ export default function ProfilPage() {
               {/* Avatar */}
               <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {currentUser.photoURL
-                  ? <img src={currentUser.photoURL} alt={displayName} className="w-full h-full object-cover" />
+                  ? <img src={currentUser.photoURL} alt={displayName} loading="lazy" className="w-full h-full object-cover" />
                   : <span className="text-emerald-700 font-extrabold text-3xl">{initials}</span>
                 }
               </div>

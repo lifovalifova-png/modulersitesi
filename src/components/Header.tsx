@@ -164,6 +164,7 @@ export default function Header() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('header.searchPlaceholder')}
+                aria-label="Arama"
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
@@ -253,6 +254,7 @@ export default function Header() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('header.searchPlaceholderMobile')}
+                aria-label="Arama"
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>

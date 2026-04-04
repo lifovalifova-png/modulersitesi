@@ -186,6 +186,7 @@ export default function LogoKitPage() {
               <img
                 src={new URL('../assets/logo.svg', import.meta.url).href}
                 alt="ModülerPazar tam logo"
+                loading="lazy"
                 className="h-14 w-auto"
               />
             </div>
@@ -208,6 +209,7 @@ export default function LogoKitPage() {
               <img
                 src={new URL('../assets/logo-icon.svg', import.meta.url).href}
                 alt="ModülerPazar ikon"
+                loading="lazy"
                 className="h-20 w-auto"
               />
             </div>
@@ -231,6 +233,7 @@ export default function LogoKitPage() {
               <img
                 src="/logo-white.svg"
                 alt="ModülerPazar beyaz logo"
+                loading="lazy"
                 className="h-14 w-auto"
               />
             </div>
@@ -248,19 +251,19 @@ export default function LogoKitPage() {
             <div className="rounded-xl border border-gray-200 bg-white p-10 flex items-center justify-center gap-8 mb-4">
               <div className="text-center">
                 <div className="w-8 h-8 mx-auto mb-2">
-                  <img src="/favicon.svg" alt="32px favicon" className="w-full h-full" />
+                  <img src="/favicon.svg" alt="32px favicon" loading="lazy" className="w-full h-full" />
                 </div>
                 <span className="text-xs text-gray-400">32px</span>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-2">
-                  <img src="/favicon.svg" alt="64px favicon" className="w-full h-full" />
+                  <img src="/favicon.svg" alt="64px favicon" loading="lazy" className="w-full h-full" />
                 </div>
                 <span className="text-xs text-gray-400">64px</span>
               </div>
               <div className="text-center">
                 <div className="w-20 h-20 mx-auto mb-2">
-                  <img src="/favicon.svg" alt="80px favicon" className="w-full h-full" />
+                  <img src="/favicon.svg" alt="80px favicon" loading="lazy" className="w-full h-full" />
                 </div>
                 <span className="text-xs text-gray-400">80px</span>
               </div>

@@ -308,6 +308,7 @@ export default function HomePage() {
                         onChange={(e) => setAiQuery(e.target.value)}
                         placeholder={aiRemaining === 0 ? 'Yarın tekrar deneyin…' : t('ai.placeholder')}
                         disabled={aiRemaining === 0}
+                        aria-label="AI asistana soru sor"
                         className="w-full pl-9 pr-3 py-3 bg-white/15 backdrop-blur border border-white/30 rounded-xl text-sm text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </div>
