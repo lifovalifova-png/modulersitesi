@@ -28,7 +28,7 @@
 }
 .news-ticker {
   animation: news-scroll 30s linear infinite;
-  gap: 2rem;
+  will-change: transform;
 }
 .news-ticker:hover {
   animation-play-state: paused;

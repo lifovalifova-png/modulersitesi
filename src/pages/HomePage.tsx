@@ -378,6 +378,34 @@ export default function HomePage() {
         {/* ── Flaş Fırsatlar ───────────────────────────────── */}
         <FlashDealsCarousel />
 
+        {/* ── Kayan Haber Bandı ─────────────────────────────── */}
+        {haberler.length > 0 && (
+          <div className="bg-emerald-50 border-y border-emerald-100 py-2.5 overflow-hidden relative z-10">
+            <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
+              <Link
+                to="/haberler"
+                className="flex-shrink-0 text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded-full hover:bg-emerald-200 transition whitespace-nowrap"
+              >
+                {t('haber.sektorHaberleri')}
+              </Link>
+              <div className="flex-1 overflow-hidden">
+                <div className="news-ticker flex items-center whitespace-nowrap">
+                  {[...haberler, ...haberler].map((h, i) => (
+                    <Link
+                      key={`${h.id}-${i}`}
+                      to={`/haberler/${h.id}`}
+                      className="inline-flex items-center gap-3 text-sm text-emerald-800 hover:text-emerald-600 transition flex-shrink-0 pr-6"
+                    >
+                      <span className="text-emerald-400" aria-hidden="true">●</span>
+                      <span>{h.baslik}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Kategoriler ──────────────────────────────────── */}
         <section className="py-12 md:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4">
@@ -589,34 +617,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-
-        {/* ── Kayan Haber Bandı ─────────────────────────────── */}
-        {haberler.length > 0 && (
-          <div className="bg-emerald-50 border-t border-b border-emerald-100 py-2 overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
-              <Link
-                to="/haberler"
-                className="flex-shrink-0 text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full hover:bg-emerald-200 transition"
-              >
-                {t('haber.sektorHaberleri')}
-              </Link>
-              <div className="flex-1 overflow-hidden relative">
-                <div className="news-ticker flex items-center gap-0 whitespace-nowrap">
-                  {[...haberler, ...haberler].map((h, i) => (
-                    <Link
-                      key={`${h.id}-${i}`}
-                      to={`/haberler/${h.id}`}
-                      className="inline-flex items-center gap-3 text-sm text-gray-700 hover:text-emerald-700 transition flex-shrink-0"
-                    >
-                      <span className="text-emerald-400 text-xs" aria-hidden="true">●</span>
-                      <span>{h.baslik}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── CTA — Firma ──────────────────────────────────── */}
         <section className="py-12 md:py-16 bg-gray-900 text-white">
