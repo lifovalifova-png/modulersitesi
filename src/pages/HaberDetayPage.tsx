@@ -4,7 +4,6 @@ import {
   doc, getDoc, collection, query, where, orderBy, limit, getDocs,
 } from 'firebase/firestore';
 import { ExternalLink, Newspaper, Calendar, ArrowLeft, Clock, ChevronRight } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
@@ -126,9 +125,8 @@ export default function HaberDetayPage() {
     );
   }
 
-  const icerikMetni = haber.icerik || haber.ozet;
   const icerikVar = Boolean(haber.icerik && haber.icerik.trim().length > 0);
-  const sure = okumaSuresi(icerikMetni);
+  const sure = okumaSuresi(haber.icerik || haber.ozet);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -222,18 +220,24 @@ export default function HaberDetayPage() {
           </div>
 
           {/* İçerik */}
-          <article className="prose prose-gray prose-emerald prose-lg max-w-none mb-10">
-            <ReactMarkdown>{icerikMetni}</ReactMarkdown>
-          </article>
-
-          {/* icerik yoksa fallback mesajı */}
-          {!icerikVar && (
-            <p className="text-sm text-gray-500 italic mb-6">
-              {t('haber.detayIcinKaynaga')}{' '}
-              <a href={haber.kaynakUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">
-                {haber.kaynak} →
-              </a>
-            </p>
+          {icerikVar ? (
+            <article className="max-w-none mb-10">
+              {haber.icerik!.split('\n\n').map((paragraf, idx) => (
+                <p key={idx} className="text-gray-700 leading-relaxed mb-4 text-lg">
+                  {paragraf}
+                </p>
+              ))}
+            </article>
+          ) : (
+            <article className="max-w-none mb-10">
+              <p className="text-gray-700 leading-relaxed mb-4 text-lg">{haber.ozet}</p>
+              <p className="text-sm text-gray-500 italic mb-6">
+                {t('haber.detayIcinKaynaga')}{' '}
+                <a href={haber.kaynakUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-emerald-600 hover:underline font-medium">
+                  {haber.kaynak} <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </p>
+            </article>
           )}
 
           {/* Kaynak kutusu */}

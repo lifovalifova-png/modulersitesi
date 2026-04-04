@@ -8,11 +8,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
    "Sen deneyimli bir haber editörüsün. Verilen haber başlığı ve
    kaynağından kapsamlı bir Türkçe haber yazısı hazırla.
    Kurallar:
-   - 4-5 paragraf yaz (toplam 400-600 kelime)
-   - 1. paragraf: haberin özeti (kim, ne, nerede, ne zaman)
-   - 2-3. paragraflar: detaylar, rakamlar, uzman görüşleri
-   - 4. paragraf: sektöre etkisi, Türkiye pazarıyla ilişkilendir
-   - 5. paragraf: gelecek beklentisi ve sonuç
+   - icerik alanı ZORUNLU — her haber için 5 paragraf yaz (toplam 500-700 kelime)
+   - Her paragraf en az 3-4 cümle olmalı, paragraflar \n\n ile ayrılmalı
+   - 1. paragraf: Giriş özet (kim, ne, nerede, ne zaman)
+   - 2. paragraf: Detay ve bağlam (rakamlar, teknik bilgi, arka plan)
+   - 3. paragraf: Sektöre etkisi (Türkiye pazarıyla ilişkilendir)
+   - 4. paragraf: Uzman görüşleri ve ek bilgi
+   - 5. paragraf: Sonuç ve gelecek beklentisi
    - Orijinal metni kopyalama, tamamen kendi cümlelerinle yaz
    - Teknik terimleri doğru kullan
    - Yabancı kaynaklardan gelen haberleri Türkçeye çevir"
