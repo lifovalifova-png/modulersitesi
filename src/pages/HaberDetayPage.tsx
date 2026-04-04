@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
-import { ExternalLink, Newspaper, Calendar, ArrowLeft } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import {
+  doc, getDoc, collection, query, where, orderBy, limit, getDocs,
+} from 'firebase/firestore';
+import { ExternalLink, Newspaper, Calendar, ArrowLeft, Clock, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import { db } from '../lib/firebase';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Haber {
   id:         string;
@@ -32,11 +34,23 @@ function formatTarih(tarih: Haber['tarih']): string {
   return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+function isoTarih(tarih: Haber['tarih']): string {
+  if (!tarih) return '';
+  return new Date(tarih.seconds * 1000).toISOString();
+}
+
+function okumaSuresi(metin: string): number {
+  const kelimeSayisi = metin.trim().split(/\s+/).length;
+  return Math.max(1, Math.ceil(kelimeSayisi / 200));
+}
+
 export default function HaberDetayPage() {
   const { haberId } = useParams<{ haberId: string }>();
-  const [haber, setHaber]     = useState<Haber | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const { t } = useLanguage();
+  const [haber, setHaber]           = useState<Haber | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [notFound, setNotFound]     = useState(false);
+  const [digerHaberler, setDigerHaberler] = useState<Haber[]>([]);
 
   useEffect(() => {
     if (!haberId) { setNotFound(true); setLoading(false); return; }
@@ -57,6 +71,28 @@ export default function HaberDetayPage() {
     })();
   }, [haberId]);
 
+  /* Diğer haberler */
+  useEffect(() => {
+    if (!haberId) return;
+    (async () => {
+      try {
+        const q = query(
+          collection(db, 'haberler'),
+          where('yayinda', '==', true),
+          orderBy('tarih', 'desc'),
+          limit(4),
+        );
+        const snap = await getDocs(q);
+        setDigerHaberler(
+          snap.docs
+            .map((d) => ({ id: d.id, ...d.data() } as Haber))
+            .filter((h) => h.id !== haberId)
+            .slice(0, 3),
+        );
+      } catch { /* silent */ }
+    })();
+  }, [haberId]);
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -72,17 +108,17 @@ export default function HaberDetayPage() {
   if (notFound || !haber) {
     return (
       <div className="flex flex-col min-h-screen">
-        <SEOMeta title="Haber Bulunamadı — ModülerPazar" description="" />
+        <SEOMeta title={`${t('haber.bulunamadi')} — ModülerPazar`} description="" />
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center bg-gray-50 px-4 text-center">
           <Newspaper className="w-16 h-16 text-gray-300 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Haber Bulunamadı</h1>
-          <p className="text-gray-500 mb-6">Aradığınız haber mevcut değil veya kaldırılmış olabilir.</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">{t('haber.bulunamadi')}</h1>
+          <p className="text-gray-500 mb-6">{t('haber.bulunamadiAciklama')}</p>
           <Link
             to="/haberler"
             className="inline-flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-emerald-700 transition"
           >
-            <ArrowLeft className="w-4 h-4" /> Haberlere Dön
+            <ArrowLeft className="w-4 h-4" /> {t('haber.haberleredon')}
           </Link>
         </main>
         <Footer />
@@ -91,48 +127,84 @@ export default function HaberDetayPage() {
   }
 
   const icerikMetni = haber.icerik || haber.ozet;
+  const icerikVar = Boolean(haber.icerik && haber.icerik.trim().length > 0);
+  const sure = okumaSuresi(icerikMetni);
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: haber.baslik,
+    description: haber.ozet.slice(0, 160),
+    datePublished: isoTarih(haber.tarih),
+    image: haber.gorselUrl || VARSAYILAN_GORSEL,
+    publisher: {
+      '@type': 'Organization',
+      name: 'ModülerPazar',
+      url: 'https://modulerpazar.com',
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://modulerpazar.com/haberler/${haber.id}`,
+    },
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
       <SEOMeta
-        title={`${haber.baslik} — ModülerPazar`}
-        description={haber.ozet}
+        title={`${haber.baslik} | ModülerPazar Haberler`}
+        description={haber.ozet.slice(0, 160)}
         url={`/haberler/${haber.id}`}
         image={haber.gorselUrl}
+      />
+      {/* JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Header />
 
       <main className="flex-1 bg-gray-50">
         {/* Hero görsel */}
-        <div className="w-full h-64 md:h-96 bg-gray-200 overflow-hidden">
+        <div className="w-full max-h-[400px] bg-gray-200 overflow-hidden">
           <img
             src={haber.gorselUrl || VARSAYILAN_GORSEL}
             alt={haber.baslik}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover max-h-[400px]"
             onError={(e) => { (e.target as HTMLImageElement).src = VARSAYILAN_GORSEL; }}
           />
         </div>
 
         <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
-          {/* Geri dön */}
-          <Link
-            to="/haberler"
-            className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" /> Tüm Haberler
-          </Link>
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-6">
+            <Link to="/" className="hover:text-emerald-600 transition">Ana Sayfa</Link>
+            <ChevronRight className="w-3 h-3" />
+            <Link to="/haberler" className="hover:text-emerald-600 transition">Haberler</Link>
+            <ChevronRight className="w-3 h-3" />
+            <span className="text-gray-600 truncate max-w-[200px]">{haber.baslik}</span>
+          </nav>
+
+          {/* Bölge badge */}
+          <span className="inline-block text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full mb-4">
+            {haber.bolge === 'dunya' ? '🌍 Dünyadan' : '🇹🇷 Türkiye'}
+          </span>
 
           {/* Başlık */}
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-4">
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 leading-tight mb-4">
             {haber.baslik}
           </h1>
 
           {/* Meta satırı */}
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-8">
-            <span className="flex items-center gap-1.5 font-medium text-gray-700">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-8 pb-6 border-b border-gray-200">
+            <a
+              href={haber.kaynakUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 font-medium text-emerald-600 hover:underline"
+            >
               <Newspaper className="w-4 h-4" aria-hidden="true" />
               {haber.kaynak}
-            </span>
+            </a>
             {haber.tarih && (
               <>
                 <span aria-hidden="true">•</span>
@@ -143,20 +215,31 @@ export default function HaberDetayPage() {
               </>
             )}
             <span aria-hidden="true">•</span>
-            <span className="inline-block text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
-              {haber.bolge === 'dunya' ? '🌍 Dünyadan' : '🇹🇷 Türkiye'}
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-4 h-4" aria-hidden="true" />
+              {sure} {t('haber.okumaSuresi')}
             </span>
           </div>
 
           {/* İçerik */}
-          <article className="prose prose-gray prose-emerald max-w-none mb-10">
+          <article className="prose prose-gray prose-emerald prose-lg max-w-none mb-10">
             <ReactMarkdown>{icerikMetni}</ReactMarkdown>
           </article>
 
+          {/* icerik yoksa fallback mesajı */}
+          {!icerikVar && (
+            <p className="text-sm text-gray-500 italic mb-6">
+              {t('haber.detayIcinKaynaga')}{' '}
+              <a href={haber.kaynakUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">
+                {haber.kaynak} →
+              </a>
+            </p>
+          )}
+
           {/* Kaynak kutusu */}
-          <div className="border-2 border-emerald-200 bg-emerald-50 rounded-xl p-5">
-            <p className="text-sm font-semibold text-emerald-800 mb-3">
-              Kaynak: {haber.kaynak}
+          <div className="border-l-4 border-emerald-500 bg-emerald-50 rounded-r-xl p-5 mb-10">
+            <p className="text-sm text-gray-700 mb-3">
+              {t('haber.kaynakBilgisi').replace('{kaynak}', haber.kaynak)}
             </p>
             <a
               href={haber.kaynakUrl}
@@ -164,10 +247,53 @@ export default function HaberDetayPage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-emerald-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition"
             >
-              Orijinal Habere Git
+              {t('haber.orijinalHabereGit')}
               <ExternalLink className="w-4 h-4" aria-hidden="true" />
             </a>
           </div>
+
+          {/* Haberlere Dön */}
+          <Link
+            to="/haberler"
+            className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium mb-10"
+          >
+            <ArrowLeft className="w-4 h-4" /> {t('haber.haberleredon')}
+          </Link>
+
+          {/* Diğer Haberler */}
+          {digerHaberler.length > 0 && (
+            <section>
+              <h2 className="text-xl font-bold text-gray-900 mb-5">{t('haber.digerHaberler')}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {digerHaberler.map((h) => (
+                  <Link
+                    key={h.id}
+                    to={`/haberler/${h.id}`}
+                    className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition group"
+                  >
+                    <div className="h-32 bg-gray-100 overflow-hidden">
+                      <img
+                        src={h.gorselUrl || VARSAYILAN_GORSEL}
+                        alt=""
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).src = VARSAYILAN_GORSEL; }}
+                      />
+                    </div>
+                    <div className="p-3">
+                      <p className="text-xs text-emerald-600 font-medium mb-1">{h.kaynak}</p>
+                      <h3 className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-emerald-700 transition">
+                        {h.baslik}
+                      </h3>
+                      {h.tarih && (
+                        <p className="text-xs text-gray-400 mt-1.5">{formatTarih(h.tarih)}</p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </main>
 

@@ -520,14 +520,18 @@ export async function seedFirestore(): Promise<void> {
 
   /* ── Haber Kaynakları ────────────────────────────────── */
   const KAYNAKLAR = [
-    { id: 'seed_kaynak_01', ad: 'Hürriyet Prefabrik Haberleri', url: 'https://www.hurriyet.com.tr/haberleri/prefabrik', bolge: 'turkiye', aktif: true, _seed: true },
-    { id: 'seed_kaynak_02', ad: 'Türkiye Prefabrik Birliği',    url: 'https://www.prefab.org.tr',                       bolge: 'turkiye', aktif: true, _seed: true },
-    { id: 'seed_kaynak_03', ad: 'İMSAD',                        url: 'https://www.imsad.org',                           bolge: 'turkiye', aktif: true, _seed: true },
-    { id: 'seed_kaynak_04', ad: 'Modular Building Institute',   url: 'https://www.modular.org/press-releases',          bolge: 'dunya',   aktif: true, _seed: true },
-    { id: 'seed_kaynak_05', ad: 'ArchDaily Modular',            url: 'https://www.archdaily.com/tag/modular-and-prefabricated', bolge: 'dunya', aktif: true, _seed: true },
-    { id: 'seed_kaynak_06', ad: 'Construction Dive',            url: 'https://www.constructiondive.com',                bolge: 'dunya',   aktif: true, _seed: true },
-    { id: 'seed_kaynak_07', ad: 'HousingWire',                  url: 'https://www.housingwire.com',                     bolge: 'dunya',   aktif: true, _seed: true },
-    { id: 'seed_kaynak_08', ad: 'Dwell Prefab',                 url: 'https://www.dwell.com/collection/prefab',         bolge: 'dunya',   aktif: true, _seed: true },
+    { id: 'seed_kaynak_01', ad: 'Hürriyet',                     url: 'https://www.hurriyet.com.tr',                             aramaKelimesi: 'prefabrik ev',           bolge: 'turkiye', aktif: true, _seed: true },
+    { id: 'seed_kaynak_02', ad: 'Türkiye Prefabrik Birliği',    url: 'https://www.prefab.org.tr',                               aramaKelimesi: 'prefabrik',              bolge: 'turkiye', aktif: true, _seed: true },
+    { id: 'seed_kaynak_03', ad: 'İMSAD',                        url: 'https://www.imsad.org',                                   aramaKelimesi: 'prefabrik',              bolge: 'turkiye', aktif: true, _seed: true },
+    { id: 'seed_kaynak_04', ad: 'Sabah',                        url: 'https://www.sabah.com.tr',                                aramaKelimesi: 'tiny house',             bolge: 'turkiye', aktif: true, _seed: true },
+    { id: 'seed_kaynak_05', ad: 'Mynet',                        url: 'https://www.mynet.com',                                   aramaKelimesi: 'prefabrik',              bolge: 'turkiye', aktif: true, _seed: true },
+    { id: 'seed_kaynak_06', ad: 'Sözcü',                        url: 'https://www.sozcu.com.tr',                                aramaKelimesi: 'konteyner ev',           bolge: 'turkiye', aktif: true, _seed: true },
+    { id: 'seed_kaynak_07', ad: 'Emlakjet Blog',                url: 'https://www.emlakjet.com',                                aramaKelimesi: 'prefabrik ev',           bolge: 'turkiye', aktif: true, _seed: true },
+    { id: 'seed_kaynak_08', ad: 'Modular Building Institute',   url: 'https://www.modular.org/press-releases',                  aramaKelimesi: 'modular construction',   bolge: 'dunya',   aktif: true, _seed: true },
+    { id: 'seed_kaynak_09', ad: 'ArchDaily Modular',            url: 'https://www.archdaily.com/tag/modular-and-prefabricated',  aramaKelimesi: 'prefab modular',         bolge: 'dunya',   aktif: true, _seed: true },
+    { id: 'seed_kaynak_10', ad: 'Construction Dive',            url: 'https://www.constructiondive.com',                        aramaKelimesi: 'modular building',       bolge: 'dunya',   aktif: true, _seed: true },
+    { id: 'seed_kaynak_11', ad: 'HousingWire',                  url: 'https://www.housingwire.com',                             aramaKelimesi: 'prefab housing',         bolge: 'dunya',   aktif: true, _seed: true },
+    { id: 'seed_kaynak_12', ad: 'Dwell Prefab',                 url: 'https://www.dwell.com/collection/prefab',                 aramaKelimesi: 'prefab home',            bolge: 'dunya',   aktif: true, _seed: true },
   ];
 
   const kaynakBatch = writeBatch(db);
@@ -538,7 +542,7 @@ export async function seedFirestore(): Promise<void> {
     });
   });
   await kaynakBatch.commit();
-  console.log('[seed] haberKaynaklari yazıldı (8 adet)');
+  console.log('[seed] haberKaynaklari yazıldı (12 adet)');
 
   console.log('[seed] Tamamlandı ✓');
 }

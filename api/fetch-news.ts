@@ -3,6 +3,19 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 /* ── Modüler yapı sektörü haberlerini döndürür ──────────────
    NEWS_API_KEY env değişkeni ayarlıysa NewsAPI.org kullanılır.
    Yoksa güncel örnek haberler döndürülür (demo modu).
+
+   AI İçerik Üretim Kuralları (system prompt):
+   "Sen deneyimli bir haber editörüsün. Verilen haber başlığı ve
+   kaynağından kapsamlı bir Türkçe haber yazısı hazırla.
+   Kurallar:
+   - 4-5 paragraf yaz (toplam 400-600 kelime)
+   - 1. paragraf: haberin özeti (kim, ne, nerede, ne zaman)
+   - 2-3. paragraflar: detaylar, rakamlar, uzman görüşleri
+   - 4. paragraf: sektöre etkisi, Türkiye pazarıyla ilişkilendir
+   - 5. paragraf: gelecek beklentisi ve sonuç
+   - Orijinal metni kopyalama, tamamen kendi cümlelerinle yaz
+   - Teknik terimleri doğru kullan
+   - Yabancı kaynaklardan gelen haberleri Türkçeye çevir"
 ─────────────────────────────────────────────────────────── */
 
 interface HaberItem {

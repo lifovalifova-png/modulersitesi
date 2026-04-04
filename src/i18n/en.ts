@@ -571,6 +571,21 @@ const en: Record<string, string> = {
   'catFull.ozel-projeler':         'Custom Projects',
   'catFull.ahsap-yapilar':         'Timber Buildings',
   'catFull.tiny-house':            'Tiny House',
+
+  /* ── News ────────────────────────────────────── */
+  'haber.sektorHaberleri':         'Sector News',
+  'haber.tumunuGor':               'View All',
+  'haber.kaynagaGit':              'Go to Source',
+  'haber.kaynakBilgisi':           'This article was summarized from {kaynak}.',
+  'haber.haberleredon':            'Back to News',
+  'haber.detayIcinKaynaga':        'Visit the source for full details',
+  'haber.yukluyor':                'Loading news...',
+  'haber.bulunamadi':              'News not found',
+  'haber.bulunamadiAciklama':      'The article you are looking for does not exist or has been removed.',
+  'haber.digerHaberler':           'Other News',
+  'haber.okumaSuresi':             'min read',
+  'haber.devaminiOku':             'Read More',
+  'haber.orijinalHabereGit':       'Go to Original Article',
 };
 
 export default en;

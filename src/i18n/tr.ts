@@ -571,6 +571,21 @@ const tr: Record<string, string> = {
   'catFull.ozel-projeler':         'Özel Projeler',
   'catFull.ahsap-yapilar':         'Ahşap Yapılar',
   'catFull.tiny-house':            'Tiny House',
+
+  /* ── Haberler ───────────────────────────────── */
+  'haber.sektorHaberleri':         'Sektör Haberleri',
+  'haber.tumunuGor':               'Tümünü Gör',
+  'haber.kaynagaGit':              'Kaynağa Git',
+  'haber.kaynakBilgisi':           'Bu haber {kaynak} kaynağından özetlenerek hazırlanmıştır.',
+  'haber.haberleredon':            'Haberlere Dön',
+  'haber.detayIcinKaynaga':        'Detaylı içerik için kaynağa göz atın',
+  'haber.yukluyor':                'Haberler yükleniyor...',
+  'haber.bulunamadi':              'Haber bulunamadı',
+  'haber.bulunamadiAciklama':      'Aradığınız haber mevcut değil veya kaldırılmış olabilir.',
+  'haber.digerHaberler':           'Diğer Haberler',
+  'haber.okumaSuresi':             'dk okuma',
+  'haber.devaminiOku':             'Devamını Oku',
+  'haber.orijinalHabereGit':       'Orijinal Habere Git',
 };
 
 export default tr;

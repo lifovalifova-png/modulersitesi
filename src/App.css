@@ -20,3 +20,16 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* News ticker animation */
+@keyframes news-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.news-ticker {
+  animation: news-scroll 30s linear infinite;
+  gap: 2rem;
+}
+.news-ticker:hover {
+  animation-play-state: paused;
+}
