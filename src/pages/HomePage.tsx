@@ -122,7 +122,6 @@ export default function HomePage() {
         const data = d.data() as { baslik: string; kaynak: string };
         return { id: d.id, baslik: data.baslik, kaynak: data.kaynak };
       });
-      console.log('Haber bandı sorgu sonucu:', docs.length, docs);
       setHaberler(docs);
     }, (err) => {
       console.error('Haber bandı hata:', err);
@@ -230,6 +229,37 @@ export default function HomePage() {
         url="/"
       />
       <Header />
+
+      {/* ── Kayan Haber Bandı (kategori navbar altı) ────────── */}
+      <div className="w-full bg-gradient-to-r from-emerald-700 to-emerald-900 py-2 md:py-3 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
+          <span className="bg-amber-400 text-emerald-900 font-bold px-3 py-1 rounded-full text-sm whitespace-nowrap flex-shrink-0">
+            📰 {t('haber.sektorHaberleri')}
+          </span>
+          {haberler.length > 0 ? (
+            <div className="overflow-hidden flex-1">
+              <div className="flex gap-6 animate-marquee whitespace-nowrap">
+                {[...haberler, ...haberler].map((h, i) => (
+                  <span key={`${h.id}-${i}`} className="flex items-center gap-6 flex-shrink-0">
+                    <Link
+                      to={`/haberler/${h.id}`}
+                      className="text-white text-sm md:text-base font-medium hover:text-amber-200 hover:underline"
+                    >
+                      {h.baslik}
+                    </Link>
+                    <span className="text-amber-400">★</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <span className="text-sm text-emerald-200">Haberler yükleniyor...</span>
+          )}
+          <Link to="/haberler" className="text-amber-400 font-semibold text-sm whitespace-nowrap flex-shrink-0 hover:text-amber-200 transition">
+            {t('haber.tumunuGor')} →
+          </Link>
+        </div>
+      </div>
 
       <main className="flex-1">
 
@@ -380,35 +410,6 @@ export default function HomePage() {
 
         {/* ── Flaş Fırsatlar ───────────────────────────────── */}
         <FlashDealsCarousel />
-
-        {/* ── Kayan Haber Bandı ─────────────────────────────── */}
-        <div className="w-full bg-emerald-50 border-y border-emerald-200 py-2 overflow-hidden relative" style={{ zIndex: 10 }}>
-          <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
-            <span className="font-semibold text-emerald-700 text-sm whitespace-nowrap flex-shrink-0">
-              {t('haber.sektorHaberleri')}
-            </span>
-            {haberler.length > 0 ? (
-              <div className="overflow-hidden flex-1">
-                <div className="flex gap-8 animate-marquee whitespace-nowrap">
-                  {[...haberler, ...haberler].map((h, i) => (
-                    <Link
-                      key={`${h.id}-${i}`}
-                      to={`/haberler/${h.id}`}
-                      className="text-sm text-emerald-800 hover:text-emerald-600 hover:underline flex-shrink-0"
-                    >
-                      {h.baslik} — <span className="text-emerald-500">{h.kaynak}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <span className="text-sm text-emerald-600">Haberler yükleniyor...</span>
-            )}
-            <Link to="/haberler" className="text-sm text-emerald-600 font-medium whitespace-nowrap flex-shrink-0 hover:underline">
-              {t('haber.tumunuGor')} →
-            </Link>
-          </div>
-        </div>
 
         {/* ── Kategoriler ──────────────────────────────────── */}
         <section className="py-12 md:py-16 bg-white">
