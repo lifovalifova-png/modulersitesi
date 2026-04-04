@@ -16,6 +16,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import { db } from '../lib/firebase';
+import { useLanguage } from '../context/LanguageContext';
 
 /* ── Types ───────────────────────────────────────────────── */
 interface Haber {
@@ -30,6 +31,9 @@ interface Haber {
   gorselUrl?: string;
   tarih:     { seconds: number; nanoseconds: number } | null;
   yayinda:   boolean;
+  baslikEn?: string;
+  ozetEn?:   string;
+  icerikEn?: string;
 }
 
 /* ── Bölge Filtreleri ────────────────────────────────────── */
@@ -50,7 +54,10 @@ function formatTarih(tarih: Haber['tarih']): string {
 }
 
 /* ── Haber Kartı ─────────────────────────────────────────── */
-function HaberKart({ haber }: { haber: Haber }) {
+function HaberKart({ haber, lang }: { haber: Haber; lang: string }) {
+  const baslik = lang === 'en' ? (haber.baslikEn || haber.baslik) : haber.baslik;
+  const ozet   = lang === 'en' ? (haber.ozetEn || haber.ozet) : haber.ozet;
+
   return (
     <Link
       to={`/haberler/${haber.id}`}
@@ -60,7 +67,7 @@ function HaberKart({ haber }: { haber: Haber }) {
       <div className="overflow-hidden h-48 bg-gray-100 flex-shrink-0">
         <img
           src={haber.gorselUrl || VARSAYILAN_GORSEL}
-          alt={haber.baslik}
+          alt={baslik}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => { (e.target as HTMLImageElement).src = VARSAYILAN_GORSEL; }}
           loading="lazy"
@@ -76,7 +83,7 @@ function HaberKart({ haber }: { haber: Haber }) {
 
         {/* Başlık */}
         <h2 className="font-bold text-gray-900 text-base leading-snug mb-2 line-clamp-2">
-          {haber.baslik}
+          {baslik}
         </h2>
 
         {/* Kaynak + Tarih */}
@@ -98,12 +105,12 @@ function HaberKart({ haber }: { haber: Haber }) {
 
         {/* Özet */}
         <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 flex-1">
-          {haber.ozet}
+          {ozet}
         </p>
 
         {/* CTA */}
         <span className="mt-4 inline-flex items-center justify-center gap-2 bg-emerald-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg group-hover:bg-emerald-700 transition">
-          Devamını Oku
+          {lang === 'en' ? 'Read More' : 'Devamını Oku'}
         </span>
       </div>
     </Link>
@@ -114,6 +121,7 @@ function HaberKart({ haber }: { haber: Haber }) {
 const PAGE_SIZE = 12;
 
 export default function HaberlerPage() {
+  const { lang, t } = useLanguage();
   const [haberler,      setHaberler]      = useState<Haber[]>([]);
   const [loading,       setLoading]       = useState(true);
   const [loadingMore,   setLoadingMore]   = useState(false);
@@ -191,9 +199,11 @@ export default function HaberlerPage() {
         {/* ── Hero ─────────────────────────────── */}
         <section className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white py-12 md:py-16">
           <div className="max-w-3xl mx-auto px-4 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">Sektör Haberleri</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">{t('haber.sektorHaberleri')}</h1>
             <p className="text-emerald-100 text-base md:text-lg">
-              Prefabrik ev, konteyner, tiny house ve modüler yapı dünyasından güncel haberler.
+              {lang === 'en'
+                ? 'Latest news from the prefab, container, tiny house and modular building world.'
+                : 'Prefabrik ev, konteyner, tiny house ve modüler yapı dünyasından güncel haberler.'}
             </p>
           </div>
         </section>
@@ -244,7 +254,7 @@ export default function HaberlerPage() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {goruntulenen.map((h) => (
-                  <HaberKart key={h.id} haber={h} />
+                  <HaberKart key={h.id} haber={h} lang={lang} />
                 ))}
               </div>
 

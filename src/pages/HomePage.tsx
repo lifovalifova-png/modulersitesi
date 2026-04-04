@@ -88,7 +88,7 @@ function extractSlug(text: string): string {
 /* ─── Bileşen ────────────────────────────────────────────── */
 export default function HomePage() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const { flags } = useFeatureFlags();
   const [activeTab, setActiveTab] = useState<'customer' | 'producer'>('customer');
 
@@ -107,7 +107,7 @@ export default function HomePage() {
   }, []);
 
   /* ─── Kayan Haber Bandı ───────────────────────────────────── */
-  interface MiniHaber { id: string; baslik: string; kaynak: string }
+  interface MiniHaber { id: string; baslik: string; baslikEn?: string; kaynak: string }
   const [haberler, setHaberler] = useState<MiniHaber[]>([]);
 
   useEffect(() => {
@@ -119,8 +119,8 @@ export default function HomePage() {
     );
     const unsub = onSnapshot(q, (snap) => {
       const docs = snap.docs.map((d) => {
-        const data = d.data() as { baslik: string; kaynak: string };
-        return { id: d.id, baslik: data.baslik, kaynak: data.kaynak };
+        const data = d.data() as { baslik: string; baslikEn?: string; kaynak: string };
+        return { id: d.id, baslik: data.baslik, baslikEn: data.baslikEn, kaynak: data.kaynak };
       });
       setHaberler(docs);
     }, (err) => {
@@ -250,7 +250,7 @@ export default function HomePage() {
                           to={`/haberler/${h.id}`}
                           className="text-white/90 text-sm md:text-base font-medium hover:text-amber-200 hover:underline"
                         >
-                          {h.baslik}
+                          {lang === 'en' ? (h.baslikEn || h.baslik) : h.baslik}
                         </Link>
                         <span className="text-amber-400">★</span>
                       </span>

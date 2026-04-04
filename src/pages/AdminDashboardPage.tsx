@@ -2927,12 +2927,16 @@ interface AdminHaber {
   gorselUrl:  string;
   yayinda:    boolean;
   arsivlendi: boolean;
+  baslikEn?:  string;
+  ozetEn?:    string;
+  icerikEn?:  string;
   _seed?:     boolean;
 }
 
 const BOSH_HABER: Omit<AdminHaber, 'id'> = {
   baslik: '', kaynak: '', kaynakUrl: 'https://', ozet: '', icerik: '',
   kategori: 'genel', bolge: 'turkiye', gorselUrl: '', yayinda: false, arsivlendi: false,
+  baslikEn: '', ozetEn: '', icerikEn: '',
 };
 
 
@@ -3225,6 +3229,7 @@ function HaberlerTab() {
         baslik: haber.baslik, kaynak: haber.kaynak, kaynakUrl: haber.kaynakUrl,
         ozet: haber.ozet, icerik: haber.icerik ?? '', kategori: haber.kategori, bolge: haber.bolge ?? 'turkiye',
         gorselUrl: haber.gorselUrl ?? '', yayinda: haber.yayinda, arsivlendi: haber.arsivlendi ?? false,
+        baslikEn: haber.baslikEn ?? '', ozetEn: haber.ozetEn ?? '', icerikEn: haber.icerikEn ?? '',
       });
     } else {
       setDuzenle(null);
@@ -3641,11 +3646,38 @@ function HaberlerTab() {
                   placeholder="Kartlarda görünecek kısa özet (2-3 cümle)..." />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">İçerik (Markdown)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">İçerik</label>
                 <textarea value={form.icerik} onChange={(e) => setForm({ ...form, icerik: e.target.value })}
                   rows={8}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y font-mono"
-                  placeholder="Detay sayfasında gösterilecek uzun içerik. Markdown destekler: **kalın**, *italik*, ## başlık..." />
+                  placeholder="Detay sayfasında gösterilecek uzun içerik (5 paragraf, \n\n ile ayır)..." />
+              </div>
+
+              {/* İngilizce alanlar (opsiyonel) */}
+              <div className="border-t border-gray-200 pt-4 mt-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">🌐 İngilizce (Opsiyonel)</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Başlık (EN)</label>
+                    <input value={form.baslikEn ?? ''} onChange={(e) => setForm({ ...form, baslikEn: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="English title (optional)" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Özet (EN)</label>
+                    <textarea value={form.ozetEn ?? ''} onChange={(e) => setForm({ ...form, ozetEn: e.target.value })}
+                      rows={2}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                      placeholder="English summary (optional)" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">İçerik (EN)</label>
+                    <textarea value={form.icerikEn ?? ''} onChange={(e) => setForm({ ...form, icerikEn: e.target.value })}
+                      rows={6}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y font-mono"
+                      placeholder="English content (optional, 5 paragraphs)" />
+                  </div>
+                </div>
               </div>
             </div>
 

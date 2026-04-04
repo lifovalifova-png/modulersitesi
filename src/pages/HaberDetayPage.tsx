@@ -22,6 +22,9 @@ interface Haber {
   gorselUrl?: string;
   tarih:      { seconds: number; nanoseconds: number } | null;
   yayinda:    boolean;
+  baslikEn?:  string;
+  ozetEn?:    string;
+  icerikEn?:  string;
 }
 
 const VARSAYILAN_GORSEL =
@@ -45,7 +48,7 @@ function okumaSuresi(metin: string): number {
 
 export default function HaberDetayPage() {
   const { haberId } = useParams<{ haberId: string }>();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [haber, setHaber]           = useState<Haber | null>(null);
   const [loading, setLoading]       = useState(true);
   const [notFound, setNotFound]     = useState(false);
@@ -125,14 +128,17 @@ export default function HaberDetayPage() {
     );
   }
 
-  const icerikVar = Boolean(haber.icerik && haber.icerik.trim().length > 0);
-  const sure = okumaSuresi(haber.icerik || haber.ozet);
+  const baslik = lang === 'en' ? (haber.baslikEn || haber.baslik) : haber.baslik;
+  const ozet   = lang === 'en' ? (haber.ozetEn || haber.ozet) : haber.ozet;
+  const icerikRaw = lang === 'en' ? (haber.icerikEn || haber.icerik) : haber.icerik;
+  const icerikVar = Boolean(icerikRaw && icerikRaw.trim().length > 0);
+  const sure = okumaSuresi(icerikRaw || ozet);
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
-    headline: haber.baslik,
-    description: haber.ozet.slice(0, 160),
+    headline: baslik,
+    description: ozet.slice(0, 160),
     datePublished: isoTarih(haber.tarih),
     image: haber.gorselUrl || VARSAYILAN_GORSEL,
     publisher: {
@@ -149,8 +155,8 @@ export default function HaberDetayPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <SEOMeta
-        title={`${haber.baslik} | ModülerPazar Haberler`}
-        description={haber.ozet.slice(0, 160)}
+        title={`${baslik} | ModülerPazar Haberler`}
+        description={ozet.slice(0, 160)}
         url={`/haberler/${haber.id}`}
         image={haber.gorselUrl}
       />
@@ -166,20 +172,26 @@ export default function HaberDetayPage() {
         <div className="w-full max-h-[400px] bg-gray-200 overflow-hidden">
           <img
             src={haber.gorselUrl || VARSAYILAN_GORSEL}
-            alt={haber.baslik}
+            alt={baslik}
             className="w-full h-full object-cover max-h-[400px]"
             onError={(e) => { (e.target as HTMLImageElement).src = VARSAYILAN_GORSEL; }}
           />
         </div>
 
         <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
-          {/* Breadcrumb */}
+          {/* Haberlere Dön + Breadcrumb */}
+          <Link
+            to="/haberler"
+            className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-800 font-medium mb-4 transition"
+          >
+            <ArrowLeft className="w-4 h-4" /> {t('haber.haberleredon')}
+          </Link>
           <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-6">
-            <Link to="/" className="hover:text-emerald-600 transition">Ana Sayfa</Link>
+            <Link to="/" className="hover:text-emerald-600 transition">{lang === 'en' ? 'Home' : 'Ana Sayfa'}</Link>
             <ChevronRight className="w-3 h-3" />
-            <Link to="/haberler" className="hover:text-emerald-600 transition">Haberler</Link>
+            <Link to="/haberler" className="hover:text-emerald-600 transition">{lang === 'en' ? 'News' : 'Haberler'}</Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-gray-600 truncate max-w-[200px]">{haber.baslik}</span>
+            <span className="text-gray-600 truncate max-w-[200px]">{baslik}</span>
           </nav>
 
           {/* Bölge badge */}
@@ -189,7 +201,7 @@ export default function HaberDetayPage() {
 
           {/* Başlık */}
           <h1 className="text-2xl md:text-4xl font-bold text-gray-900 leading-tight mb-4">
-            {haber.baslik}
+            {baslik}
           </h1>
 
           {/* Meta satırı */}
@@ -222,7 +234,7 @@ export default function HaberDetayPage() {
           {/* İçerik */}
           {icerikVar ? (
             <article className="max-w-none mb-10">
-              {haber.icerik!.split('\n\n').map((paragraf, idx) => (
+              {icerikRaw!.split('\n\n').map((paragraf, idx) => (
                 <p key={idx} className="text-gray-700 leading-relaxed mb-4 text-lg">
                   {paragraf}
                 </p>
@@ -230,7 +242,7 @@ export default function HaberDetayPage() {
             </article>
           ) : (
             <article className="max-w-none mb-10">
-              <p className="text-gray-700 leading-relaxed mb-4 text-lg">{haber.ozet}</p>
+              <p className="text-gray-700 leading-relaxed mb-4 text-lg">{ozet}</p>
               <p className="text-sm text-gray-500 italic mb-6">
                 {t('haber.detayIcinKaynaga')}{' '}
                 <a href={haber.kaynakUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-emerald-600 hover:underline font-medium">
@@ -287,7 +299,7 @@ export default function HaberDetayPage() {
                     <div className="p-3">
                       <p className="text-xs text-emerald-600 font-medium mb-1">{h.kaynak}</p>
                       <h3 className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-emerald-700 transition">
-                        {h.baslik}
+                        {lang === 'en' ? (h.baslikEn || h.baslik) : h.baslik}
                       </h3>
                       {h.tarih && (
                         <p className="text-xs text-gray-400 mt-1.5">{formatTarih(h.tarih)}</p>
