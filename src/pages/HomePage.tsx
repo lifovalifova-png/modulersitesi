@@ -17,7 +17,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
-import { CATEGORIES } from '../data/categories';
+import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
 import { useLanguage } from '../context/LanguageContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 
@@ -430,7 +430,7 @@ export default function HomePage() {
                       {Icon && <Icon className="w-6 h-6 text-white" aria-hidden="true" />}
                     </div>
                     <h3 className="font-semibold text-gray-800 group-hover:text-emerald-700 transition">
-                      {category.name}
+                      {t(CATEGORY_NAME_KEYS[category.slug])}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">{category.count} {t('cats.listings')}</p>
                   </Link>

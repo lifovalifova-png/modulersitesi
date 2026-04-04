@@ -555,7 +555,7 @@ const en: Record<string, string> = {
   'ai.queryRemaining': 'You have {n} queries left today.',
 
   /* ── Category names ────────────────────────────────────── */
-  'catName.prefabrik':             'Prefabrik',
+  'catName.prefabrik':             'Prefab',
   'catName.celik-yapilar':         'Steel Structures',
   'catName.yasam-konteynerleri':   'Living Containers',
   'catName.ikinci-el':             'Second Hand',
