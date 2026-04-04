@@ -107,7 +107,7 @@ export default function HomePage() {
   }, []);
 
   /* ─── Kayan Haber Bandı ───────────────────────────────────── */
-  interface MiniHaber { id: string; baslik: string }
+  interface MiniHaber { id: string; baslik: string; kaynak: string }
   const [haberler, setHaberler] = useState<MiniHaber[]>([]);
 
   useEffect(() => {
@@ -118,7 +118,10 @@ export default function HomePage() {
       limit(10),
     );
     const unsub = onSnapshot(q, (snap) => {
-      const docs = snap.docs.map((d) => ({ id: d.id, baslik: (d.data() as { baslik: string }).baslik }));
+      const docs = snap.docs.map((d) => {
+        const data = d.data() as { baslik: string; kaynak: string };
+        return { id: d.id, baslik: data.baslik, kaynak: data.kaynak };
+      });
       console.log('Haber bandı sorgu sonucu:', docs.length, docs);
       setHaberler(docs);
     }, (err) => {
@@ -379,32 +382,33 @@ export default function HomePage() {
         <FlashDealsCarousel />
 
         {/* ── Kayan Haber Bandı ─────────────────────────────── */}
-        {haberler.length > 0 && (
-          <div className="bg-emerald-50 border-y border-emerald-100 py-2.5 overflow-hidden relative z-10">
-            <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
-              <Link
-                to="/haberler"
-                className="flex-shrink-0 text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded-full hover:bg-emerald-200 transition whitespace-nowrap"
-              >
-                {t('haber.sektorHaberleri')}
-              </Link>
-              <div className="flex-1 overflow-hidden">
-                <div className="news-ticker flex items-center whitespace-nowrap">
+        <div className="w-full bg-emerald-50 border-y border-emerald-200 py-2 overflow-hidden relative" style={{ zIndex: 10 }}>
+          <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
+            <span className="font-semibold text-emerald-700 text-sm whitespace-nowrap flex-shrink-0">
+              {t('haber.sektorHaberleri')}
+            </span>
+            {haberler.length > 0 ? (
+              <div className="overflow-hidden flex-1">
+                <div className="flex gap-8 animate-marquee whitespace-nowrap">
                   {[...haberler, ...haberler].map((h, i) => (
                     <Link
                       key={`${h.id}-${i}`}
                       to={`/haberler/${h.id}`}
-                      className="inline-flex items-center gap-3 text-sm text-emerald-800 hover:text-emerald-600 transition flex-shrink-0 pr-6"
+                      className="text-sm text-emerald-800 hover:text-emerald-600 hover:underline flex-shrink-0"
                     >
-                      <span className="text-emerald-400" aria-hidden="true">●</span>
-                      <span>{h.baslik}</span>
+                      {h.baslik} — <span className="text-emerald-500">{h.kaynak}</span>
                     </Link>
                   ))}
                 </div>
               </div>
-            </div>
+            ) : (
+              <span className="text-sm text-emerald-600">Haberler yükleniyor...</span>
+            )}
+            <Link to="/haberler" className="text-sm text-emerald-600 font-medium whitespace-nowrap flex-shrink-0 hover:underline">
+              {t('haber.tumunuGor')} →
+            </Link>
           </div>
-        )}
+        </div>
 
         {/* ── Kategoriler ──────────────────────────────────── */}
         <section className="py-12 md:py-16 bg-white">

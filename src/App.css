@@ -22,14 +22,14 @@
 }
 
 /* News ticker animation */
-@keyframes news-scroll {
-  0% { transform: translateX(0); }
+@keyframes marquee {
+  0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
 }
-.news-ticker {
-  animation: news-scroll 30s linear infinite;
+.animate-marquee {
+  animation: marquee 25s linear infinite;
   will-change: transform;
 }
-.news-ticker:hover {
+.animate-marquee:hover {
   animation-play-state: paused;
 }
