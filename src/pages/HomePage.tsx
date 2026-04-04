@@ -230,42 +230,43 @@ export default function HomePage() {
       />
       <Header />
 
-      {/* ── Kayan Haber Bandı (kategori navbar altı) ────────── */}
-      <div className="w-full bg-gradient-to-r from-emerald-700 to-emerald-900 py-2 md:py-3 overflow-hidden relative">
-        <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
-          <span className="bg-amber-400 text-emerald-900 font-bold px-3 py-1 rounded-full text-sm whitespace-nowrap flex-shrink-0">
-            📰 {t('haber.sektorHaberleri')}
-          </span>
-          {haberler.length > 0 ? (
-            <div className="overflow-hidden flex-1">
-              <div className="flex gap-6 animate-marquee whitespace-nowrap">
-                {[...haberler, ...haberler].map((h, i) => (
-                  <span key={`${h.id}-${i}`} className="flex items-center gap-6 flex-shrink-0">
-                    <Link
-                      to={`/haberler/${h.id}`}
-                      className="text-white text-sm md:text-base font-medium hover:text-amber-200 hover:underline"
-                    >
-                      {h.baslik}
-                    </Link>
-                    <span className="text-amber-400">★</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <span className="text-sm text-emerald-200">Haberler yükleniyor...</span>
-          )}
-          <Link to="/haberler" className="text-amber-400 font-semibold text-sm whitespace-nowrap flex-shrink-0 hover:text-amber-200 transition">
-            {t('haber.tumunuGor')} →
-          </Link>
-        </div>
-      </div>
-
       <main className="flex-1">
 
         {/* ── Hero ─────────────────────────────────────────── */}
-        <section className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white py-16 md:py-20">
-          <div className="max-w-7xl mx-auto px-4">
+        <section className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white">
+
+          {/* ── Kayan Haber Bandı (hero içi, cam efekti) ────── */}
+          <div className="w-full bg-white/10 backdrop-blur-sm border-b border-white/20 py-2.5 overflow-hidden">
+            <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
+              <span className="bg-amber-400 text-emerald-900 font-bold px-3 py-1 rounded-full text-sm whitespace-nowrap flex-shrink-0">
+                📰 {t('haber.sektorHaberleri')}
+              </span>
+              {haberler.length > 0 ? (
+                <div className="overflow-hidden flex-1">
+                  <div className="flex gap-6 animate-marquee whitespace-nowrap">
+                    {[...haberler, ...haberler].map((h, i) => (
+                      <span key={`${h.id}-${i}`} className="flex items-center gap-6 flex-shrink-0">
+                        <Link
+                          to={`/haberler/${h.id}`}
+                          className="text-white/90 text-sm md:text-base font-medium hover:text-amber-200 hover:underline"
+                        >
+                          {h.baslik}
+                        </Link>
+                        <span className="text-amber-400">★</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <span className="text-sm text-white/60">Haberler yükleniyor...</span>
+              )}
+              <Link to="/haberler" className="text-amber-400 font-semibold text-sm whitespace-nowrap flex-shrink-0 hover:text-amber-200 transition">
+                {t('haber.tumunuGor')} →
+              </Link>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 py-16 md:py-20">
             <div className="max-w-3xl">
 
               {/* Öne çıkan badge */}
