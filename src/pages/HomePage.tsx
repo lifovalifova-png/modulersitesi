@@ -118,8 +118,12 @@ export default function HomePage() {
       limit(10),
     );
     const unsub = onSnapshot(q, (snap) => {
-      setHaberler(snap.docs.map((d) => ({ id: d.id, baslik: (d.data() as { baslik: string }).baslik })));
-    }, () => {});
+      const docs = snap.docs.map((d) => ({ id: d.id, baslik: (d.data() as { baslik: string }).baslik }));
+      console.log('Haber bandı sorgu sonucu:', docs.length, docs);
+      setHaberler(docs);
+    }, (err) => {
+      console.error('Haber bandı hata:', err);
+    });
     return unsub;
   }, []);
 

@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "haberler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "yayinda", "order": "ASCENDING" },
+        { "fieldPath": "tarih", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "ilanlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "tarih", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
