@@ -1128,6 +1128,137 @@ function SettingsTab() {
           }
         </button>
       </div>
+
+      {/* Beta Modu Ayarları */}
+      <BetaSettingsCard />
+    </div>
+  );
+}
+
+function BetaSettingsCard() {
+  const [beta, setBeta] = useState({
+    betaMode: true,
+    betaLabel: { tr: 'Beta', en: 'Beta' },
+    betaBannerVisible: true,
+    betaBannerText: {
+      tr: 'Bu platform şu anda beta aşamasındadır. Geri bildirimlerinizi bekliyoruz!',
+      en: 'This platform is currently in beta. We welcome your feedback!',
+    },
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'global'), (snap) => {
+      if (snap.exists()) setBeta((prev) => ({ ...prev, ...(snap.data() as typeof prev) }));
+    });
+    return unsub;
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await setDoc(doc(db, 'settings', 'global'), beta);
+      toast.success('Beta ayarları kaydedildi.');
+    } catch {
+      toast.error('Kaydetme sırasında hata oluştu.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+      <div>
+        <h3 className="font-semibold text-gray-700 text-sm">Beta Modu Ayarları</h3>
+        <p className="text-xs text-gray-400 mt-0.5">
+          Beta modunu ve banner'ı yönetin. Değişiklikler anında yansır.
+        </p>
+      </div>
+
+      {/* Toggle'lar */}
+      <div className="flex flex-col gap-3">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={beta.betaMode}
+            onChange={(e) => setBeta((p) => ({ ...p, betaMode: e.target.checked }))}
+            className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+          />
+          <span className="text-sm text-gray-700">Beta modu aktif</span>
+          <span className="text-xs text-gray-400">(Logo yanında badge gösterir)</span>
+        </label>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={beta.betaBannerVisible}
+            onChange={(e) => setBeta((p) => ({ ...p, betaBannerVisible: e.target.checked }))}
+            className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+          />
+          <span className="text-sm text-gray-700">Beta banner'ı göster</span>
+          <span className="text-xs text-gray-400">(Sayfa üstünde ince bilgi çubuğu)</span>
+        </label>
+      </div>
+
+      {/* Beta Label */}
+      <div>
+        <h4 className="text-xs font-medium text-gray-600 mb-2">Badge Etiketi</h4>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Türkçe</label>
+            <input
+              type="text"
+              value={beta.betaLabel.tr}
+              onChange={(e) => setBeta((p) => ({ ...p, betaLabel: { ...p.betaLabel, tr: e.target.value } }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">English</label>
+            <input
+              type="text"
+              value={beta.betaLabel.en}
+              onChange={(e) => setBeta((p) => ({ ...p, betaLabel: { ...p.betaLabel, en: e.target.value } }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Banner Text */}
+      <div>
+        <h4 className="text-xs font-medium text-gray-600 mb-2">Banner Metni</h4>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Türkçe</label>
+            <input
+              type="text"
+              value={beta.betaBannerText.tr}
+              onChange={(e) => setBeta((p) => ({ ...p, betaBannerText: { ...p.betaBannerText, tr: e.target.value } }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">English</label>
+            <input
+              type="text"
+              value={beta.betaBannerText.en}
+              onChange={(e) => setBeta((p) => ({ ...p, betaBannerText: { ...p.betaBannerText, en: e.target.value } }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-lg font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {saving
+          ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Kaydediliyor…</>
+          : <><Save className="w-4 h-4" /> Beta Ayarlarını Kaydet</>
+        }
+      </button>
     </div>
   );
 }

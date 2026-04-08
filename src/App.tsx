@@ -5,7 +5,9 @@ import { HelmetProvider }      from 'react-helmet-async';
 import { AuthProvider }        from './context/AuthContext';
 import { TeklifSepetProvider } from './context/TeklifSepetContext';
 import { LanguageProvider }    from './context/LanguageContext';
+import { SettingsProvider }    from './context/SettingsContext';
 import AdminRoute      from './components/AdminRoute';
+import BetaBanner      from './components/BetaBanner';
 import TeklifSepeti   from './components/TeklifSepeti';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useFeatureFlags } from './hooks/useFeatureFlags';
@@ -65,9 +67,11 @@ function App() {
   return (
     <HelmetProvider>
     <LanguageProvider>
+      <SettingsProvider>
       <AuthProvider>
         <TeklifSepetProvider>
           <Router>
+            <BetaBanner />
             <Toaster position="top-right" richColors />
             <GatedTeklifSepeti />
             <ErrorBoundary>
@@ -116,6 +120,7 @@ function App() {
           </Router>
         </TeklifSepetProvider>
       </AuthProvider>
+      </SettingsProvider>
     </LanguageProvider>
     </HelmetProvider>
   );

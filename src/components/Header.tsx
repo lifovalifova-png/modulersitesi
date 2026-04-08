@@ -7,6 +7,7 @@ import { SITE_CONFIG } from '../config/site';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import UserMenu from './UserMenu';
+import BetaBadge from './BetaBadge';
 import logoSrc from '../assets/logo.svg';
 
 /* ─── 81 il listesi ───────────────────────────────────────── */
@@ -149,6 +150,7 @@ export default function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center flex-shrink-0" aria-label="ModülerPazar ana sayfa">
             <img src={logoSrc} alt="ModülerPazar" className="h-8 w-auto" />
+            <BetaBadge />
           </Link>
 
           {/* ── Desktop Search Bar with Filters ──────────── */}
