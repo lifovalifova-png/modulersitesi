@@ -118,9 +118,17 @@ export default function HomePage() {
       limit(5),
     );
     const unsub = onSnapshot(q, (snap) => {
-      const docs = snap.docs.map((d) => {
+      const raw = snap.docs.map((d) => {
         const data = d.data() as { baslik: string; baslikEn?: string; kaynak: string };
         return { id: d.id, baslik: data.baslik, baslikEn: data.baslikEn, kaynak: data.kaynak };
+      });
+      // Duplicate guard
+      const seen = new Set<string>();
+      const docs = raw.filter((h) => {
+        const key = h.baslik.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
       setHaberler(docs);
     }, (err) => {

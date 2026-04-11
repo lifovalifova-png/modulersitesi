@@ -85,12 +85,18 @@ export default function HaberDetayPage() {
           limit(4),
         );
         const snap = await getDocs(q);
-        setDigerHaberler(
-          snap.docs
-            .map((d) => ({ id: d.id, ...d.data() } as Haber))
-            .filter((h) => h.id !== haberId)
-            .slice(0, 3),
-        );
+        const raw = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() } as Haber))
+          .filter((h) => h.id !== haberId);
+        // Duplicate guard
+        const seen = new Set<string>();
+        const unique = raw.filter((h) => {
+          const key = h.baslik.trim().toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setDigerHaberler(unique.slice(0, 3));
       } catch { /* silent */ }
     })();
   }, [haberId]);

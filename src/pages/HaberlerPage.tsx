@@ -145,9 +145,17 @@ export default function HaberlerPage() {
     const q = query(collection(db, 'haberler'), ...constraints);
 
     const unsub = onSnapshot(q, (snap) => {
-      const docs = snap.docs.map(
+      const raw = snap.docs.map(
         (d) => ({ id: d.id, ...d.data() } as Haber),
       );
+      // Duplicate guard — aynı baslik'ten sadece birini göster
+      const seen = new Set<string>();
+      const docs = raw.filter((h) => {
+        const key = h.baslik.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
       setHaberler(docs);
       setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
       setHasMore(snap.docs.length === PAGE_SIZE);
@@ -172,8 +180,17 @@ export default function HaberlerPage() {
     );
 
     const snap = await getDocs(q);
-    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Haber));
-    setHaberler((prev) => [...prev, ...docs]);
+    const newDocs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Haber));
+    setHaberler((prev) => {
+      const all = [...prev, ...newDocs];
+      const seen = new Set<string>();
+      return all.filter((h) => {
+        const key = h.baslik.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    });
     setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
     setHasMore(snap.docs.length === PAGE_SIZE);
     setLoadingMore(false);

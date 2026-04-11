@@ -3435,6 +3435,23 @@ function HaberlerTab() {
   }
 
   async function handleOneriEkle(o: Onerilen) {
+    // Duplicate kontrolü — baslik veya kaynakUrl zaten var mı?
+    const q1 = query(collection(db, 'haberler'), where('baslik', '==', o.baslik.trim()));
+    const snap1 = await getDocs(q1);
+    if (!snap1.empty) {
+      toast.error('Bu başlıkta haber zaten mevcut.');
+      setOnerilenler((prev) => prev.filter((x) => x.kaynakUrl !== o.kaynakUrl));
+      return;
+    }
+    if (o.kaynakUrl) {
+      const q2 = query(collection(db, 'haberler'), where('kaynakUrl', '==', o.kaynakUrl));
+      const snap2 = await getDocs(q2);
+      if (!snap2.empty) {
+        toast.error('Bu kaynak URL\'sine sahip haber zaten mevcut.');
+        setOnerilenler((prev) => prev.filter((x) => x.kaynakUrl !== o.kaynakUrl));
+        return;
+      }
+    }
     await addDoc(collection(db, 'haberler'), {
       baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
       ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
@@ -3448,7 +3465,17 @@ function HaberlerTab() {
   async function handleTumunuYayinla() {
     if (onerilenler.length === 0) return;
     let eklenen = 0;
+    let atlanan = 0;
     for (const o of onerilenler) {
+      // Duplicate kontrolü
+      const q1 = query(collection(db, 'haberler'), where('baslik', '==', o.baslik.trim()));
+      const snap1 = await getDocs(q1);
+      if (!snap1.empty) { atlanan++; continue; }
+      if (o.kaynakUrl) {
+        const q2 = query(collection(db, 'haberler'), where('kaynakUrl', '==', o.kaynakUrl));
+        const snap2 = await getDocs(q2);
+        if (!snap2.empty) { atlanan++; continue; }
+      }
       await addDoc(collection(db, 'haberler'), {
         baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
         ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
@@ -3458,7 +3485,40 @@ function HaberlerTab() {
       eklenen++;
     }
     setOnerilenler([]);
-    toast.success(`${eklenen} haber yayına eklendi.`);
+    if (eklenen > 0) toast.success(`${eklenen} haber yayına eklendi.${atlanan > 0 ? ` ${atlanan} duplicate atlandı.` : ''}`);
+    else toast.info(`Tüm haberler zaten mevcut (${atlanan} duplicate atlandı).`);
+  }
+
+  async function handleDuplicateTemizle() {
+    const grouped = new Map<string, typeof liste>();
+    for (const h of liste) {
+      const key = h.baslik.trim().toLowerCase();
+      if (!key) continue;
+      const arr = grouped.get(key) || [];
+      arr.push(h);
+      grouped.set(key, arr);
+    }
+    const dupes: string[] = [];
+    for (const [, arr] of grouped) {
+      if (arr.length <= 1) continue;
+      // İlk öğeyi tut, geri kalanı sil
+      for (let i = 1; i < arr.length; i++) {
+        if (arr[i].id) dupes.push(arr[i].id!);
+      }
+    }
+    if (dupes.length === 0) {
+      toast.info('Duplicate haber bulunamadı.');
+      return;
+    }
+    if (!window.confirm(`${dupes.length} duplicate haber silinecek. Devam?`)) return;
+    let silinen = 0;
+    for (const id of dupes) {
+      try {
+        await deleteDoc(doc(db, 'haberler', id));
+        silinen++;
+      } catch { /* skip */ }
+    }
+    toast.success(`${silinen} duplicate haber silindi.`);
   }
 
   async function handleTaslakTumunuOnayla() {
@@ -3521,20 +3581,27 @@ function HaberlerTab() {
                 const data = await res.json() as { haberler: Onerilen[] };
                 const haberler = data.haberler ?? [];
                 let eklenen = 0;
+                let atlanan = 0;
                 for (const o of haberler) {
-                  const mevcutMu = liste.some((h) => h.baslik === o.baslik || h.kaynakUrl === o.kaynakUrl);
-                  if (!mevcutMu) {
-                    await addDoc(collection(db, 'haberler'), {
-                      baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
-                      ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
-                      bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
-                      yayinda: true, arsivlendi: false, otomatik: true, tarih: serverTimestamp(),
-                    });
-                    eklenen++;
+                  // Firestore duplicate kontrolü
+                  const q1 = query(collection(db, 'haberler'), where('baslik', '==', o.baslik.trim()));
+                  const snap1 = await getDocs(q1);
+                  if (!snap1.empty) { atlanan++; continue; }
+                  if (o.kaynakUrl) {
+                    const q2 = query(collection(db, 'haberler'), where('kaynakUrl', '==', o.kaynakUrl));
+                    const snap2 = await getDocs(q2);
+                    if (!snap2.empty) { atlanan++; continue; }
                   }
+                  await addDoc(collection(db, 'haberler'), {
+                    baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
+                    ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
+                    bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
+                    yayinda: true, arsivlendi: false, otomatik: true, tarih: serverTimestamp(),
+                  });
+                  eklenen++;
                 }
-                if (eklenen > 0) toast.success(`${eklenen} haber yayına eklendi.`);
-                else toast.info('Yeni haber bulunamadı (mevcut haberlerle aynı).');
+                if (eklenen > 0) toast.success(`${eklenen} haber yayına eklendi.${atlanan > 0 ? ` ${atlanan} duplicate atlandı.` : ''}`);
+                else toast.info(`Yeni haber bulunamadı (${atlanan} duplicate).`);
               } catch {
                 toast.error('Haberler alınamadı.');
               } finally {
@@ -3558,6 +3625,12 @@ function HaberlerTab() {
             className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition"
           >
             <Plus className="w-4 h-4" /> Yeni Haber Ekle
+          </button>
+          <button
+            onClick={handleDuplicateTemizle}
+            className="flex items-center gap-2 border border-red-400 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-50 transition"
+          >
+            <Trash2 className="w-4 h-4" /> Duplicate Temizle
           </button>
         </div>
       </div>
