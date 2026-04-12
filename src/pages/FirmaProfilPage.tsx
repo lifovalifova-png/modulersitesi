@@ -5,16 +5,15 @@ import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { CATEGORIES } from '../data/categories';
-import { formatFiyat, type Ilan } from '../hooks/useIlanlar';
+import type { Ilan } from '../hooks/useIlanlar';
 import SEOMeta from '../components/SEOMeta';
 import { useAuth } from '../context/AuthContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
 import {
-  ShieldCheck, MapPin, Tag, Star, Send, Building2, Globe,
-  MessageCircle, Clock, Factory, Store, Package, Calendar,
-  Hash, ChevronRight, AlertCircle, ArrowLeft, ThumbsUp,
+  ShieldCheck, Star, Send, Globe,
+  MessageCircle, AlertCircle, ArrowLeft, ThumbsUp,
 } from 'lucide-react';
 
 /* ── Firma tipi (Firestore firms koleksiyonu) ───────────────── */
@@ -72,16 +71,17 @@ function Stars({ rating, count }: { rating: number; count: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[...Array(5)].map((_, i) => (
-        <Star
+        <span
           key={i}
-          className={`w-4 h-4 ${
-            i < Math.round(rating)
-              ? 'text-amber-400 fill-amber-400'
-              : 'text-white/30 fill-white/20'
+          className={`material-symbols-outlined text-sm ${
+            i < Math.round(rating) ? 'text-amber-400' : 'text-white/20'
           }`}
-        />
+          style={{ fontVariationSettings: "'FILL' 1" }}
+        >
+          star
+        </span>
       ))}
-      <span className="ml-1.5 text-sm font-semibold text-white/90">
+      <span className="ml-1.5 text-sm font-semibold text-white/90 font-body">
         {count > 0 ? `${rating.toFixed(1)} (${count} ${t('puan.count')})` : t('puan.none')}
       </span>
     </div>
@@ -136,37 +136,6 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
   );
 }
 
-/* ── İlan kartı ─────────────────────────────────────────────── */
-function IlanCard({ ilan }: { ilan: Ilan }) {
-  return (
-    <Link
-      to={`/ilan/${ilan.id}`}
-      className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:border-emerald-200 hover:bg-emerald-50/50 transition group"
-    >
-      {ilan.gorseller?.[0] ? (
-        <img
-          src={ilan.gorseller[0]}
-          alt={ilan.baslik}
-          className="w-16 h-14 object-cover rounded-lg flex-shrink-0"
-          loading="lazy"
-        />
-      ) : (
-        <div className="w-16 h-14 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center">
-          <Package className="w-5 h-5 text-gray-300" />
-        </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-800 line-clamp-1 group-hover:text-emerald-600 transition">
-          {ilan.baslik}
-        </p>
-        <p className="text-xs text-gray-500 mt-0.5">{ilan.sehir}</p>
-        <p className="text-sm font-bold text-emerald-600 mt-1">{formatFiyat(ilan.fiyat)}</p>
-      </div>
-      <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0 group-hover:text-emerald-500 transition" />
-    </Link>
-  );
-}
-
 /* ── Ana bileşen ─────────────────────────────────────────────── */
 export default function FirmaProfilPage() {
   const { id } = useParams<{ id: string }>();
@@ -185,7 +154,6 @@ export default function FirmaProfilPage() {
   const [aciklama,      setAciklama]      = useState('');
   const [yorumLoading,  setYorumLoading]  = useState(false);
   const [onayliMusteri, setOnayliMusteri] = useState<boolean | null>(null);
-
 
   /* Firma verisini çek */
   useEffect(() => {
@@ -273,8 +241,8 @@ export default function FirmaProfilPage() {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+        <div className="flex-1 flex items-center justify-center bg-surface-container-low">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
         <Footer />
       </div>
@@ -286,15 +254,15 @@ export default function FirmaProfilPage() {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-4 py-20">
-          <AlertCircle className="w-12 h-12 text-gray-300" />
-          <h2 className="text-xl font-bold text-gray-700">{t('firmaProfile.notFound')}</h2>
-          <p className="text-gray-500 text-sm max-w-xs">
+        <main className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-4 py-20 bg-surface-container-low">
+          <AlertCircle className="w-12 h-12 text-outline-variant" />
+          <h2 className="text-xl font-bold text-on-surface font-headline">{t('firmaProfile.notFound')}</h2>
+          <p className="text-on-surface-variant text-sm max-w-xs font-body">
             {t('firmaProfile.notFoundDesc')}
           </p>
           <Link
             to="/firmalar"
-            className="flex items-center gap-2 text-emerald-600 hover:underline text-sm font-medium mt-2"
+            className="flex items-center gap-2 text-primary hover:underline text-sm font-medium mt-2 font-body"
           >
             <ArrowLeft className="w-4 h-4" /> {t('firmaProfile.backToAll')}
           </Link>
@@ -331,14 +299,14 @@ export default function FirmaProfilPage() {
     : `${firma.name} — ${sehir ? sehir + ' ' : ''}${ilkKategori ? (CAT_MAP[ilkKategori] || ilkKategori) + ' ' : ''}firması. ModülerPazar'da ilanları ve iletişim bilgileri.`;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-surface-container-low font-body">
       <SEOMeta
         title={firma.name}
         description={seoDesc}
         url={`/firma/${id}`}
       />
 
-      {/* LocalBusiness JSON-LD */}
+      {/* LocalBusiness JSON-LD — uses only server-owned config values, safe */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -366,384 +334,424 @@ export default function FirmaProfilPage() {
 
       <main className="flex-1">
 
-        {/* ══ KAPAK ════════════════════════════════════════════ */}
-        <div className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-600 text-white">
-          <div className="max-w-7xl mx-auto px-4 py-10 md:py-14">
+        {/* ══ DÜKKAN BAŞLIĞI ═══════════════════════════════════ */}
+        <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-14">
 
             {/* Breadcrumb */}
-            <nav className="text-xs text-white/60 mb-6 flex items-center gap-1.5">
+            <nav className="text-xs text-white/50 mb-6 flex items-center gap-1.5 font-body">
               <Link to="/" className="hover:text-white transition">{t('common.home')}</Link>
               <span>/</span>
               <Link to="/firmalar" className="hover:text-white transition">{t('firmaProfile.breadcrumbFirms')}</Link>
               <span>/</span>
-              <span className="text-white/90 truncate max-w-[160px]">{firmaAdi}</span>
+              <span className="text-white/80 truncate max-w-[160px]">{firmaAdi}</span>
             </nav>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-              {/* Avatar */}
-              <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur border-2 border-white/30 flex items-center justify-center flex-shrink-0 shadow-lg">
-                <span className="text-3xl font-extrabold text-white">{firmaHarfi}</span>
+              {/* Firma Avatar */}
+              <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center text-white text-3xl font-bold font-headline flex-shrink-0 shadow-lg">
+                {firmaHarfi}
               </div>
 
-              {/* Bilgiler */}
+              {/* Firma Bilgileri */}
               <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-bold leading-tight">{firmaAdi}</h1>
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <h1 className="text-2xl md:text-3xl font-headline font-bold text-white">{firmaAdi}</h1>
                   {firma.verified && (
-                    <span className="inline-flex items-center gap-1 bg-white/20 border border-white/30 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                      <ShieldCheck className="w-3.5 h-3.5" /> {t('firmaProfile.verified')}
+                    <span className="bg-primary text-on-primary text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1 font-headline">
+                      <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span> {t('firmaProfile.verified')}
                     </span>
                   )}
                 </div>
-
-                <div className="flex flex-wrap items-center gap-3 text-sm text-white/80 mb-3 mt-1">
+                <div className="flex flex-wrap gap-4 text-white/60 text-sm font-body">
                   {sehir && (
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
+                      <span className="material-symbols-outlined text-sm">location_on</span>
                       {sehir}{firma.ilce ? `, ${firma.ilce}` : ''}
                     </span>
                   )}
                   {ilkKategori && (
                     <span className="flex items-center gap-1">
-                      <Tag className="w-3.5 h-3.5" />
+                      <span className="material-symbols-outlined text-sm">category</span>
                       {CAT_MAP[ilkKategori] || ilkKategori}
                     </span>
                   )}
                   {firma.olusturmaTarihi && (
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
+                      <span className="material-symbols-outlined text-sm">calendar_today</span>
                       {new Date(firma.olusturmaTarihi.seconds * 1000).getFullYear()}'den beri
                     </span>
                   )}
                 </div>
-
-                <Stars rating={avgPuan} count={yorumlar.length} />
+                <div className="mt-3">
+                  <Stars rating={avgPuan} count={yorumlar.length} />
+                </div>
               </div>
 
-              {/* Teklif İste */}
-              <Link
-                to={`/talep-olustur?firma=${id}`}
-                className="flex-shrink-0 flex items-center gap-2 bg-white text-emerald-700 font-bold px-5 py-2.5 rounded-xl hover:bg-emerald-50 transition shadow-sm text-sm whitespace-nowrap"
-              >
-                <Send className="w-4 h-4" /> {t('common.getQuote')}
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* ══ İÇERİK ══════════════════════════════════════════ */}
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex flex-col lg:flex-row gap-6">
-
-            {/* ── Sol Kolon (geniş) ──────────────────────────── */}
-            <div className="flex-1 min-w-0 space-y-6">
-
-              {/* Hakkımızda */}
-              {firma.tanitimMetni ? (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-emerald-600" /> {t('firmaProfile.about')}
-                  </h2>
-                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                    {firma.tanitimMetni}
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-emerald-600" /> {t('firmaProfile.about')}
-                  </h2>
-                  <p className="text-sm text-gray-400 italic">
-                    {t('firmaProfile.noAbout')}
-                  </p>
-                </div>
-              )}
-
-              {/* Hizmet Kategorileri */}
-              {kategoriler.length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-emerald-600" /> {t('firmaProfile.categories')}
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {kategoriler.map((slug) => (
-                      <Link
-                        key={slug}
-                        to={`/kategori/${slug}`}
-                        className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition"
-                      >
-                        {CAT_MAP[slug] || slug}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Hizmet Bölgeleri */}
-              {bolgeler.length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-emerald-600" /> {t('firmaProfile.regions')}
-                  </h2>
-                  <div className="flex flex-wrap gap-1.5">
-                    {bolgeler.map((bolge) => (
-                      <span
-                        key={bolge}
-                        className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-600"
-                      >
-                        {bolge}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Aktif İlanlar */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Package className="w-4 h-4 text-emerald-600" />
-                  {t('firmaProfile.listings')}
-                  {ilanlar.length > 0 && (
-                    <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                      {ilanlar.length}
-                    </span>
-                  )}
-                </h2>
-                {ilanlar.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Package className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">{t('firmaProfile.noListings')}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {ilanlar.map((ilan) => (
-                      <IlanCard key={ilan.id} ilan={ilan} />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Puanlar & Değerlendirmeler */}
-              {flags.puanlamaSistemi && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <ThumbsUp className="w-4 h-4 text-emerald-600" />
-                    {t('puan.title')}
-                    {yorumlar.length > 0 && (
-                      <span className="text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                        {avgPuan.toFixed(1)} / 5
-                      </span>
-                    )}
-                  </h2>
-
-                  {/* Ortalama + dağılım */}
-                  {yorumlar.length > 0 ? (
-                    <div className="flex gap-6 mb-6">
-                      <div className="text-center flex-shrink-0">
-                        <p className="text-4xl font-bold text-gray-800">{avgPuan.toFixed(1)}</p>
-                        <StarsLight rating={avgPuan} count={0} />
-                        <p className="text-xs text-gray-400 mt-1">{yorumlar.length} {t('puan.count')}</p>
-                      </div>
-                      <div className="flex-1 space-y-1.5 self-center">
-                        {dagilim.map(({ star, count }) => {
-                          const pct = yorumlar.length > 0 ? (count / yorumlar.length) * 100 : 0;
-                          return (
-                            <div key={star} className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500 w-3 text-right">{star}</span>
-                              <Star className="w-3 h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
-                              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }} />
-                              </div>
-                              <span className="text-xs text-gray-400 w-5">{count}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-400 italic mb-4">{t('puan.none')}</p>
-                  )}
-
-                  {/* Form durumu */}
-                  {!currentUser ? (
-                    <div className="border-t border-gray-100 pt-4">
-                      <Link
-                        to="/giris"
-                        className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium"
-                      >
-                        {t('puan.loginPrompt')}
-                      </Link>
-                    </div>
-                  ) : kullaniciPuanVerdi ? (
-                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-700 font-medium flex items-center gap-2">
-                      {t('puan.yourRating')} <StarsLight rating={kullanicininPuani} count={0} />
-                    </div>
-                  ) : onayliMusteri === null ? (
-                    <div className="border-t border-gray-100 pt-4 text-sm text-gray-400">{t('puan.checking')}</div>
-                  ) : !onayliMusteri ? (
-                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600">
-                      {t('puan.eligibility')}
-                    </div>
-                  ) : (
-                    <form onSubmit={handlePuanGonder} className="border-t border-gray-100 pt-4">
-                      <p className="text-sm font-semibold text-gray-700 mb-3">{t('puan.formTitle')}</p>
-                      <div className="mb-3">
-                        <label className="block text-xs text-gray-500 mb-1">{t('puan.starLabel')}</label>
-                        <StarPicker value={puan} onChange={setPuan} />
-                      </div>
-                      {puan === 1 && (
-                        <div className="mb-3">
-                          <label className="block text-xs text-gray-500 mb-1">
-                            {t('puan.aciklamaLabel')} <span className="text-red-500">*</span>
-                            <span className="ml-1 text-gray-400">({aciklama.trim().length}/100 {t('puan.aciklamaRequired')})</span>
-                          </label>
-                          <textarea
-                            value={aciklama}
-                            onChange={(e) => setAciklama(e.target.value)}
-                            rows={4}
-                            placeholder={t('puan.aciklamaPlaceholder')}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          />
-                        </div>
-                      )}
-                      <button
-                        type="submit"
-                        disabled={yorumLoading}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition disabled:opacity-60"
-                      >
-                        {yorumLoading ? t('common.sending') : t('puan.submit')}
-                      </button>
-                    </form>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* ── Sağ Kolon (dar) ────────────────────────────── */}
-            <div className="w-full lg:w-72 xl:w-80 flex-shrink-0 space-y-4">
-
-              {/* İletişim Kartı */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <h3 className="font-bold text-gray-800 text-sm mb-4">{t('firmaProfile.contact')}</h3>
-
+              {/* CTA Butonlar */}
+              <div className="flex flex-col gap-3 flex-shrink-0">
                 <Link
                   to={`/talep-olustur?firma=${id}`}
-                  className="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition text-sm shadow-sm"
+                  className="bg-primary hover:bg-primary-container text-on-primary font-bold px-8 py-3 rounded-xl transition-colors flex items-center gap-2 font-headline text-sm"
                 >
-                  <Send className="w-4 h-4" /> {t('common.getQuote')}
+                  <span className="material-symbols-outlined text-lg">request_quote</span>
+                  {t('common.getQuote')}
                 </Link>
-
                 {firma.whatsapp && (
                   <a
                     href={`https://wa.me/${firma.whatsapp.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full mt-2 border border-gray-200 text-gray-600 hover:border-green-300 hover:text-green-600 hover:bg-green-50 py-2.5 rounded-xl transition text-sm font-medium"
+                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-3 rounded-xl transition-colors flex items-center gap-2 font-headline text-sm"
                   >
-                    <MessageCircle className="w-4 h-4" /> {t('firmaProfile.whatsapp')}
+                    <span className="material-symbols-outlined text-lg">chat</span>
+                    {t('firmaProfile.whatsapp')}
                   </a>
                 )}
-
                 {firma.website && (
                   <a
                     href={firma.website.startsWith('http') ? firma.website : `https://${firma.website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full mt-2 border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 py-2.5 rounded-xl transition text-sm font-medium"
+                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-3 rounded-xl transition-colors flex items-center gap-2 font-headline text-sm"
                   >
-                    <Globe className="w-4 h-4" /> {t('firmaProfile.website')}
+                    <span className="material-symbols-outlined text-lg">language</span>
+                    {t('firmaProfile.website')}
                   </a>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
 
-                <p className="text-xs text-gray-400 text-center mt-3 leading-relaxed">
-                  {t('firmaProfile.contactNote')}
+        {/* ══ ANA İÇERİK ═════════════════════════════════════ */}
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* ── Sol geniş: Ürünler & İlanlar ────────────────── */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* İlan başlığı */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-headline font-bold text-on-surface">
+                {t('firmaProfile.listings')}
+                <span className="ml-2 text-sm font-normal text-on-surface-variant">({ilanlar.length})</span>
+              </h2>
+            </div>
+
+            {/* İlan grid */}
+            {ilanlar.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {ilanlar.map((ilan) => (
+                  <Link key={ilan.id} to={`/ilan/${ilan.id}`}
+                        className="group bg-white rounded-2xl overflow-hidden border border-outline-variant/20 hover:shadow-xl transition-all duration-300">
+                    <div className="aspect-video overflow-hidden bg-surface-container-low">
+                      {ilan.gorseller?.[0] ? (
+                        <img src={ilan.gorseller[0]} alt={ilan.baslik}
+                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                             loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="material-symbols-outlined text-4xl text-outline-variant">home</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      {ilan.acil && (
+                        <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mr-2 font-headline">Acil</span>
+                      )}
+                      <h3 className="font-headline font-bold text-on-surface mt-2 line-clamp-2 group-hover:text-primary transition-colors">
+                        {ilan.baslik}
+                      </h3>
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-xl font-black text-primary font-headline">
+                          {ilan.fiyat ? `₺${ilan.fiyat.toLocaleString('tr-TR')}` : 'Fiyat sorun'}
+                        </span>
+                        <span className="text-xs text-on-surface-variant flex items-center gap-1 font-body">
+                          <span className="material-symbols-outlined text-sm">location_on</span>
+                          {ilan.sehir}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-outline-variant/20">
+                <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">storefront</span>
+                <p className="text-on-surface-variant font-medium font-headline">{t('firmaProfile.noListings')}</p>
+                <p className="text-outline-variant text-sm mt-1 font-body">Bu firma yakında ilan ekleyecek</p>
+              </div>
+            )}
+
+            {/* Hizmet Kategorileri */}
+            {kategoriler.length > 0 && (
+              <div className="bg-white rounded-2xl p-6 border border-outline-variant/20">
+                <h2 className="font-bold text-on-surface mb-3 flex items-center gap-2 font-headline">
+                  <span className="material-symbols-outlined text-primary text-lg">category</span> {t('firmaProfile.categories')}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {kategoriler.map((slug) => (
+                    <Link
+                      key={slug}
+                      to={`/kategori/${slug}`}
+                      className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition font-body"
+                    >
+                      {CAT_MAP[slug] || slug}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Hizmet Bölgeleri */}
+            {bolgeler.length > 0 && (
+              <div className="bg-white rounded-2xl p-6 border border-outline-variant/20">
+                <h2 className="font-bold text-on-surface mb-3 flex items-center gap-2 font-headline">
+                  <span className="material-symbols-outlined text-primary text-lg">pin_drop</span> {t('firmaProfile.regions')}
+                </h2>
+                <div className="flex flex-wrap gap-1.5">
+                  {bolgeler.map((bolge) => (
+                    <span
+                      key={bolge}
+                      className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-body"
+                    >
+                      {bolge}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Puanlar & Değerlendirmeler */}
+            {flags.puanlamaSistemi && (
+              <div className="bg-white rounded-2xl border border-outline-variant/20 p-6">
+                <h2 className="font-bold text-on-surface mb-4 flex items-center gap-2 font-headline">
+                  <ThumbsUp className="w-4 h-4 text-primary" />
+                  {t('puan.title')}
+                  {yorumlar.length > 0 && (
+                    <span className="text-xs font-semibold bg-tertiary-fixed text-tertiary px-2 py-0.5 rounded-full">
+                      {avgPuan.toFixed(1)} / 5
+                    </span>
+                  )}
+                </h2>
+
+                {yorumlar.length > 0 ? (
+                  <div className="flex gap-6 mb-6">
+                    <div className="text-center flex-shrink-0">
+                      <p className="text-4xl font-bold text-on-surface font-headline">{avgPuan.toFixed(1)}</p>
+                      <StarsLight rating={avgPuan} count={0} />
+                      <p className="text-xs text-on-surface-variant mt-1 font-body">{yorumlar.length} {t('puan.count')}</p>
+                    </div>
+                    <div className="flex-1 space-y-1.5 self-center">
+                      {dagilim.map(({ star, count }) => {
+                        const pct = yorumlar.length > 0 ? (count / yorumlar.length) * 100 : 0;
+                        return (
+                          <div key={star} className="flex items-center gap-2">
+                            <span className="text-xs text-on-surface-variant w-3 text-right">{star}</span>
+                            <Star className="w-3 h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
+                            <div className="flex-1 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+                              <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="text-xs text-on-surface-variant w-5">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-on-surface-variant italic mb-4 font-body">{t('puan.none')}</p>
+                )}
+
+                {/* Form durumu */}
+                {!currentUser ? (
+                  <div className="border-t border-outline-variant/20 pt-4">
+                    <Link
+                      to="/giris"
+                      className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium font-body"
+                    >
+                      {t('puan.loginPrompt')}
+                    </Link>
+                  </div>
+                ) : kullaniciPuanVerdi ? (
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-primary font-medium flex items-center gap-2 font-body">
+                    {t('puan.yourRating')} <StarsLight rating={kullanicininPuani} count={0} />
+                  </div>
+                ) : onayliMusteri === null ? (
+                  <div className="border-t border-outline-variant/20 pt-4 text-sm text-on-surface-variant font-body">{t('puan.checking')}</div>
+                ) : !onayliMusteri ? (
+                  <div className="bg-surface-container-low border border-outline-variant/20 rounded-xl p-4 text-sm text-on-surface-variant font-body">
+                    {t('puan.eligibility')}
+                  </div>
+                ) : (
+                  <form onSubmit={handlePuanGonder} className="border-t border-outline-variant/20 pt-4">
+                    <p className="text-sm font-semibold text-on-surface mb-3 font-headline">{t('puan.formTitle')}</p>
+                    <div className="mb-3">
+                      <label className="block text-xs text-on-surface-variant mb-1 font-body">{t('puan.starLabel')}</label>
+                      <StarPicker value={puan} onChange={setPuan} />
+                    </div>
+                    {puan === 1 && (
+                      <div className="mb-3">
+                        <label className="block text-xs text-on-surface-variant mb-1 font-body">
+                          {t('puan.aciklamaLabel')} <span className="text-red-500">*</span>
+                          <span className="ml-1 text-outline-variant">({aciklama.trim().length}/100 {t('puan.aciklamaRequired')})</span>
+                        </label>
+                        <textarea
+                          value={aciklama}
+                          onChange={(e) => setAciklama(e.target.value)}
+                          rows={4}
+                          placeholder={t('puan.aciklamaPlaceholder')}
+                          className="w-full px-3 py-2 border border-outline-variant rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary font-body"
+                        />
+                      </div>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={yorumLoading}
+                      className="bg-primary hover:bg-primary-container text-on-primary text-sm font-semibold px-4 py-2 rounded-xl transition disabled:opacity-60 font-headline"
+                    >
+                      {yorumLoading ? t('common.sending') : t('puan.submit')}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── Sağ dar: Firma bilgi kartları ────────────────── */}
+          <div className="space-y-4">
+
+            {/* Hakkında */}
+            <div className="bg-white rounded-2xl p-6 border border-outline-variant/20">
+              <h3 className="font-headline font-bold text-on-surface mb-3 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-lg">info</span> {t('firmaProfile.about')}
+              </h3>
+              {firma.tanitimMetni ? (
+                <p className="text-on-surface-variant text-sm leading-relaxed whitespace-pre-line font-body">
+                  {firma.tanitimMetni}
                 </p>
-              </div>
+              ) : (
+                <p className="text-on-surface-variant text-sm italic font-body">
+                  {t('firmaProfile.noAbout')}
+                </p>
+              )}
+            </div>
 
-              {/* Firma Detayları */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-                <h3 className="font-bold text-gray-800 text-sm">{t('firmaProfile.details')}</h3>
-
-                {/* Çalışma Saatleri */}
-                <div className="flex items-start gap-2.5">
-                  <Clock className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-gray-400 mb-0.5">{t('firmaProfile.hours')}</p>
-                    <p className="text-sm text-gray-700 font-medium">{t('firmaProfile.hoursValue')}</p>
+            {/* Firma Bilgileri kartı */}
+            <div className="bg-white rounded-2xl p-6 border border-outline-variant/20">
+              <h3 className="font-headline font-bold text-on-surface mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-lg">business</span> {t('firmaProfile.details')}
+              </h3>
+              <div className="space-y-3 text-sm">
+                {sehir && (
+                  <div className="flex items-center gap-3 text-on-surface-variant font-body">
+                    <span className="material-symbols-outlined text-primary text-lg">location_city</span>
+                    {sehir}{firma.ilce ? `, ${firma.ilce}` : ''}
                   </div>
-                </div>
-
-                {/* Satış Tipi */}
+                )}
+                {ilkKategori && (
+                  <div className="flex items-center gap-3 text-on-surface-variant font-body">
+                    <span className="material-symbols-outlined text-primary text-lg">category</span>
+                    {CAT_MAP[ilkKategori] || ilkKategori}
+                  </div>
+                )}
                 {firma.firmaType && (
-                  <div className="flex items-start gap-2.5">
-                    {firma.firmaType === 'uretici'
-                      ? <Factory className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      : <Store   className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    }
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">{t('firmaProfile.saleType')}</p>
-                      <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${
-                        firma.firmaType === 'uretici'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {firma.firmaType === 'uretici' ? t('firmaProfile.producer') : t('firmaProfile.seller')}
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-3 text-on-surface-variant font-body">
+                    <span className="material-symbols-outlined text-primary text-lg">
+                      {firma.firmaType === 'uretici' ? 'factory' : 'store'}
+                    </span>
+                    {firma.firmaType === 'uretici' ? t('firmaProfile.producer') : t('firmaProfile.seller')}
                   </div>
                 )}
-
-                {/* Vergi Numarası */}
                 {firma.vergiNo && (
-                  <div className="flex items-start gap-2.5">
-                    <Hash className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-400 mb-0.5">{t('firmaProfile.taxNo')}</p>
-                      <p className="text-sm text-gray-700 font-mono font-medium tracking-wider">
-                        {maskVergiNo(firma.vergiNo)}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-3 text-on-surface-variant font-body">
+                    <span className="material-symbols-outlined text-primary text-lg">tag</span>
+                    <span className="font-mono tracking-wider">{maskVergiNo(firma.vergiNo)}</span>
                   </div>
                 )}
-
-                {/* Kayıt Tarihi */}
                 {firma.olusturmaTarihi && (
-                  <div className="flex items-start gap-2.5">
-                    <Calendar className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-400 mb-0.5">{t('firmaProfile.regDate')}</p>
-                      <p className="text-sm text-gray-700 font-medium">
-                        {formatDate(firma.olusturmaTarihi)}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-3 text-on-surface-variant font-body">
+                    <span className="material-symbols-outlined text-primary text-lg">event</span>
+                    {formatDate(firma.olusturmaTarihi)}
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Doğrulama Rozeti */}
-              {firma.verified && (
-                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-emerald-800">{t('firmaProfile.verifiedFirm')}</p>
-                    <p className="text-xs text-emerald-600 mt-0.5 leading-relaxed">
-                      {t('firmaProfile.verifiedDesc')}
-                    </p>
-                  </div>
-                </div>
+            {/* İletişim kartı */}
+            <div className="bg-white rounded-2xl p-6 border border-outline-variant/20">
+              <h3 className="font-headline font-bold text-on-surface mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-lg">contact_page</span> {t('firmaProfile.contact')}
+              </h3>
+
+              <Link
+                to={`/talep-olustur?firma=${id}`}
+                className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-container text-on-primary font-bold py-3 rounded-xl transition text-sm shadow-sm font-headline"
+              >
+                <Send className="w-4 h-4" /> {t('common.getQuote')}
+              </Link>
+
+              {firma.whatsapp && (
+                <a
+                  href={`https://wa.me/${firma.whatsapp.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full mt-2 border border-outline-variant/30 text-on-surface-variant hover:border-green-300 hover:text-green-600 hover:bg-green-50 py-2.5 rounded-xl transition text-sm font-medium font-body"
+                >
+                  <MessageCircle className="w-4 h-4" /> {t('firmaProfile.whatsapp')}
+                </a>
               )}
 
-              {/* Tüm Firmalara Dön */}
+              {firma.website && (
+                <a
+                  href={firma.website.startsWith('http') ? firma.website : `https://${firma.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full mt-2 border border-outline-variant/30 text-on-surface-variant hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 py-2.5 rounded-xl transition text-sm font-medium font-body"
+                >
+                  <Globe className="w-4 h-4" /> {t('firmaProfile.website')}
+                </a>
+              )}
+
+              <p className="text-xs text-on-surface-variant text-center mt-3 leading-relaxed font-body">
+                {t('firmaProfile.contactNote')}
+              </p>
+            </div>
+
+            {/* Teklif İste (sticky sidebar CTA) */}
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center sticky top-28">
+              <p className="text-primary font-medium text-sm mb-4 font-headline">Bu firmadan ücretsiz teklif alın</p>
               <Link
-                to="/firmalar"
-                className="flex items-center justify-center gap-2 w-full border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 py-2.5 rounded-xl transition text-xs font-medium"
+                to={`/talep-olustur?firma=${id}`}
+                className="w-full inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-on-primary font-bold py-3 rounded-xl transition-colors font-headline text-sm"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> {t('firmaProfile.seeAll')}
+                <span className="material-symbols-outlined text-lg">request_quote</span>
+                {t('common.getQuote')}
               </Link>
             </div>
 
+            {/* Doğrulama Rozeti */}
+            {firma.verified && (
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-start gap-3">
+                <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-primary font-headline">{t('firmaProfile.verifiedFirm')}</p>
+                  <p className="text-xs text-primary/70 mt-0.5 leading-relaxed font-body">
+                    {t('firmaProfile.verifiedDesc')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Tüm Firmalara Dön */}
+            <Link
+              to="/firmalar"
+              className="flex items-center justify-center gap-2 w-full border border-outline-variant/30 text-on-surface-variant hover:border-primary hover:text-primary py-2.5 rounded-xl transition text-xs font-medium font-body"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> {t('firmaProfile.seeAll')}
+            </Link>
           </div>
+
         </div>
       </main>
 

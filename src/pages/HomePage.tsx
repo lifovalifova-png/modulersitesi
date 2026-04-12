@@ -18,6 +18,7 @@ import FlashDealsCarousel from '../components/FlashDealsCarousel';
 import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
 import { useLanguage } from '../context/LanguageContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
+import type { Ilan } from '../hooks/useIlanlar';
 
 /* ─── CountUp: 0'dan hedefe sayma animasyonu ────────────── */
 function StatCounter({ target, suffix, active }: { target: number; suffix: string; active: boolean }) {
@@ -140,6 +141,22 @@ export default function HomePage() {
       console.error('Haber bandı hata:', err);
     });
     return unsub;
+  }, []);
+
+  /* ─── Son 8 ilan (Hero grid) ──────────────────────────────── */
+  const [sonIlanlar, setSonIlanlar] = useState<Ilan[]>([]);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'ilanlar'),
+      where('status', '==', 'aktif'),
+      orderBy('tarih', 'desc'),
+      limit(8),
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setSonIlanlar(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Ilan)));
+    });
+    return () => unsub();
   }, []);
 
   /* ─── Translated data arrays ────────────────────────────── */
@@ -359,36 +376,85 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* Sağ: Featured Card */}
-              <div className="hidden lg:block">
-                <div className="bg-white/10 backdrop-blur-lg border border-white/15 rounded-3xl p-8 shadow-2xl">
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="material-symbols-outlined text-3xl text-secondary-container" aria-hidden="true">trending_up</span>
+              {/* Sağ: İkili Panel */}
+              <div className="hidden lg:flex gap-4">
+                {/* Sol dar: Popüler kategoriler */}
+                <div className="w-1/3 bg-white/10 backdrop-blur-lg border border-white/15 rounded-3xl p-6 shadow-2xl">
+                  <div className="flex items-center gap-2 mb-5">
+                    <span className="material-symbols-outlined text-2xl text-secondary-container" aria-hidden="true">trending_up</span>
                     <div>
-                      <p className="text-white font-bold font-headline text-lg">{lang === 'en' ? 'Popular This Week' : 'Bu Hafta Popüler'}</p>
-                      <p className="text-white/50 text-sm font-body">{lang === 'en' ? 'Most viewed categories' : 'En çok görüntülenen kategoriler'}</p>
+                      <p className="text-white font-bold font-headline text-sm">{lang === 'en' ? 'Popular This Week' : 'Bu Hafta Popüler'}</p>
+                      <p className="text-white/50 text-xs font-body">{lang === 'en' ? 'Top categories' : 'En çok görüntülenen'}</p>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    {CATEGORIES.slice(0, 4).map((cat) => (
+                  <div className="space-y-2">
+                    {CATEGORIES.slice(0, 5).map((cat) => (
                       <Link
                         key={cat.slug}
                         to={`/kategori/${cat.slug}`}
-                        className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl px-4 py-3 transition group"
+                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 transition group"
                       >
-                        <span className={`material-symbols-outlined text-2xl text-secondary-container`} aria-hidden="true">
+                        <span className="material-symbols-outlined text-xl text-secondary-container" aria-hidden="true">
                           {CATEGORY_MATERIAL_ICONS[cat.slug] || 'home'}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-white font-semibold text-sm font-headline truncate group-hover:text-secondary-container transition">
+                          <p className="text-white font-semibold text-xs font-headline truncate group-hover:text-secondary-container transition">
                             {t(CATEGORY_NAME_KEYS[cat.slug])}
                           </p>
-                          <p className="text-white/40 text-xs font-body">{cat.count} {t('cats.listings')}</p>
+                          <p className="text-white/40 text-[10px] font-body">{cat.count} {t('cats.listings')}</p>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-secondary-container group-hover:translate-x-1 transition-all" />
                       </Link>
                     ))}
                   </div>
+                </div>
+
+                {/* Sağ geniş: Son ilanlar grid */}
+                <div className="w-2/3 bg-white/10 backdrop-blur-lg border border-white/15 rounded-3xl p-6 shadow-2xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-white font-headline font-bold text-lg">{lang === 'en' ? 'Modular Building Solutions' : 'Modüler Yapı Çözümleri'}</h3>
+                    <Link to="/kategori/prefabrik" className="text-secondary-container text-xs hover:text-white transition-colors flex items-center gap-1 font-body">
+                      {lang === 'en' ? 'View All' : 'Tümü'} <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                    </Link>
+                  </div>
+
+                  {sonIlanlar.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-72 scrollbar-hide">
+                      {sonIlanlar.map((ilan) => (
+                        <Link
+                          key={ilan.id}
+                          to={`/ilan/${ilan.id}`}
+                          className="bg-white/10 hover:bg-white/20 backdrop-blur border border-white/10 rounded-xl p-3 transition-all group"
+                        >
+                          {ilan.gorseller?.[0] ? (
+                            <div className="aspect-video rounded-lg overflow-hidden mb-2">
+                              <img src={ilan.gorseller[0]} alt={ilan.baslik}
+                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                   loading="lazy" />
+                            </div>
+                          ) : (
+                            <div className="aspect-video rounded-lg bg-white/5 flex items-center justify-center mb-2">
+                              <span className="material-symbols-outlined text-white/30 text-2xl">home</span>
+                            </div>
+                          )}
+                          <p className="text-white text-xs font-semibold line-clamp-1 font-headline">{ilan.baslik}</p>
+                          <p className="text-secondary-container text-xs font-bold mt-0.5 font-headline">
+                            {ilan.fiyat ? `₺${ilan.fiyat.toLocaleString('tr-TR')}` : (lang === 'en' ? 'Ask price' : 'Fiyat sorun')}
+                          </p>
+                          <p className="text-white/50 text-[10px] mt-0.5 font-body">{ilan.sehir}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-48 text-center">
+                      <span className="material-symbols-outlined text-white/20 text-5xl mb-3">storefront</span>
+                      <p className="text-white/60 text-sm font-medium font-headline">{lang === 'en' ? 'No listings yet' : 'Henüz ilan yok'}</p>
+                      <p className="text-white/30 text-xs mt-1 font-body">{lang === 'en' ? 'Listings will appear here automatically' : 'İlanlar buraya otomatik eklenecek'}</p>
+                      <Link to="/satici-formu"
+                            className="mt-4 bg-primary hover:bg-primary-container text-on-primary text-xs font-bold px-4 py-2 rounded-full transition-colors font-headline">
+                        {lang === 'en' ? 'Post the First Listing' : 'İlk İlanı Siz Verin'}
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
