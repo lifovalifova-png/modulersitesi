@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, Mail, Building2, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, Building2, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
 import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { SITE_CONFIG } from '../config/site';
@@ -47,12 +47,20 @@ export default function Header() {
   /* state */
   const [mobileMenuOpen,       setMobileMenuOpen]       = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const [searchOpen,           setSearchOpen]           = useState(false); // mobile filter panel
+  const [searchOpen,           setSearchOpen]           = useState(false);
   const [query,                setQuery]                = useState('');
   const [selectedCategory,     setSelectedCategory]     = useState('');
   const [selectedCity,         setSelectedCity]         = useState('');
+  const [scrolled,             setScrolled]             = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  /* scroll → glassmorphism efekti */
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   /* focus search input when panel opens */
   useEffect(() => {
@@ -75,60 +83,23 @@ export default function Header() {
     setSearchOpen(false);
   };
 
-  /* ── Shared filter fields ─────────────────────────────── */
-  const FilterFields = ({ compact = false }: { compact?: boolean }) => (
-    <>
-      {/* Kategori */}
-      <div className={compact ? 'w-full' : 'relative'}>
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          aria-label="Kategori seç"
-          className={`appearance-none border border-gray-300 rounded-lg bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-8 ${
-            compact ? 'w-full px-3 py-2' : 'px-3 py-2 w-44'
-          }`}
-        >
-          <option value="">{t('header.allCategoriesOpt')}</option>
-          {CATEGORIES.map((cat) => (
-            <option key={cat.slug} value={cat.slug}>{t(CATEGORY_NAME_KEYS[cat.slug])}</option>
-          ))}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
-      </div>
-
-      {/* Şehir */}
-      <div className={compact ? 'w-full' : 'relative'}>
-        <select
-          value={selectedCity}
-          onChange={(e) => setSelectedCity(e.target.value)}
-          aria-label="Şehir seç"
-          className={`appearance-none border border-gray-300 rounded-lg bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent pr-8 ${
-            compact ? 'w-full px-3 py-2' : 'px-3 py-2 w-36'
-          }`}
-        >
-          <option value="">{t('header.allCities')}</option>
-          {CITIES.map((city) => (
-            <option key={city} value={city}>{city}</option>
-          ))}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
-      </div>
-    </>
-  );
-
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
+    <header className={`sticky top-0 z-50 transition-all duration-300 ${
+      scrolled
+        ? 'bg-white/80 backdrop-blur-xl shadow-lg shadow-black/5'
+        : 'bg-white shadow-sm'
+    }`}>
 
       {/* Top Bar */}
-      <div className="bg-emerald-700 text-white py-2 px-4 text-sm">
+      <div className="bg-primary text-on-primary py-2 px-4 text-xs font-body">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <span className="flex items-center gap-2">
-            <Mail className="w-4 h-4" aria-hidden="true" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">mail</span>
             <span className="hidden sm:inline">{t('header.support')}:</span>{' '}
             <a href={`mailto:${SITE_CONFIG.email}`} className="hover:underline">{SITE_CONFIG.email}</a>
           </span>
           <div className="flex items-center gap-3">
-            <button onClick={handleIlanVer} className="hover:underline">
+            <button onClick={handleIlanVer} className="hover:underline font-medium">
               {t('header.freePostAd')}
             </button>
             {/* Dil değiştirici */}
@@ -144,11 +115,11 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center flex-shrink-0" aria-label="ModülerPazar ana sayfa">
+          <Link to="/" className="flex items-center flex-shrink-0 gap-1" aria-label="ModülerPazar ana sayfa">
             <img src={logoSrc} alt="ModülerPazar" className="h-8 w-auto" />
             <BetaBadge />
           </Link>
@@ -160,27 +131,55 @@ export default function Header() {
           >
             {/* Keyword */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-on-surface-variant" aria-hidden="true">search</span>
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('header.searchPlaceholder')}
                 aria-label="Arama"
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2.5 border border-outline-variant rounded-xl text-sm font-body text-on-surface bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
               />
             </div>
 
-            {/* Dropdowns */}
+            {/* Kategori */}
             <div className="relative">
-              <FilterFields />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                aria-label="Kategori seç"
+                className="appearance-none border border-outline-variant rounded-xl bg-surface-container-low text-on-surface text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent pr-8 px-3 py-2.5 w-44"
+              >
+                <option value="">{t('header.allCategoriesOpt')}</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.slug} value={cat.slug}>{t(CATEGORY_NAME_KEYS[cat.slug])}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" aria-hidden="true" />
+            </div>
+
+            {/* Şehir */}
+            <div className="relative">
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                aria-label="Şehir seç"
+                className="appearance-none border border-outline-variant rounded-xl bg-surface-container-low text-on-surface text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent pr-8 px-3 py-2.5 w-36"
+              >
+                <option value="">{t('header.allCities')}</option>
+                {CITIES.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" aria-hidden="true" />
             </div>
 
             {/* Search Button */}
             <button
               type="submit"
-              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition text-sm font-medium flex-shrink-0"
+              className="bg-primary text-on-primary px-5 py-2.5 rounded-xl hover:bg-primary-container transition text-sm font-semibold font-body flex-shrink-0 flex items-center gap-1.5"
             >
+              <span className="material-symbols-outlined text-base" aria-hidden="true">search</span>
               {t('header.searchBtn')}
             </button>
           </form>
@@ -190,14 +189,14 @@ export default function Header() {
             {role !== 'seller' && (
               <button
                 onClick={handleTeklifIste}
-                className="border border-emerald-600 text-emerald-600 px-4 py-2 rounded-lg hover:bg-emerald-50 transition font-medium text-sm"
+                className="border border-primary text-primary px-4 py-2.5 rounded-xl hover:bg-primary/5 transition font-semibold text-sm font-body"
               >
                 {t('header.getQuoteCta')}
               </button>
             )}
             <button
               onClick={handleIlanVer}
-              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition font-medium text-sm"
+              className="bg-primary text-on-primary px-4 py-2.5 rounded-xl hover:bg-primary-container transition font-semibold text-sm font-body"
             >
               {t('header.postAdBtn')}
             </button>
@@ -210,7 +209,7 @@ export default function Header() {
               onClick={() => setSearchOpen((v) => !v)}
               aria-label="Arama ve filtreleri aç"
               aria-expanded={searchOpen}
-              className="p-2 text-gray-600 hover:text-emerald-600"
+              className="p-2 text-on-surface-variant hover:text-primary transition"
             >
               {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
             </button>
@@ -218,13 +217,13 @@ export default function Header() {
               <>
                 <Link
                   to="/giris"
-                  className="border border-emerald-600 text-emerald-600 px-3 py-1.5 rounded-lg font-medium text-sm hover:bg-emerald-50 transition"
+                  className="border border-primary text-primary px-3 py-1.5 rounded-xl font-semibold text-sm hover:bg-primary/5 transition font-body"
                 >
                   {t('auth.login')}
                 </Link>
                 <Link
                   to="/kayit"
-                  className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-medium text-sm hover:bg-emerald-700 transition"
+                  className="bg-primary text-on-primary px-3 py-1.5 rounded-xl font-semibold text-sm hover:bg-primary-container transition font-body"
                 >
                   {t('auth.register')}
                 </Link>
@@ -234,7 +233,7 @@ export default function Header() {
               onClick={() => setMobileMenuOpen((v) => !v)}
               aria-label="Menüyü aç"
               aria-expanded={mobileMenuOpen}
-              className="p-2 text-gray-600"
+              className="p-2 text-on-surface-variant"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -247,9 +246,8 @@ export default function Header() {
             onSubmit={handleSearch}
             className="md:hidden mt-3 space-y-2 pb-2"
           >
-            {/* Keyword */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-on-surface-variant" aria-hidden="true">search</span>
               <input
                 ref={searchInputRef}
                 type="text"
@@ -257,46 +255,46 @@ export default function Header() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('header.searchPlaceholderMobile')}
                 aria-label="Arama"
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-10 pr-3 py-2.5 border border-outline-variant rounded-xl text-sm font-body text-on-surface bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
-            {/* Category + City — stacked on mobile */}
             <div className="grid grid-cols-2 gap-2">
               <div className="relative">
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   aria-label="Kategori seç"
-                  className="w-full appearance-none border border-gray-300 rounded-lg bg-white text-gray-700 text-sm px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full appearance-none border border-outline-variant rounded-xl bg-surface-container-low text-on-surface text-sm font-body px-3 py-2.5 pr-7 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">{t('header.allCategories')}</option>
                   {CATEGORIES.map((cat) => (
                     <option key={cat.slug} value={cat.slug}>{t(CATEGORY_NAME_KEYS[cat.slug])}</option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" aria-hidden="true" />
               </div>
               <div className="relative">
                 <select
                   value={selectedCity}
                   onChange={(e) => setSelectedCity(e.target.value)}
                   aria-label="Şehir seç"
-                  className="w-full appearance-none border border-gray-300 rounded-lg bg-white text-gray-700 text-sm px-3 py-2 pr-7 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full appearance-none border border-outline-variant rounded-xl bg-surface-container-low text-on-surface text-sm font-body px-3 py-2.5 pr-7 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">{t('header.allCities')}</option>
                   {CITIES.map((city) => (
                     <option key={city} value={city}>{city}</option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" aria-hidden="true" />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-emerald-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-emerald-700 transition"
+              className="w-full bg-primary text-on-primary py-2.5 rounded-xl font-semibold text-sm font-body hover:bg-primary-container transition flex items-center justify-center gap-1.5"
             >
+              <span className="material-symbols-outlined text-base" aria-hidden="true">search</span>
               {t('header.searchBtn')}
             </button>
           </form>
@@ -304,25 +302,26 @@ export default function Header() {
       </div>
 
       {/* Category Navigation */}
-      <nav className="border-t border-gray-200 bg-gray-50" aria-label="Kategoriler">
+      <nav className="border-t border-outline-variant/30 bg-surface-container-low/60" aria-label="Kategoriler">
         <div className="max-w-7xl mx-auto px-4">
           <div className="hidden md:flex items-center gap-1 py-2 overflow-x-auto">
 
             {/* All categories dropdown */}
             <div className="relative flex-shrink-0">
               <button
-                className="flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition font-medium whitespace-nowrap text-sm"
+                className="flex items-center gap-1 px-3 py-2 text-on-surface hover:text-primary hover:bg-primary/5 rounded-xl transition font-medium whitespace-nowrap text-sm font-body"
                 onMouseEnter={() => setCategoryDropdownOpen(true)}
                 onMouseLeave={() => setCategoryDropdownOpen(false)}
                 aria-haspopup="true"
                 aria-expanded={categoryDropdownOpen}
               >
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">category</span>
                 {t('header.allCategories')}
                 <ChevronDown className="w-4 h-4" aria-hidden="true" />
               </button>
               {categoryDropdownOpen && (
                 <div
-                  className="absolute top-full left-0 bg-white shadow-lg rounded-lg py-2 min-w-48 z-50"
+                  className="absolute top-full left-0 bg-white shadow-xl rounded-xl py-2 min-w-48 z-50 border border-outline-variant/30"
                   onMouseEnter={() => setCategoryDropdownOpen(true)}
                   onMouseLeave={() => setCategoryDropdownOpen(false)}
                   role="menu"
@@ -332,7 +331,7 @@ export default function Header() {
                       key={cat.slug}
                       to={`/kategori/${cat.slug}`}
                       role="menuitem"
-                      className="block px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 text-sm"
+                      className="block px-4 py-2.5 text-on-surface hover:bg-primary/5 hover:text-primary text-sm font-body transition"
                     >
                       {t(CATEGORY_NAME_KEYS[cat.slug])}
                     </Link>
@@ -346,47 +345,47 @@ export default function Header() {
               <Link
                 key={cat.slug}
                 to={`/kategori/${cat.slug}`}
-                className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+                className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
               >
                 {t(CATEGORY_NAME_KEYS[cat.slug])}
               </Link>
             ))}
 
             {/* Separator */}
-            <div className="flex-shrink-0 w-px h-5 bg-gray-300 mx-1" aria-hidden="true" />
+            <div className="flex-shrink-0 w-px h-5 bg-outline-variant mx-1" aria-hidden="true" />
 
             <Link
               to="/firmalar"
-              className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+              className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
-              <Building2 className="w-4 h-4" aria-hidden="true" />
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">business</span>
               {t('nav.firms')}
             </Link>
 
             <Link
               to="/blog"
-              className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
               {t('nav.blog')}
             </Link>
 
             <Link
               to="/haberler"
-              className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
               {t('nav.haberler')}
             </Link>
 
             <Link
               to="/sss"
-              className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
               {t('nav.faq')}
             </Link>
 
             <Link
               to="/nasil-kullanilir"
-              className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
               {t('nav.howToUse')}
             </Link>
@@ -394,16 +393,16 @@ export default function Header() {
             {flags.fiyatHesaplama && (
               <Link
                 to="/fiyat-hesapla"
-                className="flex items-center gap-1.5 px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+                className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
               >
-                <Calculator className="w-4 h-4" aria-hidden="true" />
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">calculate</span>
                 {t('nav.fiyatHesapla')}
               </Link>
             )}
 
             <Link
               to="/hakkimizda"
-              className="px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition whitespace-nowrap text-sm flex-shrink-0"
+              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
               {t('nav.about')}
             </Link>
@@ -414,25 +413,25 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200">
+        <div className="md:hidden bg-white border-t border-outline-variant/30">
           <div className="px-4 py-4 space-y-2">
             {role !== 'seller' && (
               <button
                 onClick={() => { handleTeklifIste(); setMobileMenuOpen(false); }}
-                className="block w-full border border-emerald-600 text-emerald-600 px-4 py-3 rounded-lg text-center font-medium hover:bg-emerald-50 transition"
+                className="block w-full border border-primary text-primary px-4 py-3 rounded-xl text-center font-semibold hover:bg-primary/5 transition font-body"
               >
                 {t('header.getQuoteCta')}
               </button>
             )}
             <button
               onClick={() => { handleIlanVer(); setMobileMenuOpen(false); }}
-              className="block w-full bg-emerald-600 text-white px-4 py-3 rounded-lg text-center font-medium"
+              className="block w-full bg-primary text-on-primary px-4 py-3 rounded-xl text-center font-semibold font-body"
             >
               {t('header.freePostAd')}
             </button>
             <Link
               to="/firmalar"
-              className="flex items-center gap-2 w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              className="flex items-center gap-2 w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Building2 className="w-5 h-5" aria-hidden="true" />
@@ -440,28 +439,28 @@ export default function Header() {
             </Link>
             <Link
               to="/blog"
-              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              className="block w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.blog')}
             </Link>
             <Link
               to="/haberler"
-              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              className="block w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.haberler')}
             </Link>
             <Link
               to="/sss"
-              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              className="block w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.faq')}
             </Link>
             <Link
               to="/nasil-kullanilir"
-              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              className="block w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.howToUse')}
@@ -469,7 +468,7 @@ export default function Header() {
             {flags.fiyatHesaplama && (
               <Link
                 to="/fiyat-hesapla"
-                className="flex items-center gap-2 w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+                className="flex items-center gap-2 w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <Calculator className="w-5 h-5" aria-hidden="true" />
@@ -478,18 +477,18 @@ export default function Header() {
             )}
             <Link
               to="/hakkimizda"
-              className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition"
+              className="block w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.about')}
             </Link>
-            <div className="pt-2 border-t border-gray-200">
-              <p className="text-xs text-gray-400 mb-2 px-2">{t('header.categoriesLabel')}</p>
+            <div className="pt-2 border-t border-outline-variant/30">
+              <p className="text-xs text-on-surface-variant mb-2 px-2 font-body">{t('header.categoriesLabel')}</p>
               {CATEGORIES.map((cat) => (
                 <Link
                   key={cat.slug}
                   to={`/kategori/${cat.slug}`}
-                  className="block w-full px-3 py-3 rounded-lg text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition text-sm"
+                  className="block w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition text-sm font-body"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t(CATEGORY_NAME_KEYS[cat.slug])}
@@ -498,47 +497,47 @@ export default function Header() {
             </div>
 
             {/* Kullanıcı bölümü */}
-            <div className="pt-3 border-t border-gray-200">
+            <div className="pt-3 border-t border-outline-variant/30">
               {currentUser ? (
                 <>
                   <Link
                     to="/profil"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-2 py-2 mb-1 hover:bg-emerald-50 rounded-lg transition"
+                    className="flex items-center gap-3 px-2 py-2 mb-1 hover:bg-primary/5 rounded-xl transition"
                   >
-                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <div className="w-9 h-9 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {currentUser.photoURL ? (
                         <img src={currentUser.photoURL} alt="Profil fotoğrafı" className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-emerald-700 font-bold text-sm">
+                        <span className="text-on-secondary-container font-bold text-sm font-headline">
                           {(currentUser.displayName || currentUser.email || 'K').charAt(0).toUpperCase()}
                         </span>
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate">
+                      <p className="text-sm font-semibold text-on-surface truncate font-headline">
                         {currentUser.displayName || 'Kullanıcı'}
                       </p>
-                      <p className="text-xs text-gray-400 truncate">{currentUser.email}</p>
+                      <p className="text-xs text-on-surface-variant truncate font-body">{currentUser.email}</p>
                     </div>
                   </Link>
                   <Link
                     to="/profil"
-                    className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 hover:text-emerald-600"
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-on-surface hover:text-primary font-body"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <UserCircle className="w-4 h-4" /> {t('auth.profile')}
                   </Link>
                   <Link
                     to="/firma-paneli"
-                    className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 hover:text-emerald-600"
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-on-surface hover:text-primary font-body"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <FileText className="w-4 h-4" /> {t('auth.myAds')}
                   </Link>
                   <button
                     onClick={async () => { await logout(); setMobileMenuOpen(false); }}
-                    className="flex items-center gap-2 px-2 py-2 text-sm text-red-600 w-full"
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-red-600 w-full font-body"
                   >
                     <LogOut className="w-4 h-4" /> {t('auth.logout')}
                   </button>
@@ -547,14 +546,14 @@ export default function Header() {
                 <div className="flex gap-2">
                   <Link
                     to="/giris"
-                    className="flex-1 border border-emerald-600 text-emerald-600 text-center px-4 py-2.5 rounded-lg font-medium text-sm hover:bg-emerald-50 transition"
+                    className="flex-1 border border-primary text-primary text-center px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary/5 transition font-body"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('auth.login')}
                   </Link>
                   <Link
                     to="/kayit"
-                    className="flex-1 bg-emerald-600 text-white text-center px-4 py-2.5 rounded-lg font-medium text-sm hover:bg-emerald-700 transition"
+                    className="flex-1 bg-primary text-on-primary text-center px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary-container transition font-body"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {t('auth.register')}

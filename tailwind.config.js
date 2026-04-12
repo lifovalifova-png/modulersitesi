@@ -16,6 +16,10 @@ module.exports = {
 			},
 		},
 		extend: {
+			fontFamily: {
+				headline: ["'Plus Jakarta Sans'", "sans-serif"],
+				body: ["'Inter'", "sans-serif"],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -23,9 +27,22 @@ module.exports = {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#2B5D3A',
+					DEFAULT: '#006948',
 					foreground: 'hsl(var(--primary-foreground))',
 				},
+				'primary-container': '#00855d',
+				'on-primary': '#ffffff',
+				'surface-container-low': '#f1f3ff',
+				'surface-container-lowest': '#ffffff',
+				'surface-container-highest': '#dce2f7',
+				'on-surface': '#141b2b',
+				'on-surface-variant': '#3d4a42',
+				'outline-variant': '#bccac0',
+				'secondary-container': '#6cf8bb',
+				'on-secondary-container': '#00714d',
+				'tertiary': '#735c00',
+				'tertiary-fixed': '#ffe083',
+				'on-tertiary': '#ffffff',
 				secondary: {
 					DEFAULT: '#4A90E2',
 					foreground: 'hsl(var(--secondary-foreground))',
