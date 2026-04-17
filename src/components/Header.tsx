@@ -377,6 +377,14 @@ export default function Header() {
             </Link>
 
             <Link
+              to="/etkinlikler"
+              className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
+            >
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">event</span>
+              Etkinlikler
+            </Link>
+
+            <Link
               to="/sss"
               className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
@@ -450,6 +458,14 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.haberler')}
+            </Link>
+            <Link
+              to="/etkinlikler"
+              className="flex items-center gap-2 w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">event</span>
+              Etkinlikler
             </Link>
             <Link
               to="/sss"

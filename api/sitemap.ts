@@ -44,6 +44,7 @@ const STATIC_PAGES = [
   { loc: '/sss',                changefreq: 'monthly', priority: '0.7' },
   { loc: '/nasil-kullanilir',   changefreq: 'monthly', priority: '0.7' },
   { loc: '/haberler',           changefreq: 'daily',   priority: '0.8' },
+  { loc: '/etkinlikler',        changefreq: 'weekly',  priority: '0.8' },
   { loc: '/hakkimizda',         changefreq: 'monthly', priority: '0.6' },
   { loc: '/fiyat-hesapla',      changefreq: 'monthly', priority: '0.7' },
   { loc: '/satici-formu',       changefreq: 'monthly', priority: '0.6' },
@@ -100,6 +101,15 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   for (const doc of firms) {
     if (field(doc, 'status') === 'approved') {
       urls.push(urlEntry(`/firma/${docId(doc)}`, 'weekly', '0.6'));
+    }
+  }
+
+  // Firestore'dan yayındaki etkinlikler
+  const etkinlikler = await fetchCollection('etkinlikler', ['durum', 'slug']);
+  for (const d of etkinlikler) {
+    if (field(d, 'durum') === 'yayinda') {
+      const slug = field(d, 'slug') || docId(d);
+      urls.push(urlEntry(`/etkinlikler/${slug}`, 'weekly', '0.6'));
     }
   }
 

@@ -138,7 +138,7 @@ interface AdminIlan {
   aktif?:            boolean;
 }
 
-type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda' | 'acilIlanlar' | 'geriBildirimler' | 'haberler';
+type TabKey = 'overview' | 'settings' | 'flashDeals' | 'ilanlar' | 'firms' | 'talepler' | 'blog' | 'rapor' | 'features' | 'yorumlar' | 'hakkimizda' | 'acilIlanlar' | 'geriBildirimler' | 'haberler' | 'etkinlikler';
 type FirmStatus  = 'all' | 'pending' | 'approved' | 'rejected';
 type TalepStatus = 'all' | 'beklemede' | 'iletildi' | 'tamamlandi';
 
@@ -4041,6 +4041,357 @@ function GeriBildirimlerTab() {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════
+   ETKİNLİKLER TAB
+════════════════════════════════════════════════════════════ */
+interface AdminEtkinlik {
+  id?: string;
+  baslik: string;
+  slug: string;
+  tur: 'fuar' | 'seminer' | 'konferans' | 'workshop' | 'webinar';
+  baslangicTarihi: string; // YYYY-MM-DD (form input)
+  bitisTarihi: string;
+  sehir: string;
+  mekan: string;
+  kisaAciklama: string;
+  tamAciklama: string;
+  kapakGorseli: string;
+  kategoriler: string;
+  organizator: string;
+  organizatorWeb: string;
+  katilimUcretli: boolean;
+  biletUcreti: string;
+  biletLinki: string;
+  durum: 'taslak' | 'yayinda' | 'arsiv';
+}
+
+const BOSH_ETKINLIK: AdminEtkinlik = {
+  baslik: '', slug: '', tur: 'fuar',
+  baslangicTarihi: '', bitisTarihi: '',
+  sehir: '', mekan: '',
+  kisaAciklama: '', tamAciklama: '', kapakGorseli: '',
+  kategoriler: '', organizator: '', organizatorWeb: '',
+  katilimUcretli: false, biletUcreti: '', biletLinki: '',
+  durum: 'taslak',
+};
+
+function EtkinliklerTab() {
+  const [liste, setListe] = useState<(AdminEtkinlik & { id: string })[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalAcik, setModalAcik] = useState(false);
+  const [duzenle, setDuzenle] = useState<(AdminEtkinlik & { id: string }) | null>(null);
+  const [form, setForm] = useState<AdminEtkinlik>(BOSH_ETKINLIK);
+  const [kaydediyor, setKaydediyor] = useState(false);
+  const [filtre, setFiltre] = useState<'all' | 'taslak' | 'yayinda' | 'arsiv'>('all');
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'etkinlikler'), (snap) => {
+      const docs = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() } as AdminEtkinlik & { id: string }))
+        .sort((a, b) => {
+          const ta = (a as any).baslangicTarihi?.seconds ?? 0;
+          const tb = (b as any).baslangicTarihi?.seconds ?? 0;
+          return tb - ta;
+        });
+      setListe(docs);
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  const goruntule = filtre === 'all' ? liste : liste.filter((e) => (e as any).durum === filtre);
+
+  function tsToInput(ts: any): string {
+    if (!ts?.seconds) return '';
+    return new Date(ts.seconds * 1000).toISOString().split('T')[0];
+  }
+
+  function acModal(etk?: AdminEtkinlik & { id: string }) {
+    if (etk) {
+      setDuzenle(etk);
+      setForm({
+        baslik: etk.baslik, slug: etk.slug, tur: etk.tur || 'fuar',
+        baslangicTarihi: tsToInput((etk as any).baslangicTarihi),
+        bitisTarihi: tsToInput((etk as any).bitisTarihi),
+        sehir: etk.sehir || '', mekan: etk.mekan || '',
+        kisaAciklama: etk.kisaAciklama || '', tamAciklama: etk.tamAciklama || '',
+        kapakGorseli: etk.kapakGorseli || '',
+        kategoriler: Array.isArray((etk as any).kategoriler) ? (etk as any).kategoriler.join(', ') : '',
+        organizator: etk.organizator || '', organizatorWeb: (etk as any).organizatorWeb || '',
+        katilimUcretli: !!(etk as any).katilimUcretli,
+        biletUcreti: (etk as any).biletUcreti ? String((etk as any).biletUcreti) : '',
+        biletLinki: (etk as any).biletLinki || '',
+        durum: (etk as any).durum || 'taslak',
+      });
+    } else {
+      setDuzenle(null);
+      setForm(BOSH_ETKINLIK);
+    }
+    setModalAcik(true);
+  }
+
+  function slugify(s: string): string {
+    return s.toLowerCase()
+      .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s')
+      .replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
+      .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  }
+
+  async function handleKaydet() {
+    if (!form.baslik.trim() || !form.baslangicTarihi || !form.bitisTarihi) {
+      toast.error('Başlık, başlangıç ve bitiş tarihi zorunludur.');
+      return;
+    }
+    setKaydediyor(true);
+    const slug = form.slug.trim() || slugify(form.baslik);
+    const payload: Record<string, any> = {
+      baslik: form.baslik.trim(),
+      slug,
+      tur: form.tur,
+      baslangicTarihi: Timestamp.fromDate(new Date(form.baslangicTarihi)),
+      bitisTarihi: Timestamp.fromDate(new Date(form.bitisTarihi)),
+      sehir: form.sehir.trim(),
+      mekan: form.mekan.trim(),
+      kisaAciklama: form.kisaAciklama.trim(),
+      tamAciklama: form.tamAciklama.trim(),
+      kapakGorseli: form.kapakGorseli.trim(),
+      kategoriler: form.kategoriler.split(',').map((s: string) => s.trim()).filter(Boolean),
+      organizator: form.organizator.trim(),
+      organizatorWeb: form.organizatorWeb.trim(),
+      katilimUcretli: form.katilimUcretli,
+      biletUcreti: form.biletUcreti ? Number(form.biletUcreti) : 0,
+      biletLinki: form.biletLinki.trim(),
+      durum: form.durum,
+      guncellenmeTarihi: serverTimestamp(),
+    };
+    try {
+      if (duzenle?.id) {
+        await updateDoc(doc(db, 'etkinlikler', duzenle.id), payload);
+        toast.success('Etkinlik güncellendi.');
+      } else {
+        payload.olusturulmaTarihi = serverTimestamp();
+        payload.goruntulenmeSayisi = 0;
+        payload.oneCikan = false;
+        await addDoc(collection(db, 'etkinlikler'), payload);
+        toast.success('Etkinlik eklendi.');
+      }
+      setModalAcik(false);
+    } catch {
+      toast.error('Kayıt sırasında hata oluştu.');
+    } finally {
+      setKaydediyor(false);
+    }
+  }
+
+  async function handleSil(id: string) {
+    if (!confirm('Etkinlik silinecek. Emin misiniz?')) return;
+    try {
+      await deleteDoc(doc(db, 'etkinlikler', id));
+      toast.success('Etkinlik silindi.');
+    } catch { toast.error('Silme hatası.'); }
+  }
+
+  async function handleDurumDegistir(id: string, yeniDurum: string) {
+    await updateDoc(doc(db, 'etkinlikler', id), { durum: yeniDurum });
+    toast.success(`Durum → ${yeniDurum}`);
+  }
+
+  const TUR_LABEL: Record<string, string> = { fuar: 'Fuar', seminer: 'Seminer', konferans: 'Konferans', workshop: 'Workshop', webinar: 'Webinar' };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold">Etkinlik Yönetimi</h2>
+        <button onClick={() => acModal()} className="flex items-center gap-1.5 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition">
+          <Plus className="w-4 h-4" /> Yeni Etkinlik
+        </button>
+      </div>
+
+      {/* Filtre */}
+      <div className="flex gap-2 mb-4">
+        {(['all','taslak','yayinda','arsiv'] as const).map((f) => (
+          <button key={f} onClick={() => setFiltre(f)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${filtre === f ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+          >
+            {f === 'all' ? `Tümü (${liste.length})` : f === 'taslak' ? 'Taslak' : f === 'yayinda' ? 'Yayında' : 'Arşiv'}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>
+      ) : goruntule.length === 0 ? (
+        <p className="text-center text-gray-500 py-12">Henüz etkinlik yok.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-gray-500">
+                <th className="py-2 px-2">Başlık</th>
+                <th className="py-2 px-2">Tür</th>
+                <th className="py-2 px-2">Şehir</th>
+                <th className="py-2 px-2">Tarih</th>
+                <th className="py-2 px-2">Durum</th>
+                <th className="py-2 px-2">İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {goruntule.map((e) => {
+                const bas = (e as any).baslangicTarihi?.seconds ? new Date((e as any).baslangicTarihi.seconds * 1000).toLocaleDateString('tr-TR') : '-';
+                return (
+                  <tr key={e.id} className="border-b hover:bg-gray-50">
+                    <td className="py-2 px-2 font-medium max-w-[200px] truncate">{e.baslik}</td>
+                    <td className="py-2 px-2">{TUR_LABEL[e.tur] || e.tur}</td>
+                    <td className="py-2 px-2">{e.sehir || '-'}</td>
+                    <td className="py-2 px-2 text-xs">{bas}</td>
+                    <td className="py-2 px-2">
+                      <select value={(e as any).durum || 'taslak'} onChange={(ev) => handleDurumDegistir(e.id, ev.target.value)}
+                        className="text-xs border rounded px-1.5 py-1"
+                      >
+                        <option value="taslak">Taslak</option>
+                        <option value="yayinda">Yayında</option>
+                        <option value="arsiv">Arşiv</option>
+                      </select>
+                    </td>
+                    <td className="py-2 px-2 flex gap-1">
+                      <button onClick={() => acModal(e)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><Pencil className="w-4 h-4" /></button>
+                      <button onClick={() => handleSil(e.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal */}
+      {modalAcik && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/50 overflow-y-auto py-8">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold">{duzenle ? 'Etkinlik Düzenle' : 'Yeni Etkinlik'}</h3>
+              <button onClick={() => setModalAcik(false)} className="p-1 text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-gray-600">Başlık *</label>
+                  <input value={form.baslik} onChange={(e) => setForm({ ...form, baslik: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Slug</label>
+                  <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="otomatik"
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Tür</label>
+                  <select value={form.tur} onChange={(e) => setForm({ ...form, tur: e.target.value as AdminEtkinlik['tur'] })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1"
+                  >
+                    <option value="fuar">Fuar</option>
+                    <option value="seminer">Seminer</option>
+                    <option value="konferans">Konferans</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="webinar">Webinar</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Başlangıç *</label>
+                  <input type="date" value={form.baslangicTarihi} onChange={(e) => setForm({ ...form, baslangicTarihi: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Bitiş *</label>
+                  <input type="date" value={form.bitisTarihi} onChange={(e) => setForm({ ...form, bitisTarihi: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Şehir</label>
+                  <input value={form.sehir} onChange={(e) => setForm({ ...form, sehir: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Mekan</label>
+                  <input value={form.mekan} onChange={(e) => setForm({ ...form, mekan: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-gray-600">Kısa Açıklama</label>
+                  <input value={form.kisaAciklama} onChange={(e) => setForm({ ...form, kisaAciklama: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-gray-600">Tam Açıklama</label>
+                  <textarea value={form.tamAciklama} onChange={(e) => setForm({ ...form, tamAciklama: e.target.value })} rows={4}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-gray-600">Kapak Görseli (URL)</label>
+                  <input value={form.kapakGorseli} onChange={(e) => setForm({ ...form, kapakGorseli: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-gray-600">Kategoriler (virgülle)</label>
+                  <input value={form.kategoriler} onChange={(e) => setForm({ ...form, kategoriler: e.target.value })} placeholder="prefabrik, konteyner"
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Organizatör</label>
+                  <input value={form.organizator} onChange={(e) => setForm({ ...form, organizator: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Organizatör Web</label>
+                  <input value={form.organizatorWeb} onChange={(e) => setForm({ ...form, organizatorWeb: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600">Durum</label>
+                  <select value={form.durum} onChange={(e) => setForm({ ...form, durum: e.target.value as AdminEtkinlik['durum'] })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm mt-1"
+                  >
+                    <option value="taslak">Taslak</option>
+                    <option value="yayinda">Yayında</option>
+                    <option value="arsiv">Arşiv</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2 mt-4">
+                  <input type="checkbox" checked={form.katilimUcretli} onChange={(e) => setForm({ ...form, katilimUcretli: e.target.checked })} id="ucretli" />
+                  <label htmlFor="ucretli" className="text-sm text-gray-700">Ücretli Katılım</label>
+                </div>
+                {form.katilimUcretli && (
+                  <>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600">Bilet Ücreti (₺)</label>
+                      <input type="number" value={form.biletUcreti} onChange={(e) => setForm({ ...form, biletUcreti: e.target.value })}
+                        className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600">Bilet Linki</label>
+                      <input value={form.biletLinki} onChange={(e) => setForm({ ...form, biletLinki: e.target.value })}
+                        className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-5 pt-4 border-t">
+              <button onClick={() => setModalAcik(false)} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50">İptal</button>
+              <button onClick={handleKaydet} disabled={kaydediyor}
+                className="flex items-center gap-1.5 bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" /> {kaydediyor ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'overview',   label: 'Genel Bakış',   icon: <LayoutDashboard className="w-4 h-4" /> },
   { key: 'settings',   label: 'Site Ayarları', icon: <Settings className="w-4 h-4" /> },
@@ -4056,6 +4407,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'acilIlanlar',      label: 'Acil İlanlar',    icon: <Flame className="w-4 h-4 text-red-500" /> },
   { key: 'geriBildirimler', label: 'Geri Bildirimler', icon: <Inbox className="w-4 h-4" /> },
   { key: 'haberler',        label: 'Haberler',         icon: <Newspaper className="w-4 h-4" /> },
+  { key: 'etkinlikler',    label: 'Etkinlikler',      icon: <Flame className="w-4 h-4 text-emerald-500" /> },
 ];
 
 export default function AdminDashboardPage() {
@@ -4305,6 +4657,7 @@ export default function AdminDashboardPage() {
           {tab === 'acilIlanlar'      && <AcilIlanlarTab />}
           {tab === 'geriBildirimler' && <GeriBildirimlerTab />}
           {tab === 'haberler'       && <HaberlerTab />}
+          {tab === 'etkinlikler'   && <EtkinliklerTab />}
         </main>
       </div>
     </div>

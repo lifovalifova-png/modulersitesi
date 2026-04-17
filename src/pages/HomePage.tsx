@@ -19,6 +19,8 @@ import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
 import { useLanguage } from '../context/LanguageContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import type { Ilan } from '../hooks/useIlanlar';
+import type { Etkinlik } from '../types/etkinlik';
+import { TUR_LABELS, TUR_COLORS } from '../types/etkinlik';
 
 /* ─── CountUp: 0'dan hedefe sayma animasyonu ────────────── */
 function StatCounter({ target, suffix, active }: { target: number; suffix: string; active: boolean }) {
@@ -157,6 +159,25 @@ export default function HomePage() {
       setSonIlanlar(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Ilan)));
     });
     return () => unsub();
+  }, []);
+
+  /* ─── Yaklaşan etkinlikler (3 adet) ────────────────────────── */
+  const [yakinEtkinlikler, setYakinEtkinlikler] = useState<Etkinlik[]>([]);
+
+  useEffect(() => {
+    const now = new Date();
+    const nowTs = { seconds: Math.floor(now.getTime() / 1000), nanoseconds: 0 };
+    const q = query(
+      collection(db, 'etkinlikler'),
+      where('durum', '==', 'yayinda'),
+      where('bitisTarihi', '>=', nowTs),
+      orderBy('bitisTarihi', 'asc'),
+      limit(3),
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setYakinEtkinlikler(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Etkinlik)));
+    }, () => {});
+    return unsub;
   }, []);
 
   /* ─── Translated data arrays ────────────────────────────── */
@@ -532,6 +553,73 @@ export default function HomePage() {
 
         {/* ── Flaş Fırsatlar ───────────────────────────────── */}
         <FlashDealsCarousel />
+
+        {/* ── Yaklaşan Fuarlar & Etkinlikler ──────────────── */}
+        {yakinEtkinlikler.length > 0 && (
+          <section className="py-14 md:py-20 bg-surface-container-low">
+            <div className="max-w-7xl mx-auto px-4">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-on-surface font-headline">
+                    Yaklaşan Fuarlar ve Etkinlikler
+                  </h2>
+                  <p className="text-on-surface-variant mt-1 font-body text-sm">
+                    Sektörün önemli buluşma noktalarını kaçırmayın
+                  </p>
+                </div>
+                <Link
+                  to="/etkinlikler"
+                  className="hidden sm:inline-flex items-center gap-1.5 text-primary font-bold text-sm hover:underline font-headline"
+                >
+                  Tümünü Gör <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {yakinEtkinlikler.map((etk) => (
+                  <Link
+                    key={etk.id}
+                    to={`/etkinlikler/${etk.slug || etk.id}`}
+                    className="group bg-white rounded-2xl overflow-hidden border border-outline-variant/20 hover:shadow-xl transition-all duration-300"
+                  >
+                    <div className="aspect-video overflow-hidden bg-surface-container-low relative">
+                      <img
+                        src={etk.kapakGorseli || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=500&fit=crop'}
+                        alt={etk.baslik}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur rounded-xl px-3 py-1.5 text-center shadow-sm">
+                        <p className="text-xs font-bold text-primary font-headline leading-none">
+                          {new Date(etk.baslangicTarihi.seconds * 1000).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                        </p>
+                      </div>
+                      <span className={`absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full ${TUR_COLORS[etk.tur]} font-headline`}>
+                        {TUR_LABELS[etk.tur]}
+                      </span>
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-headline font-bold text-on-surface text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors mb-2">
+                        {etk.baslik}
+                      </h3>
+                      <div className="flex items-center gap-2 text-xs text-on-surface-variant font-body">
+                        <span className="material-symbols-outlined text-sm text-primary">location_on</span>
+                        {etk.mekan}, {etk.sehir}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <div className="sm:hidden text-center mt-6">
+                <Link
+                  to="/etkinlikler"
+                  className="inline-flex items-center gap-1.5 text-primary font-bold text-sm hover:underline font-headline"
+                >
+                  Tümünü Gör <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── Kategoriler ──────────────────────────────────── */}
         <section className="py-14 md:py-20 bg-surface-container-lowest">

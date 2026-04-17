@@ -16,6 +16,23 @@
         { "fieldPath": "tarih", "order": "DESCENDING" }
       ]
     }
+    ,
+    {
+      "collectionGroup": "etkinlikler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "durum", "order": "ASCENDING" },
+        { "fieldPath": "baslangicTarihi", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "etkinlikler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "durum", "order": "ASCENDING" },
+        { "fieldPath": "bitisTarihi", "order": "ASCENDING" }
+      ]
+    }
   ],
   "fieldOverrides": []
 }

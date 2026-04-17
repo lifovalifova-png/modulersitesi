@@ -45,6 +45,8 @@ const TalepDetayPage        = lazy(() => import('./pages/TalepDetayPage'));
 const NasilKullanilirPage   = lazy(() => import('./pages/NasilKullanilirPage'));
 const HaberlerPage          = lazy(() => import('./pages/HaberlerPage'));
 const HaberDetayPage        = lazy(() => import('./pages/HaberDetayPage'));
+const EtkinliklerPage       = lazy(() => import('./pages/EtkinliklerPage'));
+const EtkinlikDetayPage     = lazy(() => import('./pages/EtkinlikDetayPage'));
 const NotFoundPage          = lazy(() => import('./pages/NotFoundPage'));
 
 /* ── Feature flag gated TeklifSepeti ───────────────────────── */
@@ -105,6 +107,8 @@ function App() {
                 <Route path="/nasil-kullanilir" element={<NasilKullanilirPage />} />
                 <Route path="/haberler"         element={<HaberlerPage />} />
                 <Route path="/haberler/:haberId" element={<HaberDetayPage />} />
+                <Route path="/etkinlikler"      element={<EtkinliklerPage />} />
+                <Route path="/etkinlikler/:slug" element={<EtkinlikDetayPage />} />
                 <Route path="/geri-bildirim"   element={<GeriBildirimPage />} />
                 <Route path="/talepim/:talepId" element={<TalepDetayPage />} />
                 <Route path="/admin"            element={<AdminLoginPage />} />
