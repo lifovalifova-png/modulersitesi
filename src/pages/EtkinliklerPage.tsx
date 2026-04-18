@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  collection, query, where, orderBy, onSnapshot, Timestamp,
+  collection, query, where, orderBy, onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
-import { useLanguage } from '../context/LanguageContext';
 import type { Etkinlik } from '../types/etkinlik';
 import { TUR_LABELS, TUR_COLORS } from '../types/etkinlik';
 
@@ -40,7 +39,6 @@ function formatTarihKisa(ts: { seconds: number }): string {
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=500&fit=crop';
 
 export default function EtkinliklerPage() {
-  const { t } = useLanguage();
   const [etkinlikler, setEtkinlikler] = useState<Etkinlik[]>([]);
   const [loading, setLoading] = useState(true);
   const [sehirFiltre, setSehirFiltre] = useState('');
@@ -48,7 +46,6 @@ export default function EtkinliklerPage() {
   const [arsivGoster, setArsivGoster] = useState(false);
 
   useEffect(() => {
-    const now = Timestamp.now();
     const q = query(
       collection(db, 'etkinlikler'),
       where('durum', '==', 'yayinda'),

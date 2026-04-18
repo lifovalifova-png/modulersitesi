@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  collection, query, where, orderBy, limit, getDocs, doc, getDoc, updateDoc, increment, Timestamp,
+  collection, query, where, orderBy, limit, getDocs, doc, getDoc, updateDoc, increment,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
-import { useLanguage } from '../context/LanguageContext';
 import type { Etkinlik } from '../types/etkinlik';
 import { TUR_LABELS, TUR_COLORS } from '../types/etkinlik';
 
@@ -27,7 +26,6 @@ function formatTarihFull(ts: { seconds: number }): string {
 
 export default function EtkinlikDetayPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { t } = useLanguage();
   const [etkinlik, setEtkinlik] = useState<Etkinlik | null>(null);
   const [ilgili, setIlgili] = useState<Etkinlik[]>([]);
   const [loading, setLoading] = useState(true);
