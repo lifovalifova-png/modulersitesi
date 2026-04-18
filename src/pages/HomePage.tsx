@@ -324,8 +324,8 @@ export default function HomePage() {
 
           <div className="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Sol: Metin */}
-              <div>
+              {/* Sağ (desktop): Metin — mobilde önce görünsün */}
+              <div className="order-1 lg:order-2">
                 <div className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container text-sm font-bold px-4 py-1.5 rounded-full mb-6 font-headline">
                   <span className="material-symbols-outlined text-base" aria-hidden="true">bolt</span>
                   {t('hero.badge')}
@@ -397,8 +397,8 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* Sağ: İkili Panel */}
-              <div className="hidden lg:flex gap-4">
+              {/* Sol (desktop): İkili Panel */}
+              <div className="hidden lg:flex gap-4 order-2 lg:order-1">
                 {/* Sol dar: Popüler kategoriler */}
                 <div className="w-1/3 bg-white/10 backdrop-blur-lg border border-white/15 rounded-3xl p-6 shadow-2xl">
                   <div className="flex items-center gap-2 mb-5">
