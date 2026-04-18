@@ -129,5 +129,10 @@ service cloud.firestore {
       allow create: if request.auth != null && isAdmin();
       allow update, delete: if request.auth != null && isAdmin();
     }
+
+    match /whatsappTiklamalari/{id} {
+      allow create: if true;
+      allow read: if request.auth != null && isAdmin();
+    }
   }
 }

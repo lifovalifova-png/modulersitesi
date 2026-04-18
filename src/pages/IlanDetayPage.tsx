@@ -9,7 +9,7 @@ import { FLASH_DEALS } from '../data/flashDeals';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
 import SEOMeta from '../components/SEOMeta';
-import { trackEvent } from '../lib/analytics';
+import { trackEvent, trackWhatsAppClick } from '../lib/analytics';
 import { sanitizeText } from '../utils/sanitize';
 import {
   MapPin, Tag, Calendar, ShieldCheck, Phone, ChevronLeft, ChevronRight,
@@ -663,7 +663,21 @@ export default function IlanDetayPage() {
                         {firmaContact.eposta}
                       </a>
                     )}
-                    {!firmaContact?.phone && !firmaContact?.eposta && (
+                    {firmaContact?.whatsapp && ilan && (
+                      <a
+                        href={`https://wa.me/${firmaContact.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
+                          `Merhaba, ModülerPazar'da gördüğüm "${ilan.baslik}" ilanı hakkında bilgi almak istiyorum.\nLink: https://modulerpazar.com/ilan/${ilan.id}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => trackWhatsAppClick(ilan.firmaId, ilan.id)}
+                        className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1da851] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-sm"
+                      >
+                        <span className="material-symbols-outlined text-lg">chat</span>
+                        WhatsApp ile İletişime Geç
+                      </a>
+                    )}
+                    {!firmaContact?.phone && !firmaContact?.eposta && !firmaContact?.whatsapp && (
                       <p className="text-center text-xs text-gray-400 py-2">
                         {t('listing.noContact')}
                       </p>

@@ -20,6 +20,7 @@ interface Firm {
   verified:     boolean;
   status:       'pending' | 'approved' | 'rejected';
   tanitimMetni?: string;
+  whatsapp?:    string;
 }
 
 interface FirmStats {
@@ -244,6 +245,9 @@ export default function FirmalarPage() {
                           </p>
                           {firm.verified && (
                             <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" aria-label={t('common.verified')} />
+                          )}
+                          {firm.whatsapp && (
+                            <span className="material-symbols-outlined text-[#25D366] text-base flex-shrink-0" aria-label="WhatsApp" title="WhatsApp ile ulaşılabilir">chat</span>
                           )}
                         </div>
                         {(firm.city || firm.sehir) && (

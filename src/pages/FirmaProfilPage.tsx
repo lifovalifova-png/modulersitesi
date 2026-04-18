@@ -13,8 +13,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
 import {
   ShieldCheck, Star, Send, Globe,
-  MessageCircle, AlertCircle, ArrowLeft, ThumbsUp,
+  AlertCircle, ArrowLeft, ThumbsUp,
 } from 'lucide-react';
+import { trackWhatsAppClick } from '../lib/analytics';
 
 /* ── Firma tipi (Firestore firms koleksiyonu) ───────────────── */
 interface Firma {
@@ -693,12 +694,16 @@ export default function FirmaProfilPage() {
 
               {firma.whatsapp && (
                 <a
-                  href={`https://wa.me/${firma.whatsapp.replace(/\D/g, '')}`}
+                  href={`https://wa.me/${firma.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
+                    `Merhaba, ModülerPazar'dan ulaşıyorum. ${firma.name} firmanız hakkında bilgi almak istiyorum.`
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full mt-2 border border-outline-variant/30 text-on-surface-variant hover:border-green-300 hover:text-green-600 hover:bg-green-50 py-2.5 rounded-xl transition text-sm font-medium font-body"
+                  onClick={() => trackWhatsAppClick(firma.id)}
+                  className="flex items-center justify-center gap-2 w-full mt-2 bg-[#25D366] hover:bg-[#1da851] text-white font-bold py-3 rounded-xl transition text-sm shadow-sm font-headline"
                 >
-                  <MessageCircle className="w-4 h-4" /> {t('firmaProfile.whatsapp')}
+                  <span className="material-symbols-outlined text-lg">chat</span>
+                  WhatsApp ile İletişime Geç
                 </a>
               )}
 
