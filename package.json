@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "install-deps": "npm install",
     "clean": "rm -rf node_modules package-lock.json dist",
-    "clean-dupes": "npx tsx src/scripts/cleanDuplicateHaberler.ts"
+    "clean-dupes": "npx tsx src/scripts/cleanDuplicateHaberler.ts",
+    "scrape:fuarlar": "npx tsx src/scripts/fuarScraper.ts"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

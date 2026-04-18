@@ -54,6 +54,19 @@ export default function Header() {
   const [scrolled,             setScrolled]             = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const catDropdownRef = useRef<HTMLDivElement>(null);
+
+  /* click-outside → kategori dropdown kapat */
+  useEffect(() => {
+    if (!categoryDropdownOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target as Node)) {
+        setCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [categoryDropdownOpen]);
 
   /* scroll → glassmorphism efekti */
   useEffect(() => {
@@ -307,30 +320,42 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-1 py-2 overflow-x-auto">
 
             {/* All categories dropdown */}
-            <div className="relative flex-shrink-0">
+            <div className="relative flex-shrink-0" ref={catDropdownRef}>
               <button
-                className="flex items-center gap-1 px-3 py-2 text-on-surface hover:text-primary hover:bg-primary/5 rounded-xl transition font-medium whitespace-nowrap text-sm font-body"
-                onMouseEnter={() => setCategoryDropdownOpen(true)}
-                onMouseLeave={() => setCategoryDropdownOpen(false)}
+                className={`flex items-center gap-1 px-3 py-2 rounded-xl transition font-medium whitespace-nowrap text-sm font-body ${
+                  categoryDropdownOpen
+                    ? 'text-primary bg-primary/5'
+                    : 'text-on-surface hover:text-primary hover:bg-primary/5'
+                }`}
+                onClick={() => setCategoryDropdownOpen((v) => !v)}
                 aria-haspopup="true"
                 aria-expanded={categoryDropdownOpen}
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">category</span>
                 {t('header.allCategories')}
-                <ChevronDown className="w-4 h-4" aria-hidden="true" />
+                <ChevronDown className={`w-4 h-4 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
               </button>
               {categoryDropdownOpen && (
                 <div
-                  className="absolute top-full left-0 bg-white shadow-xl rounded-xl py-2 min-w-48 z-50 border border-outline-variant/30"
-                  onMouseEnter={() => setCategoryDropdownOpen(true)}
-                  onMouseLeave={() => setCategoryDropdownOpen(false)}
+                  className="absolute top-full left-0 bg-white shadow-xl rounded-2xl py-2 min-w-56 z-50 border border-outline-variant/30 mt-1"
                   role="menu"
                 >
+                  <Link
+                    to="/"
+                    role="menuitem"
+                    onClick={() => setCategoryDropdownOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-primary font-semibold hover:bg-primary/5 text-sm font-body transition"
+                  >
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">apps</span>
+                    Hepsi
+                  </Link>
+                  <div className="border-t border-outline-variant/20 my-1" />
                   {CATEGORIES.map((cat) => (
                     <Link
                       key={cat.slug}
                       to={`/kategori/${cat.slug}`}
                       role="menuitem"
+                      onClick={() => setCategoryDropdownOpen(false)}
                       className="block px-4 py-2.5 text-on-surface hover:bg-primary/5 hover:text-primary text-sm font-body transition"
                     >
                       {t(CATEGORY_NAME_KEYS[cat.slug])}
