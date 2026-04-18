@@ -340,17 +340,6 @@ export default function Header() {
               )}
             </div>
 
-            {/* Individual category links */}
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.slug}
-                to={`/kategori/${cat.slug}`}
-                className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
-              >
-                {t(CATEGORY_NAME_KEYS[cat.slug])}
-              </Link>
-            ))}
-
             {/* Separator */}
             <div className="flex-shrink-0 w-px h-5 bg-outline-variant mx-1" aria-hidden="true" />
 
@@ -358,22 +347,8 @@ export default function Header() {
               to="/firmalar"
               className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
-              <span className="material-symbols-outlined text-lg" aria-hidden="true">business</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">apartment</span>
               {t('nav.firms')}
-            </Link>
-
-            <Link
-              to="/blog"
-              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
-            >
-              {t('nav.blog')}
-            </Link>
-
-            <Link
-              to="/haberler"
-              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
-            >
-              {t('nav.haberler')}
             </Link>
 
             <Link
@@ -385,33 +360,26 @@ export default function Header() {
             </Link>
 
             <Link
-              to="/sss"
-              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
+              to="/blog"
+              className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
-              {t('nav.faq')}
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">edit_note</span>
+              {t('nav.blog')}
             </Link>
 
             <Link
-              to="/nasil-kullanilir"
-              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
+              to="/haberler"
+              className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
-              {t('nav.howToUse')}
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">newspaper</span>
+              {t('nav.haberler')}
             </Link>
-
-            {flags.fiyatHesaplama && (
-              <Link
-                to="/fiyat-hesapla"
-                className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
-              >
-                <span className="material-symbols-outlined text-lg" aria-hidden="true">calculate</span>
-                {t('nav.fiyatHesapla')}
-              </Link>
-            )}
 
             <Link
               to="/hakkimizda"
-              className="px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
+              className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">info</span>
               {t('nav.about')}
             </Link>
 
