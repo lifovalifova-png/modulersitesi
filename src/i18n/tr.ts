@@ -263,7 +263,7 @@ const tr: Record<string, string> = {
   'basket.submitCta':      'Teklif Talebini Gönder',
   'basket.compare':        'Karşılaştır',
   'basket.fullMsg':        '✅ 2 firma seçildi. Tek formla her iki firmaya teklif isteği gönderin!',
-  'basket.tipMsg':         '💡 En fazla 2 firma seçebilirsiniz. Bir firma daha ekleyin ve karşılaştırın.',
+  'basket.tipMsg':         '💡 En fazla 2 firma seçebilirsiniz — karşılaştırmayı kolaylaştırmak için bu sınırı koyduk.',
   'basket.emptySlotMsg':   '"2. Firmadan da Teklif Al" butonuna basarak ikinci firmayı ekleyin.',
   'basket.removeFirm':     'firmayı çıkar',
 

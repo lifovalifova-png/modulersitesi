@@ -263,7 +263,7 @@ const en: Record<string, string> = {
   'basket.submitCta':      'Send Quote Request',
   'basket.compare':        'Compare',
   'basket.fullMsg':        '✅ 2 firms selected. Send a request to both with one form!',
-  'basket.tipMsg':         '💡 You can select up to 2 firms. Add one more and compare.',
+  'basket.tipMsg':         '💡 You can select up to 2 firms — we set this limit to make comparison easier.',
   'basket.emptySlotMsg':   'Tap "Get Quote from 2nd Firm" on a listing to add a second firm.',
   'basket.removeFirm':     'remove firm',
 

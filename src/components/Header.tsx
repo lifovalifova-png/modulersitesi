@@ -7,7 +7,6 @@ import { SITE_CONFIG } from '../config/site';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import UserMenu from './UserMenu';
-import BetaBadge from './BetaBadge';
 import logoSrc from '../assets/logo.svg';
 
 /* ─── 81 il listesi ───────────────────────────────────────── */
@@ -78,7 +77,7 @@ export default function Header() {
   /* focus search input when panel opens */
   useEffect(() => {
     if (searchOpen) {
-      setTimeout(() => searchInputRef.current?.focus(), 50);
+      setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [searchOpen]);
 
@@ -132,9 +131,8 @@ export default function Header() {
         <div className="flex items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center flex-shrink-0 gap-1" aria-label="ModülerPazar ana sayfa">
+          <Link to="/" className="flex items-center flex-shrink-0" aria-label="ModülerPazar ana sayfa">
             <img src={logoSrc} alt="ModülerPazar" className="h-8 w-auto" />
-            <BetaBadge />
           </Link>
 
           {/* ── Desktop Search Bar with Filters ──────────── */}
@@ -398,6 +396,14 @@ export default function Header() {
             >
               <span className="material-symbols-outlined text-lg" aria-hidden="true">newspaper</span>
               {t('nav.haberler')}
+            </Link>
+
+            <Link
+              to="/fiyatlandirma"
+              className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
+            >
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">payments</span>
+              Fiyatlar
             </Link>
 
             <Link

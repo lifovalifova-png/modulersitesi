@@ -391,9 +391,24 @@ export default function HomePage() {
                     </p>
                   </>
                 ) : (
-                  <p className="mt-2 text-xs text-white/40 font-body">
-                    Bu özellik şu anda kullanılamıyor.
-                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {[
+                      { label: 'Prefabrik Ev', slug: 'prefabrik' },
+                      { label: 'Konteyner', slug: 'yasam-konteynerleri' },
+                      { label: 'Tiny House', slug: 'tiny-house' },
+                      { label: 'Çelik Yapı', slug: 'celik-yapilar' },
+                      { label: 'Ahşap Yapı', slug: 'ahsap-yapilar' },
+                      { label: 'Modüler Yapı', slug: 'ozel-projeler' },
+                    ].map((cat) => (
+                      <Link
+                        key={cat.slug}
+                        to={`/kategori/${cat.slug}`}
+                        className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold rounded-full transition font-body"
+                      >
+                        {cat.label}
+                      </Link>
+                    ))}
+                  </div>
                 )}
               </div>
 

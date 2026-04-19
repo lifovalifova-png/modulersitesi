@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { sanitizeText } from '../utils/sanitize';
@@ -12,14 +11,18 @@ type Tip = 'istek' | 'sikayet';
 export default function GeriBildirimPage() {
   const { currentUser } = useAuth();
   const [seciliTip, setSeciliTip] = useState<Tip | null>(null);
+  const [ad, setAd]               = useState(currentUser?.displayName || '');
+  const [eposta, setEposta]       = useState(currentUser?.email || '');
   const [baslik, setBaslik]       = useState('');
   const [aciklama, setAciklama]   = useState('');
   const [gonderiyor, setGonderiyor] = useState(false);
 
   async function handleGonder(e: React.FormEvent) {
     e.preventDefault();
-    if (!currentUser || !seciliTip) return;
+    if (!seciliTip) return;
 
+    if (!ad.trim()) { toast.error('Lütfen adınızı girin.'); return; }
+    if (!eposta.trim()) { toast.error('Lütfen e-posta adresinizi girin.'); return; }
     if (!baslik.trim()) { toast.error('Lütfen bir başlık girin.'); return; }
     if (!aciklama.trim()) { toast.error('Lütfen açıklama girin.'); return; }
 
@@ -29,16 +32,20 @@ export default function GeriBildirimPage() {
         tip:       seciliTip,
         baslik:    sanitizeText(baslik, 200),
         aciklama:  sanitizeText(aciklama, 2000),
-        userId:    currentUser.uid,
-        userEmail: currentUser.email ?? '',
-        userName:  currentUser.displayName ?? currentUser.email ?? '',
+        ad:        sanitizeText(ad, 100),
+        eposta:    eposta.trim(),
+        userId:    currentUser?.uid || null,
+        userEmail: currentUser?.email || eposta.trim(),
+        userName:  currentUser?.displayName || ad.trim(),
+        anonim:    !currentUser,
         tarih:     serverTimestamp(),
         durum:     'beklemede',
       });
-      toast.success('Geri bildiriminiz alındı. Teşekkürler!');
+      toast.success('Geri bildiriminiz alındı, teşekkürler!');
       setBaslik('');
       setAciklama('');
       setSeciliTip(null);
+      if (!currentUser) { setAd(''); setEposta(''); }
     } catch {
       toast.error('Bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
@@ -85,29 +92,45 @@ export default function GeriBildirimPage() {
           </button>
         </div>
 
-        {/* Giriş yapılmamışsa uyarı */}
-        {!currentUser && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center">
-            <p className="text-amber-800 font-medium mb-3">
-              Geri bildirim göndermek için giriş yapmanız gerekiyor.
-            </p>
-            <Link
-              to="/giris"
-              className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition"
-            >
-              Giriş Yap
-            </Link>
-          </div>
-        )}
-
-        {/* Form — giriş yapılmış ve tip seçilmişse göster */}
-        {currentUser && seciliTip && (
+        {/* Form — tip seçilmişse göster (giriş yapmamış da olsa) */}
+        {seciliTip && (
           <form onSubmit={handleGonder} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">{seciliTip === 'istek' ? '📋' : '⚠️'}</span>
               <span className="font-semibold text-gray-700 capitalize">
                 {seciliTip === 'istek' ? 'İstek' : 'Şikayet'} Formu
               </span>
+            </div>
+
+            {/* Ad Soyad */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-1 block">
+                Ad Soyad <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                maxLength={100}
+                value={ad}
+                onChange={(e) => setAd(e.target.value)}
+                placeholder="Adınız Soyadınız"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
+              />
+            </div>
+
+            {/* E-posta */}
+            <div>
+              <label className="text-sm font-semibold text-gray-700 mb-1 block">
+                E-posta <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                value={eposta}
+                onChange={(e) => setEposta(e.target.value)}
+                placeholder="ornek@email.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
+              />
             </div>
 
             {/* Başlık */}
@@ -152,11 +175,12 @@ export default function GeriBildirimPage() {
               />
             </div>
 
-            {/* Kullanıcı bilgisi */}
-            <div className="bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-500">
-              <span className="font-medium text-gray-700">Gönderen:</span>{' '}
-              {currentUser.displayName || currentUser.email}
-            </div>
+            {currentUser && (
+              <div className="bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-500">
+                <span className="font-medium text-gray-700">Hesap:</span>{' '}
+                {currentUser.displayName || currentUser.email}
+              </div>
+            )}
 
             <button
               type="submit"
@@ -168,8 +192,8 @@ export default function GeriBildirimPage() {
           </form>
         )}
 
-        {/* Giriş yapılmış ama tip seçilmemişse yönlendirici metin */}
-        {currentUser && !seciliTip && (
+        {/* Tip seçilmemişse yönlendirici metin */}
+        {!seciliTip && (
           <p className="text-center text-sm text-gray-400 mt-2">
             Yukarıdan bir tür seçin ve form açılacak.
           </p>
