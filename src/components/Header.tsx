@@ -315,7 +315,7 @@ export default function Header() {
       {/* Category Navigation */}
       <nav className="border-t border-outline-variant/30 bg-surface-container-low/60" aria-label="Kategoriler">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="hidden md:flex items-center gap-1 py-2 overflow-x-auto">
+          <div className="hidden md:flex items-center gap-1 py-2">
 
             {/* All categories dropdown */}
             <div className="relative flex-shrink-0" ref={catDropdownRef}>
