@@ -10,6 +10,7 @@ export interface FeatureFlags {
   sinirsizTalep:   boolean;
   puanlamaSistemi: boolean;
   fiyatHesaplama:  boolean;
+  fiyatlandirma:   boolean;
 }
 
 // Tüm flagler false — fail-closed: döküman yoksa veya okunamazsa özellikler kapalı kalır
@@ -21,6 +22,7 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   sinirsizTalep:   false,
   puanlamaSistemi: false,
   fiyatHesaplama:  false,
+  fiyatlandirma:   false,
 };
 
 export function useFeatureFlags(): { flags: FeatureFlags; loading: boolean } {

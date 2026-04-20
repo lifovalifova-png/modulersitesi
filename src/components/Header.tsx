@@ -399,14 +399,6 @@ export default function Header() {
             </Link>
 
             <Link
-              to="/fiyatlandirma"
-              className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
-            >
-              <span className="material-symbols-outlined text-lg" aria-hidden="true">payments</span>
-              Fiyatlar
-            </Link>
-
-            <Link
               to="/hakkimizda"
               className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-xl transition whitespace-nowrap text-sm flex-shrink-0 font-body"
             >

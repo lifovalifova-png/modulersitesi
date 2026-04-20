@@ -46,6 +46,7 @@ const NasilKullanilirPage   = lazy(() => import('./pages/NasilKullanilirPage'));
 const HaberlerPage          = lazy(() => import('./pages/HaberlerPage'));
 const HaberDetayPage        = lazy(() => import('./pages/HaberDetayPage'));
 const EtkinliklerPage       = lazy(() => import('./pages/EtkinliklerPage'));
+// Faz 2'de aktif edilecek — admin panelinden fiyatlandirma flag'i ile kontrol
 const FiyatlandirmaPage     = lazy(() => import('./pages/FiyatlandirmaPage'));
 const EtkinlikDetayPage     = lazy(() => import('./pages/EtkinlikDetayPage'));
 const NotFoundPage          = lazy(() => import('./pages/NotFoundPage'));

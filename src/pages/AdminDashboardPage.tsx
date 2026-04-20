@@ -461,6 +461,12 @@ const FEATURE_DEFS: FeatureDef[] = [
     description: 'Kullanıcıların yapı tipine göre tahmini maliyet hesaplaması.',
     tier:        'Ücretsiz',
   },
+  {
+    key:         'fiyatlandirma',
+    label:       'Fiyatlandırma Sayfası',
+    description: 'Satıcı firma plan ve fiyat sayfasını aktif eder (Faz 2).',
+    tier:        'Premium',
+  },
 ];
 
 /* ═══════════════════════════════════════════════════════════

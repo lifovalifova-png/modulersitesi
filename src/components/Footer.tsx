@@ -74,7 +74,6 @@ export default function Footer() {
               {flags.fiyatHesaplama && (
                 <li><Link to="/fiyat-hesapla" className="hover:text-primary transition">{t('nav.fiyatHesapla')}</Link></li>
               )}
-              <li><Link to="/fiyatlandirma" className="hover:text-primary transition">Fiyatlandırma</Link></li>
               <li><Link to="/hakkimizda" className="hover:text-primary transition">{t('nav.about')}</Link></li>
               <li><Link to="/geri-bildirim" className="hover:text-primary transition">İstek & Şikayet</Link></li>
             </ul>
