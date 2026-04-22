@@ -465,7 +465,7 @@ const FEATURE_DEFS: FeatureDef[] = [
     key:         'fiyatlandirma',
     label:       'Fiyatlandırma Sayfası',
     description: 'Satıcı firma plan ve fiyat sayfasını aktif eder (Faz 2).',
-    tier:        'Premium',
+    tier:        'Ücretli',
   },
 ];
 

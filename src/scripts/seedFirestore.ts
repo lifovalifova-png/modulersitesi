@@ -230,58 +230,239 @@ interface IlanSeed {
   aciklama: string;
   acil: boolean;
   indirimli: boolean;
+  ozellikler: Record<string, string>;
 }
 
 const ILANLAR: IlanSeed[] = [
-  /* ── Anadolu Prefabrik / Ankara — 3.500 TL/m² ── */
-  { id: 'seed_ilan_01', firmaId: 'seed_firm_01', baslik: '80m² Prefabrik Villa - Anahtar Teslim',    fiyat:  280000, aciklama: 'Fabrikada üretilmiş, anahtar teslim 80m² prefabrik villa. Isı yalıtımlı, çift camlı, kurulum dahil fiyat.', acil: false, indirimli: false },
-  { id: 'seed_ilan_02', firmaId: 'seed_firm_01', baslik: '120m² Prefabrik Müstakil Ev - 3+1',        fiyat:  420000, aciklama: 'Geniş 3+1 müstakil prefabrik ev. Yerden ısıtma, klima altyapısı, balkon ve teras dahil.', acil: false, indirimli: false },
-  { id: 'seed_ilan_03', firmaId: 'seed_firm_01', baslik: '50m² Yazlık Prefabrik - 45 Gün Teslim',   fiyat:  175000, aciklama: 'Yazlık ve tatil amaçlı kompakt prefabrik. 45 günde teslim garantisi. Temel hariç fiyat.', acil: true, indirimli: false },
+  /* ── Anadolu Prefabrik / Ankara ── */
+  {
+    id: 'seed_ilan_01', firmaId: 'seed_firm_01',
+    baslik: '80m² Prefabrik Villa - Anahtar Teslim',
+    fiyat: 280000, acil: false, indirimli: false,
+    aciklama: 'Fabrikada üretilmiş, anahtar teslim 80m² prefabrik villa. Çift cam, ısı yalıtımlı dış cephe ve kombi altyapısı dahildir. Ankara ve çevre illere 60 gün içinde kurulum garantisi sunulmaktadır. Temel betonu fiyata dahildir.',
+    ozellikler: { metrekare: '80', odaSayisi: '2+1', malzeme: 'EPS sandviç panel', teslimSuresi: '60 gün', katSayisi: '1', yalitim: 'Isı + ses yalıtımı' },
+  },
+  {
+    id: 'seed_ilan_02', firmaId: 'seed_firm_01',
+    baslik: '120m² Prefabrik Müstakil Ev - 3+1',
+    fiyat: 420000, acil: false, indirimli: false,
+    aciklama: 'Geniş 3+1 müstakil prefabrik ev. Yerden ısıtma altyapısı, klima tesisat çıkışları, ön balkon ve arka teras standart olarak sunulmaktadır. İç mekan yüksekliği 2,80 metre olup ferah bir yaşam alanı sağlar. Mutfak dolapları ve banyo seramikleri fiyata dahildir.',
+    ozellikler: { metrekare: '120', odaSayisi: '3+1', malzeme: 'Çelik karkas + EPS panel', teslimSuresi: '75 gün', katSayisi: '1', yalitim: 'Dış cephe taş yünü', bahce: 'Ön bahçe düzenlemesi dahil' },
+  },
+  {
+    id: 'seed_ilan_03', firmaId: 'seed_firm_01',
+    baslik: '50m² Yazlık Prefabrik - 45 Gün Teslim',
+    fiyat: 175000, acil: true, indirimli: false,
+    aciklama: 'Yazlık ve tatil amaçlı kompakt prefabrik yapı. 45 günde teslim garantisi verilmektedir. Açık plan mutfak-salon, 1 yatak odası ve duşakabin banyodan oluşur. Temel hariç fiyattır, isteğe bağlı güneş paneli paketi eklenebilir.',
+    ozellikler: { metrekare: '50', odaSayisi: '1+1', malzeme: 'Sandviç panel', teslimSuresi: '45 gün', katSayisi: '1', yalitim: 'Standart EPS yalıtım' },
+  },
 
-  /* ── İstanbul Konteyner / İstanbul — 150k-450k ── */
-  { id: 'seed_ilan_04', firmaId: 'seed_firm_02', baslik: '20 Feet Konteyner Ofis - Hazır Teslimat',  fiyat:  180000, aciklama: 'Komple düzenlenmiş konteyner ofis. Klimalı, ısı yalıtımlı, elektrik tesisatı tamamlanmış.', acil: false, indirimli: true },
-  { id: 'seed_ilan_05', firmaId: 'seed_firm_02', baslik: '40 Feet Yaşam Konteyneri - 2+1',           fiyat:  320000, aciklama: '40 feet konteynerden dönüştürülmüş 2+1 yaşam alanı. Mutfak, banyo, salon ve yatak odası tam donanımlı.', acil: false, indirimli: false },
-  { id: 'seed_ilan_06', firmaId: 'seed_firm_02', baslik: 'Çift Konteyner Villa - Geniş Bahçeli',    fiyat:  420000, aciklama: 'İki 40 feet konteynerin birleşiminden oluşan lüks villa. Geniş terası ve özel bahçesiyle dikkat çekiyor.', acil: true, indirimli: false },
+  /* ── İstanbul Konteyner / İstanbul ── */
+  {
+    id: 'seed_ilan_04', firmaId: 'seed_firm_02',
+    baslik: '20 Feet Konteyner Ofis - Hazır Teslimat',
+    fiyat: 180000, acil: false, indirimli: true,
+    aciklama: 'Komple düzenlenmiş 20 feet konteyner ofis. Split klima, LED aydınlatma ve elektrik panosu kurulu halde teslim edilir. Şantiye, fuar alanı veya bahçe ofisi olarak kullanılabilir. İstanbul içi nakliye ücretsizdir.',
+    ozellikler: { metrekare: '15', malzeme: 'Cor-Ten çelik konteyner', teslimSuresi: '15 gün', yalitim: 'Poliüretan sprey yalıtım', elektrik: 'Komple tesisat + pano', klima: 'Split klima dahil' },
+  },
+  {
+    id: 'seed_ilan_05', firmaId: 'seed_firm_02',
+    baslik: '40 Feet Yaşam Konteyneri - 2+1',
+    fiyat: 320000, acil: false, indirimli: false,
+    aciklama: '40 feet high-cube konteynerden dönüştürülmüş 2+1 yaşam alanı. Mutfak tezgahı, aspiratör, kombi, duşakabin ve seramik zemin tam donanımlı olarak sunulur. Tavan yüksekliği 2,70 metre olup standart konteynerlere kıyasla daha ferah bir iç mekan sağlar.',
+    ozellikler: { metrekare: '30', odaSayisi: '2+1', malzeme: 'High-cube çelik konteyner', teslimSuresi: '30 gün', yalitim: 'Taş yünü + alçıpan kaplama', tesisat: 'Kombi + sıhhi tesisat komple' },
+  },
+  {
+    id: 'seed_ilan_06', firmaId: 'seed_firm_02',
+    baslik: 'Çift Konteyner Villa - Geniş Bahçeli',
+    fiyat: 420000, acil: true, indirimli: false,
+    aciklama: 'İki adet 40 feet konteynerin birleşiminden oluşan lüks villa tipi yaşam alanı. Geniş açık teras ve özel bahçe düzenlemesiyle doğayla iç içe bir yaşam sunar. Amerikan mutfak, jakuzi banyosu ve panoramik pencere sistemi standart donanımdadır.',
+    ozellikler: { metrekare: '60', odaSayisi: '3+1', malzeme: 'Çift konteyner birleşim', teslimSuresi: '45 gün', yalitim: 'Çift kat yalıtım sistemi', teras: '25m² açık teras', bahce: 'Peyzaj dahil' },
+  },
 
-  /* ── Ege Çelik Yapı / İzmir — 40.000 TL/m² (1.250 USD × 32 TL) ── */
-  { id: 'seed_ilan_07', firmaId: 'seed_firm_03', baslik: 'Çift Katlı Çelik Ev - 120m²',             fiyat: 4800000, aciklama: 'Çelik iskelet sistem üzerine inşa edilmiş 120m² çift katlı ev. Depreme dayanıklı, uzun ömürlü.', acil: false, indirimli: false },
-  { id: 'seed_ilan_08', firmaId: 'seed_firm_03', baslik: 'Çelik İskelet Prefabrik 80m² - Stok Fiyatı', fiyat: 3200000, aciklama: 'Sezonu kapattık, stok temizleme fiyatıyla 80m² çelik iskelet prefabrik ev. Sınırlı stok!', acil: false, indirimli: true },
-  { id: 'seed_ilan_09', firmaId: 'seed_firm_03', baslik: '150m² Çelik Yapı Villa - Panoramik Cam',  fiyat: 6000000, aciklama: 'Deniz manzaralı arsa için tasarlanmış 150m² lüks çelik yapı. Panoramik cam cephe ve havuz altyapısı dahil.', acil: false, indirimli: false },
+  /* ── Ege Çelik Yapı / İzmir ── */
+  {
+    id: 'seed_ilan_07', firmaId: 'seed_firm_03',
+    baslik: 'Çift Katlı Çelik Ev - 120m²',
+    fiyat: 1850000, acil: false, indirimli: false,
+    aciklama: 'Çelik iskelet sistem üzerine inşa edilmiş 120m² çift katlı müstakil ev. 8. derece deprem bölgesine uygun statik hesaplar yapılmıştır. Alt kat salon, mutfak ve misafir WC; üst kat 3 yatak odası ve ebeveyn banyosundan oluşur. Dış cephe siding kaplama ve çatı kiremit dahildir.',
+    ozellikler: { metrekare: '120', odaSayisi: '3+1', malzeme: 'Hafif çelik iskelet (galvanizli)', teslimSuresi: '90 gün', katSayisi: '2', yalitim: 'Taş yünü + OSB + siding', deprem: '8. derece dayanıklı' },
+  },
+  {
+    id: 'seed_ilan_08', firmaId: 'seed_firm_03',
+    baslik: 'Çelik İskelet Prefabrik 80m² - Stok Fiyatı',
+    fiyat: 1350000, acil: false, indirimli: true,
+    aciklama: 'Sezon sonu stok temizleme kampanyası kapsamında 80m² çelik iskelet prefabrik ev. Galvanizli çelik profiller, dış cephe EPS yalıtım ve iç mekan alçıpan kaplama standarttır. Sınırlı sayıda stokla teslimata hazırdır, erken sipariş avantajlıdır.',
+    ozellikler: { metrekare: '80', odaSayisi: '2+1', malzeme: 'Galvanizli çelik profil', teslimSuresi: '60 gün', katSayisi: '1', yalitim: 'EPS yalıtım + alçıpan' },
+  },
+  {
+    id: 'seed_ilan_09', firmaId: 'seed_firm_03',
+    baslik: '150m² Çelik Yapı Villa - Panoramik Cam',
+    fiyat: 2500000, acil: false, indirimli: false,
+    aciklama: 'Deniz veya göl manzaralı arsalar için tasarlanmış 150m² lüks çelik yapı villa. Panoramik cam cephe sistemi, yerden ısıtma altyapısı ve havuz teknik odası standart olarak sunulur. Mimari proje müşterinin isteğine göre özelleştirilebilir.',
+    ozellikler: { metrekare: '150', odaSayisi: '4+1', malzeme: 'Çelik iskelet + cam cephe', teslimSuresi: '120 gün', katSayisi: '2', yalitim: 'Isıcam + dış cephe yalıtım', havuz: 'Havuz altyapısı dahil', isitma: 'Yerden ısıtma' },
+  },
 
-  /* ── Karadeniz Tiny House / Trabzon — 200k-600k ── */
-  { id: 'seed_ilan_10', firmaId: 'seed_firm_04', baslik: 'Orman İçi Tiny House 35m² - Acil Satış',  fiyat:  220000, aciklama: 'Karadeniz ormanları içine kurmak için tasarlanmış 35m² tiny house. Kaçırılmayacak fırsat!', acil: true, indirimli: false },
-  { id: 'seed_ilan_11', firmaId: 'seed_firm_04', baslik: 'Tekerlekli Tiny House - Gezici Yaşam',    fiyat:  210000, aciklama: 'Her yere taşıyabileceğiniz tekerlekli tiny house. Güneş enerjisi ve su tankı altyapısı dahil.', acil: false, indirimli: false },
-  { id: 'seed_ilan_12', firmaId: 'seed_firm_04', baslik: 'Ahşap Tiny House 40m² - Karadeniz Serisi', fiyat: 250000, aciklama: 'Karadeniz mimarisi ilhamıyla, yerel ahşap kullanılmış 40m² tiny house. Özel indirimli fiyat!', acil: false, indirimli: true },
+  /* ── Karadeniz Tiny House / Trabzon ── */
+  {
+    id: 'seed_ilan_10', firmaId: 'seed_firm_04',
+    baslik: 'Orman İçi Tiny House 35m² - Acil Satış',
+    fiyat: 220000, acil: true, indirimli: false,
+    aciklama: 'Karadeniz ormanları içine kurmak için tasarlanmış 35m² tiny house. Yüksek nem ve yağışa dayanıklı özel dış cephe kaplaması uygulanmıştır. Çatı katında yatak alanı, alt katta açık plan salon-mutfak ve kompakt banyo bulunur. Hemen teslime hazırdır.',
+    ozellikler: { metrekare: '35', odaSayisi: '1+0 (çatı katı)', malzeme: 'Ahşap karkas + OSB', teslimSuresi: '30 gün', yalitim: 'Taş yünü + nefes alan membran', cati: 'Çatı katı yatak alanı' },
+  },
+  {
+    id: 'seed_ilan_11', firmaId: 'seed_firm_04',
+    baslik: 'Tekerlekli Tiny House - Gezici Yaşam',
+    fiyat: 210000, acil: false, indirimli: false,
+    aciklama: 'Her yere taşıyabileceğiniz tekerlekli tiny house. Güneş enerjisi paneli, 200 litre temiz su tankı ve gri su arıtma sistemi altyapısı standarttır. Ruhsatsız arazilere kurulabilir yapısıyla lokasyon bağımsız yaşam sunar. Toplam ağırlık 3.500 kg olup standart çekici ile taşınabilir.',
+    ozellikler: { metrekare: '25', odaSayisi: '1+0', malzeme: 'Hafif çelik şasi + ahşap karkas', teslimSuresi: '45 gün', agirlik: '3.500 kg', enerji: 'Güneş paneli altyapısı', suTanki: '200 litre' },
+  },
+  {
+    id: 'seed_ilan_12', firmaId: 'seed_firm_04',
+    baslik: 'Ahşap Tiny House 40m² - Karadeniz Serisi',
+    fiyat: 250000, acil: false, indirimli: true,
+    aciklama: 'Karadeniz mimarisi ilhamıyla tasarlanmış, yerel ladin ahşabı kullanılmış 40m² tiny house. Geniş veranda, odun sobası bağlantısı ve çift kişilik asma kat standart olarak sunulur. Özel kampanya fiyatıyla sınırlı sayıda üretilmektedir.',
+    ozellikler: { metrekare: '40', odaSayisi: '1+1 (asma kat)', malzeme: 'Ladin ahşap karkas', teslimSuresi: '40 gün', yalitim: 'Ahşap lif yalıtım levha', veranda: '8m² kapalı veranda', isitma: 'Odun sobası bağlantısı' },
+  },
 
-  /* ── Bursa Modüler / Bursa — 3.500 TL/m² ── */
-  { id: 'seed_ilan_13', firmaId: 'seed_firm_05', baslik: '100m² Modüler Prefabrik - Tek Kat',       fiyat:  350000, aciklama: 'Geniş yaşam alanı sunan 100m² modüler prefabrik ev. 4 ay içinde teslim, temel dahil.', acil: false, indirimli: false },
-  { id: 'seed_ilan_14', firmaId: 'seed_firm_05', baslik: '60m² Prefabrik Bungalov - Hızlı Teslim',  fiyat:  210000, aciklama: 'Bahçe düzenlemesi dahil 60m² bungalov tipi prefabrik ev. Komşusuz, sessiz arsa için ideal.', acil: true, indirimli: false },
-  { id: 'seed_ilan_15', firmaId: 'seed_firm_05', baslik: '3+1 Prefabrik Ev 130m² - Anahtar Teslim', fiyat:  455000, aciklama: 'Komple donanımlı 3+1 prefabrik ev. Banyo, mutfak, ısıtma-soğutma sistemleri dahil.', acil: false, indirimli: false },
+  /* ── Bursa Modüler / Bursa ── */
+  {
+    id: 'seed_ilan_13', firmaId: 'seed_firm_05',
+    baslik: '100m² Modüler Prefabrik - Tek Kat',
+    fiyat: 350000, acil: false, indirimli: false,
+    aciklama: 'Geniş yaşam alanı sunan 100m² modüler prefabrik ev. Salon, 2 yatak odası, mutfak ve banyo düzenlemesi standarttır. Temel betonu ve bahçe peyzajı fiyata dahildir. Bursa, Yalova ve Balıkesir bölgesine 4 ay içinde teslim edilmektedir.',
+    ozellikler: { metrekare: '100', odaSayisi: '2+1', malzeme: 'Çelik karkas + sandviç panel', teslimSuresi: '120 gün', katSayisi: '1', yalitim: 'EPS 10 cm dış cephe', temel: 'Radye temel dahil' },
+  },
+  {
+    id: 'seed_ilan_14', firmaId: 'seed_firm_05',
+    baslik: '60m² Prefabrik Bungalov - Hızlı Teslim',
+    fiyat: 210000, acil: true, indirimli: false,
+    aciklama: 'Bahçe düzenlemesi dahil 60m² bungalov tipi prefabrik ev. Tek yatak odası, geniş salon ve açık mutfak planıyla kompakt ama fonksiyonel bir yaşam sunar. Sessiz, doğayla iç içe arsalar için idealdir. 45 gün içinde anahtar teslim yapılır.',
+    ozellikler: { metrekare: '60', odaSayisi: '1+1', malzeme: 'Sandviç panel', teslimSuresi: '45 gün', katSayisi: '1', yalitim: 'Standart ısı yalıtımı', bahce: 'Bahçe peyzajı dahil' },
+  },
+  {
+    id: 'seed_ilan_15', firmaId: 'seed_firm_05',
+    baslik: '3+1 Prefabrik Ev 130m² - Anahtar Teslim',
+    fiyat: 455000, acil: false, indirimli: false,
+    aciklama: 'Komple donanımlı 3+1 prefabrik ev. Mutfak dolapları, banyo armatürleri, kombi ve ısıtma sistemi dahil anahtar teslim sunulmaktadır. Geniş ebeveyn yatak odası, çocuk odası ve misafir odası ile aileler için idealdir. Dış cephe boyası ve çatı izolasyonu standarttır.',
+    ozellikler: { metrekare: '130', odaSayisi: '3+1', malzeme: 'Çelik karkas + EPS panel', teslimSuresi: '90 gün', katSayisi: '1', yalitim: 'EPS 12 cm + çatı izolasyonu', isitma: 'Kombi + radyatör sistemi' },
+  },
 
-  /* ── Antalya Prefabrik / Antalya — 3.500 TL/m² ── */
-  { id: 'seed_ilan_16', firmaId: 'seed_firm_06', baslik: 'Tatil Köyü Tipi Prefabrik Bungalov',      fiyat:  245000, aciklama: 'Tatil köyü ve kamp alanları için toplu üretim. 5 ve üzeri alımlarda ekstra indirim uygulanır.', acil: false, indirimli: true },
-  { id: 'seed_ilan_17', firmaId: 'seed_firm_06', baslik: 'Yazlık Prefabrik 70m² - Deniz İklimi',    fiyat:  245000, aciklama: 'Deniz kenarı arazilere özel tasarım, tuz atmosferine dayanıklı malzeme kullanımı. Hemen teslim.', acil: false, indirimli: false },
-  { id: 'seed_ilan_18', firmaId: 'seed_firm_06', baslik: 'Çift Katlı Prefabrik Villa - 5 Oda',      fiyat:  630000, aciklama: '2 katlı 5 odalı prefabrik villa. Antalya ve Muğla bölgesi için optimum iklim yalıtımı uygulanmış.', acil: false, indirimli: false },
+  /* ── Antalya Prefabrik / Antalya ── */
+  {
+    id: 'seed_ilan_16', firmaId: 'seed_firm_06',
+    baslik: 'Tatil Köyü Tipi Prefabrik Bungalov',
+    fiyat: 245000, acil: false, indirimli: true,
+    aciklama: 'Tatil köyü ve kamp alanları için toplu üretim prefabrik bungalov. 5 ve üzeri alımlarda %15 ekstra indirim uygulanır. Her ünite kendi verandası, mini mutfağı ve duş banyosuyla bağımsız konaklama imkanı sunar. Antalya iklim koşullarına uygun havalandırma sistemi dahildir.',
+    ozellikler: { metrekare: '45', odaSayisi: '1+1', malzeme: 'Sandviç panel', teslimSuresi: '30 gün', katSayisi: '1', yalitim: 'Isı + UV dayanımlı kaplama', veranda: '6m² ahşap veranda' },
+  },
+  {
+    id: 'seed_ilan_17', firmaId: 'seed_firm_06',
+    baslik: 'Yazlık Prefabrik 70m² - Deniz İklimi',
+    fiyat: 245000, acil: false, indirimli: false,
+    aciklama: 'Deniz kenarı arazilere özel tasarlanmış 70m² prefabrik yazlık ev. Tuz ve nem atmosferine dayanıklı galvanizli çelik karkas ve özel dış cephe boyası kullanılmıştır. Geniş cam yüzeylerle deniz manzarası yaşam alanına taşınır. Hemen teslime hazırdır.',
+    ozellikler: { metrekare: '70', odaSayisi: '2+1', malzeme: 'Galvanizli çelik + anti-korozif panel', teslimSuresi: '45 gün', katSayisi: '1', yalitim: 'Deniz iklimine uygun özel yalıtım', pencere: 'Geniş panoramik pencereler' },
+  },
+  {
+    id: 'seed_ilan_18', firmaId: 'seed_firm_06',
+    baslik: 'Çift Katlı Prefabrik Villa - 5 Oda',
+    fiyat: 630000, acil: false, indirimli: false,
+    aciklama: '2 katlı 5 odalı prefabrik villa. Alt katta geniş salon, mutfak, misafir WC ve 1 yatak odası; üst katta ebeveyn süiti dahil 3 yatak odası bulunur. Antalya ve Muğla bölgesine uygun sıcak iklim yalıtımı uygulanmıştır. Dış merdivenli balkon ve teras dahildir.',
+    ozellikler: { metrekare: '180', odaSayisi: '5+1', malzeme: 'Çelik karkas + kompozit panel', teslimSuresi: '120 gün', katSayisi: '2', yalitim: 'Sıcak iklim optimizasyonlu yalıtım', teras: 'Üst kat teras + balkon' },
+  },
 
-  /* ── Konya Çelik / Konya — 40.000 TL/m² ── */
-  { id: 'seed_ilan_19', firmaId: 'seed_firm_07', baslik: 'Çelik Yapı Depo + Konut Kombine - Acil',  fiyat: 4000000, aciklama: 'Alt kat depo/atölye, üst kat konut şeklinde tasarlanmış çelik yapı. Ticari-sanayi bölgeleri için ideal.', acil: true, indirimli: false },
-  { id: 'seed_ilan_20', firmaId: 'seed_firm_07', baslik: '90m² Çelik Ev - İç Anadolu Serisi',       fiyat: 3600000, aciklama: 'İç Anadolu iklim koşullarına göre optimize edilmiş 90m² çelik ev. Güçlü ısı yalıtımı.', acil: false, indirimli: false },
-  { id: 'seed_ilan_21', firmaId: 'seed_firm_07', baslik: 'Çelik Çerçeveli Karma Prefabrik 80m²',    fiyat: 3200000, aciklama: 'Çelik taşıyıcı sistem üzerine prefabrik panel dolgu. Hem sağlam hem ekonomik çözüm!', acil: false, indirimli: true },
+  /* ── Konya Çelik / Konya ── */
+  {
+    id: 'seed_ilan_19', firmaId: 'seed_firm_07',
+    baslik: 'Çelik Yapı Depo + Konut Kombine - Acil',
+    fiyat: 1650000, acil: true, indirimli: false,
+    aciklama: 'Alt kat depo/atölye, üst kat konut olarak tasarlanmış çift fonksiyonlu çelik yapı. Ticari ve sanayi bölgelerinde hem iş hem yaşam alanı olarak kullanılabilir. Alt kat 200m² açık plan depo, üst kat 100m² 2+1 konut düzenindedir. Yük asansörü altyapısı dahildir.',
+    ozellikler: { metrekare: '300', odaSayisi: '2+1 (üst kat)', malzeme: 'Ağır çelik konstrüksiyon', teslimSuresi: '150 gün', katSayisi: '2', yalitim: 'Endüstriyel yalıtım sistemi', depo: '200m² açık plan depo alanı' },
+  },
+  {
+    id: 'seed_ilan_20', firmaId: 'seed_firm_07',
+    baslik: '90m² Çelik Ev - İç Anadolu Serisi',
+    fiyat: 1250000, acil: false, indirimli: false,
+    aciklama: 'İç Anadolu iklim koşullarına özel optimize edilmiş 90m² çelik ev. -25°C\'ye kadar dayanıklı yalıtım sistemi, merkezi ısıtma altyapısı ve çift cam standart donanımdadır. Sert kış şartlarına karşı çatı kar yükü hesabı yapılmıştır.',
+    ozellikler: { metrekare: '90', odaSayisi: '2+1', malzeme: 'Hafif çelik iskelet', teslimSuresi: '75 gün', katSayisi: '1', yalitim: '15 cm taş yünü + çift cam', isitma: 'Merkezi ısıtma altyapısı' },
+  },
+  {
+    id: 'seed_ilan_21', firmaId: 'seed_firm_07',
+    baslik: 'Çelik Çerçeveli Karma Prefabrik 80m²',
+    fiyat: 950000, acil: false, indirimli: true,
+    aciklama: 'Çelik taşıyıcı sistem üzerine prefabrik panel dolgu ile hem sağlam hem ekonomik bir çözüm sunar. Galvanizli çelik çerçeve 50 yıl dayanıklılık garantili olup, iç mekan panelleri istenildiğinde değiştirilebilir modüler yapıdadır. Kampanya kapsamında özel indirimli fiyatla sunulmaktadır.',
+    ozellikler: { metrekare: '80', odaSayisi: '2+1', malzeme: 'Galvanizli çelik + prefabrik panel', teslimSuresi: '60 gün', katSayisi: '1', yalitim: 'EPS sandviç panel', garanti: '50 yıl çelik iskelet garantisi' },
+  },
 
-  /* ── Adana Konteyner / Adana — 150k-450k ── */
-  { id: 'seed_ilan_22', firmaId: 'seed_firm_08', baslik: 'Lüks Konteyner Ev 2+1 - Anahtar Teslim',  fiyat:  350000, aciklama: 'High-cube konteynerden dönüştürülmüş 2+1 lüks konut. Açık mutfak, geniş banyo, ebeveyn odası.', acil: false, indirimli: false },
-  { id: 'seed_ilan_23', firmaId: 'seed_firm_08', baslik: 'Konteyner Yurt Ünitesi - Öğrenci Kampüsü', fiyat: 160000, aciklama: 'Öğrenci kampüsleri ve yurtlar için ekonomik konteyner yaşam ünitesi. 8 veya 2 kişilik oda düzeni.', acil: false, indirimli: false },
-  { id: 'seed_ilan_24', firmaId: 'seed_firm_08', baslik: 'Bahçeli Konteyner Villa - Çukurova',      fiyat:  440000, aciklama: 'Çukurova ovasına özgü geniş bahçe tasarımıyla konteyner villa. Sıcak iklime uygun yalıtım.', acil: false, indirimli: false },
+  /* ── Adana Konteyner / Adana ── */
+  {
+    id: 'seed_ilan_22', firmaId: 'seed_firm_08',
+    baslik: 'Lüks Konteyner Ev 2+1 - Anahtar Teslim',
+    fiyat: 350000, acil: false, indirimli: false,
+    aciklama: 'High-cube konteynerden dönüştürülmüş 2+1 lüks konut. Açık mutfak konsepti, geniş duşakabin banyo ve ebeveyn yatak odası tam donanımlı olarak teslim edilir. İç mekan ahşap laminat zemin, dış cephe ise modern metal kaplama ile kaplanmıştır. Adana ve çevre illere kurulum hizmeti verilmektedir.',
+    ozellikler: { metrekare: '35', odaSayisi: '2+1', malzeme: 'High-cube çelik konteyner', teslimSuresi: '25 gün', yalitim: 'Poliüretan + alçıpan iç kaplama', zemin: 'Ahşap laminat parke' },
+  },
+  {
+    id: 'seed_ilan_23', firmaId: 'seed_firm_08',
+    baslik: 'Konteyner Yurt Ünitesi - Öğrenci Kampüsü',
+    fiyat: 160000, acil: false, indirimli: false,
+    aciklama: 'Öğrenci kampüsleri ve yurtlar için ekonomik konteyner yaşam ünitesi. 2 kişilik veya 4 kişilik oda düzeni seçenekleri mevcuttur. Ortak banyo, mini mutfak köşesi ve çalışma masası standart donanımdadır. Toplu siparişlerde özel fiyatlandırma uygulanır.',
+    ozellikler: { metrekare: '15', odaSayisi: 'Tek oda', malzeme: '20 feet standart konteyner', teslimSuresi: '15 gün', yalitim: 'EPS yalıtım', kapasite: '2-4 kişi' },
+  },
+  {
+    id: 'seed_ilan_24', firmaId: 'seed_firm_08',
+    baslik: 'Bahçeli Konteyner Villa - Çukurova',
+    fiyat: 440000, acil: false, indirimli: false,
+    aciklama: 'Çukurova ovasına özgü geniş bahçe tasarımıyla konteyner villa. Sıcak iklime uygun çift kat yalıtım ve havalandırma sistemi standarttır. L şeklinde iki konteyner birleşiminden oluşan yapı, avlu formunda özel bir yaşam alanı oluşturur. Bahçe sulama sistemi altyapısı dahildir.',
+    ozellikler: { metrekare: '55', odaSayisi: '2+1', malzeme: 'Çift konteyner L-birleşim', teslimSuresi: '40 gün', yalitim: 'Çift kat yalıtım + havalandırma', bahce: 'Avlu formunda bahçe düzeni' },
+  },
 
-  /* ── Gaziantep Yapı / Gaziantep — 300k-900k ── */
-  { id: 'seed_ilan_25', firmaId: 'seed_firm_09', baslik: 'Yığma Ahşap Bungalov 90m² - Kuzey Çamı',  fiyat:  420000, aciklama: 'Kuzey Amerika çamından üretilen yığma ahşap bungalov. Doğal ve sağlıklı yaşam arayanlar için.', acil: false, indirimli: false },
-  { id: 'seed_ilan_26', firmaId: 'seed_firm_09', baslik: 'Ahşap Yazlık Bungalov - Söküp Taşınabilir', fiyat: 320000, aciklama: 'Küçük ama fonksiyonel ahşap yazlık ev. İç tasarım tamamen doğal ahşap. Söküp taşınabilir.', acil: false, indirimli: false },
-  { id: 'seed_ilan_27', firmaId: 'seed_firm_09', baslik: 'Kütük Ev - El İşçiliği Premium',          fiyat:  650000, aciklama: 'El işçiliğiyle üretilen premium kütük ev. Her parça özel kesim, doğal kireç sıva ile iç yüzey.', acil: false, indirimli: false },
+  /* ── Gaziantep Yapı / Gaziantep ── */
+  {
+    id: 'seed_ilan_25', firmaId: 'seed_firm_09',
+    baslik: 'Yığma Ahşap Bungalov 90m² - Kuzey Çamı',
+    fiyat: 420000, acil: false, indirimli: false,
+    aciklama: 'Kuzey Amerika çamından üretilen yığma ahşap bungalov. Doğal ve sağlıklı yaşam arayanlar için ideal olan bu yapı, nefes alan ahşap duvarları sayesinde iç mekanda doğal nem dengesi sağlar. 3 yatak odası, geniş salon ve ahşap veranda standart olarak sunulur.',
+    ozellikler: { metrekare: '90', odaSayisi: '3+1', malzeme: 'Kuzey çamı yığma ahşap', teslimSuresi: '90 gün', katSayisi: '1', yalitim: 'Doğal ahşap yalıtım + ara dolgu', veranda: '12m² ahşap veranda' },
+  },
+  {
+    id: 'seed_ilan_26', firmaId: 'seed_firm_09',
+    baslik: 'Ahşap Yazlık Bungalov - Söküp Taşınabilir',
+    fiyat: 320000, acil: false, indirimli: false,
+    aciklama: 'Söküp taşınabilir modüler ahşap yazlık bungalov. İç tasarım tamamen doğal ahşap kaplama olup, yapı istenildiğinde parçalanarak başka bir arsaya kurulabilir. Kompakt ama fonksiyonel planıyla hafta sonu kaçamakları için mükemmeldir. Montaj ve demontaj hizmeti firmamız tarafından verilir.',
+    ozellikler: { metrekare: '55', odaSayisi: '1+1', malzeme: 'Modüler ahşap karkas', teslimSuresi: '45 gün', katSayisi: '1', yalitim: 'Ahşap lif yalıtım', tasinabilir: 'Söküp taşıma özelliği' },
+  },
+  {
+    id: 'seed_ilan_27', firmaId: 'seed_firm_09',
+    baslik: 'Kütük Ev - El İşçiliği Premium',
+    fiyat: 650000, acil: false, indirimli: false,
+    aciklama: 'El işçiliğiyle üretilen premium kütük ev. Her kütük parça özel kesim olup, geleneksel geçme tekniğiyle birleştirilmiştir. İç yüzeyler doğal kireç sıva ile kaplanmış, dış cephe emprenye işlemiyle korunmuştur. Şömine bacası, kütük merdiven ve çatı katı standart donanımdadır.',
+    ozellikler: { metrekare: '110', odaSayisi: '3+1', malzeme: 'Doğal kütük (el işçiliği)', teslimSuresi: '150 gün', katSayisi: '1 + çatı katı', yalitim: 'Kütük doğal yalıtım + macun dolgu', somine: 'Taş şömine dahil' },
+  },
 
-  /* ── Mersin Modüler / Mersin — 200k-600k ── */
-  { id: 'seed_ilan_28', firmaId: 'seed_firm_10', baslik: 'Deniz Manzaralı Tiny House 40m²',         fiyat:  290000, aciklama: 'Akdeniz kıyılarına özel tasarım, tüm odalardan deniz görünen tiny house. Teraslı ve pergoleli.', acil: false, indirimli: false },
-  { id: 'seed_ilan_29', firmaId: 'seed_firm_10', baslik: 'Söküp Takılabilir Tiny House - Mobil',    fiyat:  210000, aciklama: 'Tamamen söküp başka bir yere kurulabilen modüler tiny house. Arazi almadan özgür yaşam!', acil: false, indirimli: false },
-  { id: 'seed_ilan_30', firmaId: 'seed_firm_10', baslik: 'Lüks Tiny House 45m² - Plunge Havuzlu',   fiyat:  380000, aciklama: 'Plunge havuzu ve güneş terası dahil 45m² lüks tiny house. Mersin ve çevre ilçelere ücretsiz montaj.', acil: false, indirimli: false },
+  /* ── Mersin Modüler / Mersin ── */
+  {
+    id: 'seed_ilan_28', firmaId: 'seed_firm_10',
+    baslik: 'Deniz Manzaralı Tiny House 40m²',
+    fiyat: 290000, acil: false, indirimli: false,
+    aciklama: 'Akdeniz kıyılarına özel tasarım, tüm odalardan deniz manzarası sunan 40m² tiny house. Geniş teras ve pergole sistemi standart donanımdadır. Açık plan yaşam alanı, kompakt mutfak ve duş banyosu ile minimalist ama konforlu bir yaşam sunar. Denize yakın arsalar için tuz dayanımlı malzeme kullanılmıştır.',
+    ozellikler: { metrekare: '40', odaSayisi: '1+1', malzeme: 'Çelik karkas + ahşap kaplama', teslimSuresi: '35 gün', yalitim: 'Anti-korozif yalıtım', teras: '15m² teras + pergole' },
+  },
+  {
+    id: 'seed_ilan_29', firmaId: 'seed_firm_10',
+    baslik: 'Söküp Takılabilir Tiny House - Mobil',
+    fiyat: 210000, acil: false, indirimli: false,
+    aciklama: 'Tamamen söküp başka bir yere kurulabilen modüler tiny house. Arazi satın almadan farklı lokasyonlarda yaşam imkanı sunar. Güneş paneli, su deposu ve karavan tipi tuvalet altyapısı opsiyonel olarak eklenebilir. Hafif yapısıyla kamyonetle taşınabilir.',
+    ozellikler: { metrekare: '25', odaSayisi: '1+0', malzeme: 'Hafif çelik + ahşap hibrit', teslimSuresi: '30 gün', agirlik: '2.800 kg', yalitim: 'XPS yalıtım', tasinabilir: 'Kamyonetle taşınabilir' },
+  },
+  {
+    id: 'seed_ilan_30', firmaId: 'seed_firm_10',
+    baslik: 'Lüks Tiny House 45m² - Plunge Havuzlu',
+    fiyat: 380000, acil: false, indirimli: false,
+    aciklama: 'Plunge havuzu ve güneş terası dahil 45m² lüks tiny house. Mersin ve çevre ilçelere ücretsiz montaj hizmeti sunulmaktadır. İç mekanda akıllı ev sistemi altyapısı, dış mekanda ahşap deck ve mini havuz standarttır. Premium segment müşteriler için tasarlanmıştır.',
+    ozellikler: { metrekare: '45', odaSayisi: '1+1', malzeme: 'Çelik karkas + kompozit kaplama', teslimSuresi: '50 gün', yalitim: 'Poliüretan sprey yalıtım', havuz: 'Plunge havuz dahil', teras: '20m² güneş terası', akilliEv: 'Akıllı ev altyapısı' },
+  },
 ];
 
 /* ══════════════════════════════════════════════════════════
