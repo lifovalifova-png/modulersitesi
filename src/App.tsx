@@ -46,8 +46,8 @@ const NasilKullanilirPage   = lazy(() => import('./pages/NasilKullanilirPage'));
 const HaberlerPage          = lazy(() => import('./pages/HaberlerPage'));
 const HaberDetayPage        = lazy(() => import('./pages/HaberDetayPage'));
 const EtkinliklerPage       = lazy(() => import('./pages/EtkinliklerPage'));
-// Faz 2'de aktif edilecek — admin panelinden fiyatlandirma flag'i ile kontrol
-const FiyatlandirmaPage     = lazy(() => import('./pages/FiyatlandirmaPage'));
+// Faz 2'de aktif edilecek — şimdilik route kapalı
+// const FiyatlandirmaPage  = lazy(() => import('./pages/FiyatlandirmaPage'));
 const EtkinlikDetayPage     = lazy(() => import('./pages/EtkinlikDetayPage'));
 const NotFoundPage          = lazy(() => import('./pages/NotFoundPage'));
 
@@ -111,7 +111,7 @@ function App() {
                 <Route path="/haberler/:haberId" element={<HaberDetayPage />} />
                 <Route path="/etkinlikler"      element={<EtkinliklerPage />} />
                 <Route path="/etkinlikler/:slug" element={<EtkinlikDetayPage />} />
-                <Route path="/fiyatlandirma"   element={<FiyatlandirmaPage />} />
+                {/* Fiyatlandırma sayfası Faz 2'de aktif edilecek */}
                 <Route path="/geri-bildirim"   element={<GeriBildirimPage />} />
                 <Route path="/talepim/:talepId" element={<TalepDetayPage />} />
                 <Route path="/admin"            element={<AdminLoginPage />} />
