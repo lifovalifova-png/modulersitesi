@@ -3093,18 +3093,20 @@ function haberDurumHesapla(h: AdminHaber): 'taslak' | 'yayinda' | 'arsiv' {
 
 /* ─── Haber Kaynakları ──────────────────────────────────── */
 interface AdminHaberKaynagi {
-  id?:            string;
-  ad:             string;
-  url:            string;
-  aramaKelimesi:  string;
-  bolge:          string;
-  aktif:          boolean;
-  eklenmeTarihi?: { seconds: number } | null;
-  _seed?:         boolean;
+  id?:                string;
+  ad:                 string;
+  url:                string;
+  aramaKelimesi:      string;
+  anahtar_kelimeler:  string[];
+  bolge:              string;
+  aktif:              boolean;
+  eklenmeTarihi?:     { seconds: number } | null;
+  son_tarama?:        { seconds: number } | null;
+  _seed?:             boolean;
 }
 
 const BOSH_KAYNAK: Omit<AdminHaberKaynagi, 'id'> = {
-  ad: '', url: 'https://', aramaKelimesi: '', bolge: 'turkiye', aktif: true,
+  ad: '', url: 'https://', aramaKelimesi: '', anahtar_kelimeler: ['prefabrik', 'modüler yapı', 'konteyner ev', 'tiny house', 'çelik yapı'], bolge: 'turkiye', aktif: true,
 };
 
 function KaynaklarTabContent() {
@@ -3114,6 +3116,7 @@ function KaynaklarTabContent() {
   const [duzenle,    setDuzenle]    = useState<AdminHaberKaynagi | null>(null);
   const [form,       setForm]       = useState<Omit<AdminHaberKaynagi, 'id'>>(BOSH_KAYNAK);
   const [kaydediyor, setKaydediyor] = useState(false);
+  const [taramaYapilan, setTaramaYapilan] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'haberKaynaklari'), (snap) => {
@@ -3130,7 +3133,7 @@ function KaynaklarTabContent() {
   function acModal(kaynak?: AdminHaberKaynagi) {
     if (kaynak) {
       setDuzenle(kaynak);
-      setForm({ ad: kaynak.ad, url: kaynak.url, aramaKelimesi: kaynak.aramaKelimesi ?? '', bolge: kaynak.bolge, aktif: kaynak.aktif });
+      setForm({ ad: kaynak.ad, url: kaynak.url, aramaKelimesi: kaynak.aramaKelimesi ?? '', anahtar_kelimeler: kaynak.anahtar_kelimeler ?? BOSH_KAYNAK.anahtar_kelimeler, bolge: kaynak.bolge, aktif: kaynak.aktif });
     } else {
       setDuzenle(null);
       setForm(BOSH_KAYNAK);
@@ -3170,6 +3173,43 @@ function KaynaklarTabContent() {
     await updateDoc(doc(db, 'haberKaynaklari', id), { aktif: !aktif });
   }
 
+  async function handleTara(kaynak: AdminHaberKaynagi) {
+    if (!kaynak.id) return;
+    setTaramaYapilan(kaynak.id);
+    try {
+      const r = await fetch('/api/scan-news-source', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceUrl: kaynak.url, anahtar_kelimeler: kaynak.anahtar_kelimeler ?? [] }),
+      });
+      const data = await r.json();
+      if (!r.ok || data.error) {
+        toast.error(data.error ?? 'Tarama başarısız.');
+        return;
+      }
+      // Bulunan haberleri Firestore'a taslak olarak ekle (duplicate check by kaynakUrl)
+      const mevcutSnap = await getDocs(collection(db, 'haberler'));
+      const mevcutUrls = new Set(mevcutSnap.docs.map((d) => (d.data() as { kaynakUrl?: string }).kaynakUrl).filter(Boolean));
+      let eklenen = 0;
+      for (const h of (data.haberler as Array<{ baslik: string; url: string; ozet: string }>)) {
+        if (mevcutUrls.has(h.url)) continue;
+        await addDoc(collection(db, 'haberler'), {
+          baslik: h.baslik, kaynak: kaynak.ad, kaynakUrl: h.url, ozet: h.ozet,
+          icerik: '', kategori: 'genel', bolge: kaynak.bolge, gorselUrl: '',
+          yayinda: false, arsivlendi: false, otomatik: true,
+          tarih: serverTimestamp(),
+        });
+        eklenen++;
+      }
+      await updateDoc(doc(db, 'haberKaynaklari', kaynak.id), { son_tarama: serverTimestamp() });
+      toast.success(`${data.bulunan} haber bulundu, ${eklenen} taslak olarak eklendi.`);
+    } catch {
+      toast.error('Tarama sırasında hata oluştu.');
+    } finally {
+      setTaramaYapilan(null);
+    }
+  }
+
   if (loading) return <div className="p-6 text-sm text-gray-500">Yükleniyor…</div>;
 
   return (
@@ -3193,7 +3233,7 @@ function KaynaklarTabContent() {
               <tr className="border-b border-gray-200 text-xs text-gray-500 uppercase tracking-wide">
                 <th className="text-left py-3 pr-4">Kaynak Adı</th>
                 <th className="text-left py-3 pr-4">URL</th>
-                <th className="text-left py-3 pr-4">Arama Kelimesi</th>
+                <th className="text-left py-3 pr-4">Anahtar Kelimeler</th>
                 <th className="text-left py-3 pr-4">Bölge</th>
                 <th className="text-left py-3 pr-4">Durum</th>
                 <th className="text-right py-3">İşlemler</th>
@@ -3208,7 +3248,12 @@ function KaynaklarTabContent() {
                        className="text-xs text-emerald-600 hover:underline truncate max-w-[200px] block">{k.url}</a>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">{k.aramaKelimesi || '—'}</span>
+                    <div className="flex flex-wrap gap-1">
+                      {(k.anahtar_kelimeler ?? (k.aramaKelimesi ? [k.aramaKelimesi] : [])).map((kw, i) => (
+                        <span key={i} className="text-xs text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded">{kw}</span>
+                      ))}
+                      {!(k.anahtar_kelimeler?.length) && !k.aramaKelimesi && <span className="text-xs text-gray-400">—</span>}
+                    </div>
                   </td>
                   <td className="py-3 pr-4">
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
@@ -3229,6 +3274,17 @@ function KaynaklarTabContent() {
                   </td>
                   <td className="py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleTara(k)}
+                        disabled={taramaYapilan === k.id}
+                        className="text-xs px-2.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium transition disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {taramaYapilan === k.id ? (
+                          <><span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /> Taranıyor...</>
+                        ) : (
+                          <><span className="material-symbols-outlined text-sm">radar</span> Tara</>
+                        )}
+                      </button>
                       <button onClick={() => acModal(k)}
                         className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition">
                         <Pencil className="w-4 h-4" />
@@ -3274,6 +3330,16 @@ function KaynaklarTabContent() {
                 <input value={form.aramaKelimesi} onChange={(e) => setForm({ ...form, aramaKelimesi: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="ör. prefabrik, konteyner ev, modular construction..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Anahtar Kelimeler (virgülle ayırın)</label>
+                <input
+                  value={form.anahtar_kelimeler.join(', ')}
+                  onChange={(e) => setForm({ ...form, anahtar_kelimeler: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="prefabrik, modüler yapı, konteyner ev, tiny house, çelik yapı"
+                />
+                <p className="text-xs text-gray-400 mt-1">Tarama sırasında bu kelimelere uygun haberler aranır</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Bölge</label>
@@ -3869,29 +3935,29 @@ function HaberlerTab() {
 
             <div className="space-y-4">
               {/* AI ile Doldur */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 space-y-2">
-                <label className="block text-xs font-semibold text-blue-700 uppercase tracking-wide">AI ile Otomatik Doldur</label>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-2">
+                <label className="block text-xs font-semibold text-emerald-700 uppercase tracking-wide">Haber URL'si ile otomatik doldur</label>
                 <div className="flex gap-2">
                   <input
                     value={aiFetchUrl}
                     onChange={(e) => setAiFetchUrl(e.target.value)}
-                    className="flex-1 border border-blue-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-                    placeholder="Haber URL'sini yapıştırın..."
+                    className="flex-1 border border-emerald-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
+                    placeholder="https://www.aa.com.tr/haber/..."
                   />
                   <button
                     onClick={handleAiFetch}
                     disabled={aiFetching}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
                   >
                     {aiFetching ? (
                       <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Analiz ediliyor...</>
                     ) : (
-                      <><span className="material-symbols-outlined text-base">auto_awesome</span> AI ile Doldur</>
+                      '\uD83E\uDD16 AI ile Doldur'
                     )}
                   </button>
                 </div>
                 {aiFetchMsg && (
-                  <p className={`text-xs px-2 py-1.5 rounded-lg ${aiFetchMsg.type === 'ok' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                  <p className={`text-xs px-2 py-1.5 rounded-lg ${aiFetchMsg.type === 'ok' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
                     {aiFetchMsg.text}
                   </p>
                 )}
