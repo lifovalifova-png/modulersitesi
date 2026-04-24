@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, Building2, UserCircle, FileText, LogOut } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, Building2, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
 import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
 import { SITE_CONFIG } from '../config/site';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import UserMenu from './UserMenu';
 import logoSrc from '../assets/logo.svg';
 
@@ -26,6 +27,8 @@ export default function Header() {
   const navigate = useNavigate();
   const { currentUser, role, logout } = useAuth();
   const { lang, setLang, t } = useLanguage();
+  const { flags } = useFeatureFlags();
+
   function handleTeklifIste() {
     if (!currentUser) {
       navigate('/giris', { state: { from: { pathname: '/talep-olustur' } } });
@@ -469,6 +472,16 @@ export default function Header() {
             >
               {t('nav.howToUse')}
             </Link>
+            {flags.fiyatHesaplama && (
+              <Link
+                to="/fiyat-hesapla"
+                className="flex items-center gap-2 w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Calculator className="w-5 h-5" aria-hidden="true" />
+                {t('nav.fiyatHesapla')}
+              </Link>
+            )}
             <Link
               to="/hakkimizda"
               className="block w-full px-3 py-3 rounded-xl text-on-surface hover:text-primary hover:bg-primary/5 transition font-body"

@@ -2,12 +2,14 @@ import { Link } from 'react-router-dom';
 import { Mail, MapPin, Facebook, Instagram, Twitter, Linkedin, Youtube } from 'lucide-react';
 import { SITE_CONFIG, LEGAL_LINKS } from '../config/site';
 import { useLanguage } from '../context/LanguageContext';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { useSosyalMedya } from '../hooks/useSosyalMedya';
 
 const currentYear = new Date().getFullYear();
 
 export default function Footer() {
   const { t } = useLanguage();
+  const { flags } = useFeatureFlags();
   const sosyal = useSosyalMedya();
   return (
     <footer className="bg-slate-900 text-gray-300 font-body">
@@ -69,6 +71,9 @@ export default function Footer() {
               <li><Link to="/haberler" className="hover:text-primary transition">{t('footer.haberler')}</Link></li>
               <li><Link to="/sss" className="hover:text-primary transition">{t('footer.faq')}</Link></li>
               <li><Link to="/nasil-kullanilir" className="hover:text-primary transition">{t('footer.howToUse')}</Link></li>
+              {flags.fiyatHesaplama && (
+                <li><Link to="/fiyat-hesapla" className="hover:text-primary transition">{t('nav.fiyatHesapla')}</Link></li>
+              )}
               <li><Link to="/hakkimizda" className="hover:text-primary transition">{t('nav.about')}</Link></li>
               <li><Link to="/geri-bildirim" className="hover:text-primary transition">İstek & Şikayet</Link></li>
             </ul>
