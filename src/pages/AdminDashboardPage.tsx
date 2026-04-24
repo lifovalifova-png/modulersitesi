@@ -3320,6 +3320,9 @@ function HaberlerTab() {
   const [aiYukleniyor,  setAiYukleniyor]  = useState(false);
   const [onerilenler,   setOnerilenler]   = useState<Onerilen[]>([]);
   const [aiPanelAcik,   setAiPanelAcik]  = useState(false);
+  const [aiFetchUrl,    setAiFetchUrl]    = useState('');
+  const [aiFetching,    setAiFetching]    = useState(false);
+  const [aiFetchMsg,    setAiFetchMsg]    = useState<{ type: 'ok' | 'warn'; text: string } | null>(null);
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -3376,7 +3379,51 @@ function HaberlerTab() {
       setDuzenle(null);
       setForm(BOSH_HABER);
     }
+    setAiFetchUrl('');
+    setAiFetchMsg(null);
     setModalAcik(true);
+  }
+
+  async function handleAiFetch() {
+    if (!aiFetchUrl.trim()) { toast.error('Lütfen bir URL girin.'); return; }
+    setAiFetching(true);
+    setAiFetchMsg(null);
+    try {
+      const r = await fetch('/api/fetch-news-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: aiFetchUrl.trim() }),
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        setAiFetchMsg({ type: 'warn', text: data.error ?? 'Otomatik doldurma başarısız, manuel girin.' });
+        return;
+      }
+      if (data.partial) {
+        setAiFetchMsg({ type: 'warn', text: data.message });
+        if (data.sourceName) setForm((f) => ({ ...f, kaynak: data.sourceName, kaynakUrl: aiFetchUrl.trim() }));
+        return;
+      }
+      const katMap: Record<string, string> = {
+        'Sektör Haberleri': 'genel', 'Teknoloji': 'teknoloji', 'Piyasa': 'piyasa',
+        'Mevzuat': 'mevzuat', 'Etkinlik': 'etkinlik',
+      };
+      setForm((f) => ({
+        ...f,
+        baslik:   data.titleTR   || f.baslik,
+        baslikEn: data.titleEN   || f.baslikEn,
+        ozet:     data.summaryTR || f.ozet,
+        ozetEn:   data.summaryEN || f.ozetEn,
+        kaynak:   data.sourceName || f.kaynak,
+        kaynakUrl: aiFetchUrl.trim(),
+        kategori: katMap[data.category] || f.kategori,
+      }));
+      setAiFetchMsg({ type: 'ok', text: 'Form alanları otomatik dolduruldu. Kontrol edip düzenleyebilirsiniz.' });
+    } catch {
+      setAiFetchMsg({ type: 'warn', text: 'Otomatik doldurma başarısız, manuel girin.' });
+    } finally {
+      setAiFetching(false);
+    }
   }
 
   async function handleKaydet() {
@@ -3821,6 +3868,35 @@ function HaberlerTab() {
             </div>
 
             <div className="space-y-4">
+              {/* AI ile Doldur */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 space-y-2">
+                <label className="block text-xs font-semibold text-blue-700 uppercase tracking-wide">AI ile Otomatik Doldur</label>
+                <div className="flex gap-2">
+                  <input
+                    value={aiFetchUrl}
+                    onChange={(e) => setAiFetchUrl(e.target.value)}
+                    className="flex-1 border border-blue-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                    placeholder="Haber URL'sini yapıştırın..."
+                  />
+                  <button
+                    onClick={handleAiFetch}
+                    disabled={aiFetching}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
+                  >
+                    {aiFetching ? (
+                      <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Analiz ediliyor...</>
+                    ) : (
+                      <><span className="material-symbols-outlined text-base">auto_awesome</span> AI ile Doldur</>
+                    )}
+                  </button>
+                </div>
+                {aiFetchMsg && (
+                  <p className={`text-xs px-2 py-1.5 rounded-lg ${aiFetchMsg.type === 'ok' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                    {aiFetchMsg.text}
+                  </p>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Başlık *</label>
                 <input value={form.baslik} onChange={(e) => setForm({ ...form, baslik: e.target.value })}
