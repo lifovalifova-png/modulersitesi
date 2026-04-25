@@ -25,6 +25,11 @@ export default async function handler(req: Request) {
       pageText = `URL: ${url}`;
     }
 
+    if (!pageText || pageText.length < 100) {
+      const domain = new URL(url).hostname.replace('www.', '');
+      pageText = `Bu haber ${domain} sitesinden alınmıştır. URL: ${url}`;
+    }
+
     // Fetch başarısız — partial döndür
     if (!pageText || pageText === `URL: ${url}`) {
       let sourceName = '';
@@ -70,8 +75,32 @@ JSON formatı:
 
     const geminiData = await geminiRes.json();
     const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+
+    if (!text) {
+      return new Response(JSON.stringify({ error: 'Gemini boş yanıt döndürdü' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // JSON bloğunu bul — başındaki/sonundaki her şeyi temizle
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return new Response(JSON.stringify({ error: 'JSON parse edilemedi', raw: text.slice(0, 200) }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch {
+      return new Response(JSON.stringify({ error: 'JSON geçersiz', raw: jsonMatch[0].slice(0, 200) }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     return new Response(JSON.stringify({
       partial: false,
