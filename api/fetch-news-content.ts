@@ -1,137 +1,79 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+export const config = { runtime: 'edge' };
 
-/**
- * POST /api/fetch-news-content
- * Input:  { url: string }
- * Output: { titleTR, titleEN, summaryTR, summaryEN, sourceName, publishDate, category }
- *
- * URL'deki haber içeriğini Gemini ile analiz eder,
- * admin haber formunu otomatik doldurur.
- */
-
-interface GeminiResult {
-  titleTR:     string;
-  titleEN:     string;
-  summaryTR:   string;
-  summaryEN:   string;
-  sourceName:  string;
-  publishDate: string | null;
-  category:    string;
-}
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: Request) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return new Response('Method not allowed', { status: 405 });
   }
-
-  const { url } = req.body as { url?: string };
-  if (!url || typeof url !== 'string') {
-    return res.status(400).json({ error: 'URL gereklidir.' });
-  }
-
-  const geminiKey = process.env.GEMINI_API_KEY;
-  if (!geminiKey) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY tanımlı değil.' });
-  }
-
-  /* ── 1. URL'den içerik çek ────────────────────────────── */
-  let pageText = '';
-  let fetchFailed = false;
 
   try {
-    const r = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; ModulerPazarBot/1.0)',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-      signal: AbortSignal.timeout(10_000),
-    });
+    const { url } = await req.json();
+    if (!url) return new Response(JSON.stringify({ error: 'URL gerekli' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
-    if (!r.ok) {
-      fetchFailed = true;
-    } else {
-      const html = await r.text();
-      // Strip HTML tags, keep text
-      pageText = html
-        .replace(/<script[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 15_000); // Gemini token limiti için kırp
-    }
-  } catch {
-    fetchFailed = true;
-  }
+    const GEMINI_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_KEY) return new Response(JSON.stringify({ error: 'API key eksik' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
 
-  /* Fetch başarısız — sadece domain'den sourceName çıkar */
-  if (fetchFailed || !pageText) {
-    let sourceName = '';
+    // Sayfayı çek
+    let pageText = '';
     try {
-      sourceName = new URL(url).hostname.replace('www.', '');
-    } catch { /* ignore */ }
+      const pageRes = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ModulerPazar/1.0)' },
+        signal: AbortSignal.timeout(8000),
+      });
+      const html = await pageRes.text();
+      pageText = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').slice(0, 3000);
+    } catch {
+      pageText = `URL: ${url}`;
+    }
 
-    return res.status(200).json({
-      partial: true,
-      message: 'Sayfa içeriği çekilemedi, lütfen manuel doldurun.',
-      sourceName,
-      titleTR: '', titleEN: '', summaryTR: '', summaryEN: '',
-      publishDate: null, category: '',
-    });
-  }
+    // Fetch başarısız — partial döndür
+    if (!pageText || pageText === `URL: ${url}`) {
+      let sourceName = '';
+      try { sourceName = new URL(url).hostname.replace('www.', ''); } catch { /* ignore */ }
+      return new Response(JSON.stringify({
+        partial: true,
+        message: 'Sayfa içeriği çekilemedi, lütfen manuel doldurun.',
+        sourceName,
+        titleTR: '', titleEN: '', summaryTR: '', summaryEN: '',
+        publishDate: null, category: '',
+      }), { headers: { 'Content-Type': 'application/json' } });
+    }
 
-  /* ── 2. Gemini'ye gönder ──────────────────────────────── */
-  const prompt = `Bu haber metninden şunları çıkar ve SADECE JSON döndür, başka hiçbir şey yazma:
-{
-  "titleTR": "Türkçe başlık",
-  "titleEN": "İngilizce başlık",
-  "summaryTR": "2-3 cümlelik Türkçe özet",
-  "summaryEN": "2-3 cümlelik İngilizce özet",
-  "sourceName": "kaynak site adı (ör: Hürriyet, AA, Reuters)",
-  "publishDate": "YYYY-MM-DD formatında yayın tarihi, bulamazsan null",
-  "category": "şu seçeneklerden BİRİ: Sektör Haberleri / Teknoloji / Piyasa / Mevzuat / Etkinlik"
-}
-
-Haber metni:
-${pageText}`;
-
-  try {
+    // Gemini'ye gönder
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 1024,
-          },
+          contents: [{
+            parts: [{
+              text: `Aşağıdaki haber içeriğinden bilgileri çıkar ve SADECE JSON döndür, başka hiçbir şey yazma:
+
+${pageText}
+
+JSON formatı:
+{
+  "titleTR": "Türkçe başlık",
+  "titleEN": "English title",
+  "summaryTR": "2-3 cümle Türkçe özet",
+  "summaryEN": "2-3 sentence English summary",
+  "sourceName": "Kaynak site adı",
+  "publishDate": "YYYY-MM-DD veya null",
+  "category": "Sektör Haberleri veya Teknoloji veya Piyasa veya Mevzuat veya Etkinlik"
+}`,
+            }],
+          }],
+          generationConfig: { temperature: 0.1 },
         }),
-        signal: AbortSignal.timeout(30_000),
       },
     );
 
-    if (!geminiRes.ok) {
-      const err = await geminiRes.text();
-      return res.status(502).json({ error: 'Gemini API hatası', detail: err });
-    }
+    const geminiData = await geminiRes.json();
+    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
 
-    const geminiJson = await geminiRes.json() as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-
-    const raw = geminiJson.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-
-    // JSON bloğunu bul (```json ... ``` veya direkt JSON)
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return res.status(502).json({ error: 'Gemini geçerli JSON döndürmedi.' });
-    }
-
-    const parsed: GeminiResult = JSON.parse(jsonMatch[0]);
-
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       partial: false,
       titleTR:     parsed.titleTR     ?? '',
       titleEN:     parsed.titleEN     ?? '',
@@ -140,8 +82,12 @@ ${pageText}`;
       sourceName:  parsed.sourceName  ?? '',
       publishDate: parsed.publishDate ?? null,
       category:    parsed.category    ?? '',
+    }), { headers: { 'Content-Type': 'application/json' } });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'İşlem başarısız: ' + String(err) }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
-  } catch (e) {
-    return res.status(502).json({ error: 'Gemini isteği başarısız.', detail: String(e) });
   }
 }
