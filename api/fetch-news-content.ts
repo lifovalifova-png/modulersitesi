@@ -1,16 +1,71 @@
 export const config = { runtime: 'edge' };
 
+function extractJSON(text: string): Record<string, unknown> {
+  if (!text || typeof text !== 'string') {
+    throw new Error('Empty response from AI');
+  }
+
+  const cleaned = text
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim();
+
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) {
+    throw new Error('No JSON object found in AI response');
+  }
+
+  try {
+    return JSON.parse(match[0]);
+  } catch (e) {
+    throw new Error(`JSON parse failed: ${(e as Error).message}`);
+  }
+}
+
+function getDomainAsSourceName(url: string): string {
+  try {
+    const u = new URL(url);
+    return u.hostname.replace(/^www\./, '').split('.')[0];
+  } catch {
+    return 'Bilinmeyen Kaynak';
+  }
+}
+
+function titleFromURL(url: string): string {
+  try {
+    const path = new URL(url).pathname;
+    const last = path.split('/').filter(Boolean).pop() ?? '';
+    return decodeURIComponent(last)
+      .replace(/[-_]/g, ' ')
+      .replace(/\.\w+$/, '')
+      .trim() || 'Başlıksız Haber';
+  } catch {
+    return 'Başlıksız Haber';
+  }
+}
+
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS });
+}
+
 export default async function handler(req: Request) {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
   }
 
+  let url = '';
+
   try {
-    const { url } = await req.json();
-    if (!url) return new Response(JSON.stringify({ error: 'URL gerekli' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    const body = await req.json();
+    url = body.url ?? '';
+    if (!url) return jsonResponse({ error: 'URL gerekli' }, 400);
 
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
-    if (!GEMINI_KEY) return new Response(JSON.stringify({ error: 'API key eksik' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    if (!GEMINI_KEY) return jsonResponse({ error: 'API key eksik' }, 500);
+
+    const sourceName = getDomainAsSourceName(url);
 
     // Sayfayı çek
     let pageText = '';
@@ -20,27 +75,29 @@ export default async function handler(req: Request) {
         signal: AbortSignal.timeout(8000),
       });
       const html = await pageRes.text();
-      pageText = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').slice(0, 3000);
+      pageText = html
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .slice(0, 3000);
     } catch {
-      pageText = `URL: ${url}`;
+      pageText = '';
     }
 
+    // Scraping engellenmiş veya içerik çok kısa — partial döndür
     if (!pageText || pageText.length < 100) {
-      const domain = new URL(url).hostname.replace('www.', '');
-      pageText = `Bu haber ${domain} sitesinden alınmıştır. URL: ${url}`;
-    }
-
-    // Fetch başarısız — partial döndür
-    if (!pageText || pageText === `URL: ${url}`) {
-      let sourceName = '';
-      try { sourceName = new URL(url).hostname.replace('www.', ''); } catch { /* ignore */ }
-      return new Response(JSON.stringify({
+      return jsonResponse({
         partial: true,
-        message: 'Sayfa içeriği çekilemedi, lütfen manuel doldurun.',
+        message: 'Kaynak içeriği otomatik alınamadı. Lütfen manuel doldurun.',
+        titleTR: titleFromURL(url),
+        titleEN: '',
+        summaryTR: 'Kaynak içeriği otomatik alınamadı. Lütfen manuel doldurun.',
+        summaryEN: '',
         sourceName,
-        titleTR: '', titleEN: '', summaryTR: '', summaryEN: '',
-        publishDate: null, category: '',
-      }), { headers: { 'Content-Type': 'application/json' } });
+        publishDate: null,
+        category: '',
+      });
     }
 
     // Gemini'ye gönder
@@ -48,7 +105,7 @@ export default async function handler(req: Request) {
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: JSON_HEADERS,
         body: JSON.stringify({
           contents: [{
             parts: [{
@@ -74,49 +131,35 @@ JSON formatı:
     );
 
     const geminiData = await geminiRes.json();
-    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
-    if (!text) {
-      return new Response(JSON.stringify({ error: 'Gemini boş yanıt döndürdü' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+    const parsed = extractJSON(rawText);
 
-    // JSON bloğunu bul — başındaki/sonundaki her şeyi temizle
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return new Response(JSON.stringify({ error: 'JSON parse edilemedi', raw: text.slice(0, 200) }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch {
-      return new Response(JSON.stringify({ error: 'JSON geçersiz', raw: jsonMatch[0].slice(0, 200) }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    return new Response(JSON.stringify({
+    return jsonResponse({
       partial: false,
-      titleTR:     parsed.titleTR     ?? '',
-      titleEN:     parsed.titleEN     ?? '',
-      summaryTR:   parsed.summaryTR   ?? '',
-      summaryEN:   parsed.summaryEN   ?? '',
-      sourceName:  parsed.sourceName  ?? '',
-      publishDate: parsed.publishDate ?? null,
-      category:    parsed.category    ?? '',
-    }), { headers: { 'Content-Type': 'application/json' } });
+      titleTR:     (parsed.titleTR as string)     ?? '',
+      titleEN:     (parsed.titleEN as string)     ?? '',
+      summaryTR:   (parsed.summaryTR as string)   ?? '',
+      summaryEN:   (parsed.summaryEN as string)   ?? '',
+      sourceName:  (parsed.sourceName as string)  ?? sourceName,
+      publishDate: (parsed.publishDate as string) ?? null,
+      category:    (parsed.category as string)    ?? '',
+    });
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'İşlem başarısız: ' + String(err) }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+    console.error('[fetch-news-content] Hata:', err);
+    const sourceName = getDomainAsSourceName(url);
+    return jsonResponse({
+      error: String(err),
+      partial: {
+        titleTR: titleFromURL(url),
+        titleEN: '',
+        summaryTR: 'İşlem sırasında hata oluştu. Lütfen manuel doldurun.',
+        summaryEN: '',
+        sourceName,
+        publishDate: null,
+        category: '',
+      },
     });
   }
 }
