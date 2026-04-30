@@ -3461,30 +3461,41 @@ function HaberlerTab() {
         body: JSON.stringify({ url: aiFetchUrl.trim() }),
       });
       const data = await r.json();
-      if (!r.ok) {
-        setAiFetchMsg({ type: 'warn', text: data.error ?? 'Otomatik doldurma başarısız, manuel girin.' });
-        return;
-      }
-      if (data.partial) {
-        setAiFetchMsg({ type: 'warn', text: data.message });
-        if (data.sourceName) setForm((f) => ({ ...f, kaynak: data.sourceName, kaynakUrl: aiFetchUrl.trim() }));
-        return;
-      }
+
+      // Backend hata olsa bile partial obje döndürebiliyor.
+      // Hangisi varsa onu form doldurma kaynağı olarak kullan.
+      const fillData = data.partial || data;
+
+      // Kategori mapping
       const katMap: Record<string, string> = {
-        'Sektör Haberleri': 'genel', 'Teknoloji': 'teknoloji', 'Piyasa': 'piyasa',
-        'Mevzuat': 'mevzuat', 'Etkinlik': 'etkinlik',
+        'Sektör Haberleri': 'genel',
+        'Teknoloji': 'teknoloji',
+        'Piyasa': 'piyasa',
+        'Mevzuat': 'mevzuat',
+        'Etkinlik': 'etkinlik',
       };
+
+      // Form alanlarını doldur (boş alanlar eski değerlerini korusun)
       setForm((f) => ({
         ...f,
-        baslik:   data.titleTR   || f.baslik,
-        baslikEn: data.titleEN   || f.baslikEn,
-        ozet:     data.summaryTR || f.ozet,
-        ozetEn:   data.summaryEN || f.ozetEn,
-        kaynak:   data.sourceName || f.kaynak,
+        baslik: fillData.titleTR || f.baslik,
+        baslikEn: fillData.titleEN || f.baslikEn,
+        ozet: fillData.summaryTR || f.ozet,
+        ozetEn: fillData.summaryEN || f.ozetEn,
+        kaynak: fillData.sourceName || f.kaynak,
         kaynakUrl: aiFetchUrl.trim(),
-        kategori: katMap[data.category] || f.kategori,
+        kategori: fillData.category ? (katMap[fillData.category] || f.kategori) : f.kategori,
       }));
-      setAiFetchMsg({ type: 'ok', text: 'Form alanları otomatik dolduruldu. Kontrol edip düzenleyebilirsiniz.' });
+
+      // Kullanıcıya doğru mesajı göster
+      if (data.error || data.partial) {
+        setAiFetchMsg({
+          type: 'warn',
+          text: 'Bazı alanlar otomatik doldurulamadı. Lütfen başlık ve özeti kontrol edip tamamlayın.',
+        });
+      } else {
+        setAiFetchMsg({ type: 'ok', text: 'Form alanları otomatik dolduruldu.' });
+      }
     } catch {
       setAiFetchMsg({ type: 'warn', text: 'Otomatik doldurma başarısız, manuel girin.' });
     } finally {
