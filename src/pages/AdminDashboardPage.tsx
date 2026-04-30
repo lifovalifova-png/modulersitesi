@@ -3475,13 +3475,30 @@ function HaberlerTab() {
         'Etkinlik': 'etkinlik',
       };
 
-      // Form alanlarını doldur (boş alanlar eski değerlerini korusun)
+      // Backend fallback/error metinlerini filtrele
+      const isPlaceholder = (val?: string) => {
+        if (!val) return true;
+        const lower = val.toLowerCase();
+        return (
+          lower.includes('hata oluştu') ||
+          lower.includes('manuel doldurun') ||
+          lower.includes('otomatik alınamadı') ||
+          lower.includes('lütfen manuel') ||
+          val.trim().length < 10
+        );
+      };
+
+      const cleanTitleTR = isPlaceholder(fillData.titleTR) ? '' : fillData.titleTR;
+      const cleanTitleEN = isPlaceholder(fillData.titleEN) ? '' : fillData.titleEN;
+      const cleanSummaryTR = isPlaceholder(fillData.summaryTR) ? '' : fillData.summaryTR;
+      const cleanSummaryEN = isPlaceholder(fillData.summaryEN) ? '' : fillData.summaryEN;
+
       setForm((f) => ({
         ...f,
-        baslik: fillData.titleTR || f.baslik,
-        baslikEn: fillData.titleEN || f.baslikEn,
-        ozet: fillData.summaryTR || f.ozet,
-        ozetEn: fillData.summaryEN || f.ozetEn,
+        baslik: cleanTitleTR || f.baslik,
+        baslikEn: cleanTitleEN || f.baslikEn,
+        ozet: cleanSummaryTR || f.ozet,
+        ozetEn: cleanSummaryEN || f.ozetEn,
         kaynak: fillData.sourceName || f.kaynak,
         kaynakUrl: aiFetchUrl.trim(),
         kategori: fillData.category ? (katMap[fillData.category] || f.kategori) : f.kategori,
