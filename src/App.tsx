@@ -49,6 +49,7 @@ const EtkinliklerPage       = lazy(() => import('./pages/EtkinliklerPage'));
 // Faz 2'de aktif edilecek — şimdilik route kapalı
 // const FiyatlandirmaPage  = lazy(() => import('./pages/FiyatlandirmaPage'));
 const EtkinlikDetayPage     = lazy(() => import('./pages/EtkinlikDetayPage'));
+const SehirKategoriPage     = lazy(() => import('./pages/seo/SehirKategoriPage'));
 const NotFoundPage          = lazy(() => import('./pages/NotFoundPage'));
 
 /* ── Feature flag gated TeklifSepeti ───────────────────────── */
@@ -120,6 +121,7 @@ function App() {
                     <AdminDashboardPage />
                   </AdminRoute>
                 } />
+                <Route path="/:kategori/:sehir" element={<SehirKategoriPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>

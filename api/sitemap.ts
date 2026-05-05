@@ -30,6 +30,10 @@ function field(doc: { fields: Record<string, { stringValue?: string }> }, key: s
   return doc.fields?.[key]?.stringValue ?? '';
 }
 
+/* ── Programmatic SEO: şehir × kategori ────────────────── */
+const SEO_CITY_SLUGS  = ['istanbul', 'ankara', 'izmir', 'sakarya', 'antalya'];
+const SEO_CAT_SLUGS   = ['prefabrik-ev', 'konteyner-ev', 'tiny-house'];
+
 /* ── Statik rotalar ─────────────────────────────────────── */
 const CATEGORIES = [
   'prefabrik', 'celik-yapilar', 'yasam-konteynerleri',
@@ -94,6 +98,13 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   // Blog yazıları — statik listeden
   for (const slug of BLOG_SLUGS) {
     urls.push(urlEntry(`/blog/${slug}`, 'monthly', '0.7'));
+  }
+
+  // Programmatic SEO sayfaları (şehir × kategori)
+  for (const cat of SEO_CAT_SLUGS) {
+    for (const city of SEO_CITY_SLUGS) {
+      urls.push(urlEntry(`/${cat}/${city}`, 'weekly', '0.8'));
+    }
   }
 
   // Firestore'dan onaylı firmalar
