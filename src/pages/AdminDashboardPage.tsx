@@ -3203,8 +3203,9 @@ function KaynaklarTabContent() {
       }
       await updateDoc(doc(db, 'haberKaynaklari', kaynak.id), { son_tarama: serverTimestamp() });
       toast.success(`${data.bulunan} haber bulundu, ${eklenen} taslak olarak eklendi.`);
-    } catch {
-      toast.error('Tarama sırasında hata oluştu.');
+    } catch (e) {
+      console.error('[admin] handleTara hatası:', e);
+      toast.error('Tarama sırasında hata oluştu: ' + String(e));
     } finally {
       setTaramaYapilan(null);
     }
@@ -3484,7 +3485,7 @@ function HaberlerTab() {
           lower.includes('manuel doldurun') ||
           lower.includes('otomatik alınamadı') ||
           lower.includes('lütfen manuel') ||
-          val.trim().length < 10
+          val.trim().length < 5
         );
       };
 
@@ -3513,8 +3514,9 @@ function HaberlerTab() {
       } else {
         setAiFetchMsg({ type: 'ok', text: 'Form alanları otomatik dolduruldu.' });
       }
-    } catch {
-      setAiFetchMsg({ type: 'warn', text: 'Otomatik doldurma başarısız, manuel girin.' });
+    } catch (e) {
+      console.error('[admin] handleAiFetch hatası:', e);
+      setAiFetchMsg({ type: 'warn', text: 'Otomatik doldurma başarısız: ' + String(e) });
     } finally {
       setAiFetching(false);
     }
