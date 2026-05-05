@@ -28,3 +28,7 @@ dist-ssr
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Marketing skills (managed by npx skills)
+.agents/skills/
+.claude/skills/
