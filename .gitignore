@@ -29,6 +29,7 @@ dist-ssr
 /blob-report/
 /playwright/.cache/
 
-# Marketing skills (managed by npx skills)
+# Skills (managed by npx skills)
 .agents/skills/
 .claude/skills/
+skills-lock.json

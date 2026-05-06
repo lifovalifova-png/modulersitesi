@@ -83,61 +83,66 @@ function urlEntry(loc: string, changefreq: string, priority: string, lastmod = T
 }
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
-  const urls: string[] = [];
+  try {
+    const urls: string[] = [];
 
-  // Statik sayfalar
-  for (const p of STATIC_PAGES) {
-    urls.push(urlEntry(p.loc, p.changefreq, p.priority));
-  }
-
-  // Kategori sayfaları
-  for (const slug of CATEGORIES) {
-    urls.push(urlEntry(`/kategori/${slug}`, 'daily', '0.9'));
-  }
-
-  // Blog yazıları — statik listeden
-  for (const slug of BLOG_SLUGS) {
-    urls.push(urlEntry(`/blog/${slug}`, 'monthly', '0.7'));
-  }
-
-  // Programmatic SEO sayfaları (şehir × kategori)
-  for (const cat of SEO_CAT_SLUGS) {
-    for (const city of SEO_CITY_SLUGS) {
-      urls.push(urlEntry(`/${cat}/${city}`, 'weekly', '0.8'));
+    // Statik sayfalar
+    for (const p of STATIC_PAGES) {
+      urls.push(urlEntry(p.loc, p.changefreq, p.priority));
     }
-  }
 
-  // Firestore'dan onaylı firmalar
-  const firms = await fetchCollection('firms', ['status', 'name']);
-  for (const doc of firms) {
-    if (field(doc, 'status') === 'approved') {
-      urls.push(urlEntry(`/firma/${docId(doc)}`, 'weekly', '0.6'));
+    // Kategori sayfaları
+    for (const slug of CATEGORIES) {
+      urls.push(urlEntry(`/kategori/${slug}`, 'daily', '0.9'));
     }
-  }
 
-  // Firestore'dan yayındaki etkinlikler
-  const etkinlikler = await fetchCollection('etkinlikler', ['durum', 'slug']);
-  for (const d of etkinlikler) {
-    if (field(d, 'durum') === 'yayinda') {
-      const slug = field(d, 'slug') || docId(d);
-      urls.push(urlEntry(`/etkinlikler/${slug}`, 'weekly', '0.6'));
+    // Blog yazıları — statik listeden
+    for (const slug of BLOG_SLUGS) {
+      urls.push(urlEntry(`/blog/${slug}`, 'monthly', '0.7'));
     }
-  }
 
-  // Firestore'dan aktif ilanlar
-  const ilanlar = await fetchCollection('ilanlar', ['status', 'aktif']);
-  for (const doc of ilanlar) {
-    if (field(doc, 'status') === 'aktif') {
-      urls.push(urlEntry(`/ilan/${docId(doc)}`, 'weekly', '0.5'));
+    // Programmatic SEO sayfaları (şehir × kategori)
+    for (const cat of SEO_CAT_SLUGS) {
+      for (const city of SEO_CITY_SLUGS) {
+        urls.push(urlEntry(`/${cat}/${city}`, 'weekly', '0.8'));
+      }
     }
-  }
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    // Firestore'dan onaylı firmalar
+    const firms = await fetchCollection('firms', ['status', 'name']);
+    for (const doc of firms) {
+      if (field(doc, 'status') === 'approved') {
+        urls.push(urlEntry(`/firma/${docId(doc)}`, 'weekly', '0.6'));
+      }
+    }
+
+    // Firestore'dan yayındaki etkinlikler
+    const etkinlikler = await fetchCollection('etkinlikler', ['durum', 'slug']);
+    for (const d of etkinlikler) {
+      if (field(d, 'durum') === 'yayinda') {
+        const slug = field(d, 'slug') || docId(d);
+        urls.push(urlEntry(`/etkinlikler/${slug}`, 'weekly', '0.6'));
+      }
+    }
+
+    // Firestore'dan aktif ilanlar
+    const ilanlar = await fetchCollection('ilanlar', ['status', 'aktif']);
+    for (const doc of ilanlar) {
+      if (field(doc, 'status') === 'aktif') {
+        urls.push(urlEntry(`/ilan/${docId(doc)}`, 'weekly', '0.5'));
+      }
+    }
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join('\n')}
 </urlset>`;
 
-  res.setHeader('Content-Type', 'application/xml');
-  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600');
-  res.status(200).send(xml);
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
+    res.status(200).send(xml);
+  } catch (e) {
+    console.error('[sitemap] handler error:', e);
+    res.status(500).send('Sitemap generation failed');
+  }
 }
