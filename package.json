@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --port 9002 --host 0.0.0.0",
     "build": "tsc -b && vite build",
-    "build:prod": "tsc -b && BUILD_MODE=prod vite build",
+    "build:prod": "tsc -b && BUILD_MODE=prod vite build && react-snap || true",
     "lint": "eslint .",
     "test": "vitest",
     "test:e2e": "playwright test",
@@ -16,7 +16,8 @@
     "install-deps": "npm install",
     "clean": "rm -rf node_modules package-lock.json dist",
     "clean-dupes": "npx tsx src/scripts/cleanDuplicateHaberler.ts",
-    "scrape:fuarlar": "npx tsx src/scripts/fuarScraper.ts"
+    "scrape:fuarlar": "npx tsx src/scripts/fuarScraper.ts",
+    "postbuild": "react-snap || true"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -77,24 +78,40 @@
     "destination": "dist",
     "include": [
       "/",
+      "/firmalar",
+      "/blog",
+      "/haberler",
+      "/etkinlikler",
+      "/sss",
+      "/nasil-kullanilir",
+      "/hakkimizda",
+      "/fiyat-hesapla",
+      "/logo-kit",
+      "/kvkk",
+      "/gizlilik",
+      "/kullanim-kosullari",
       "/kategori/prefabrik",
       "/kategori/celik-yapilar",
       "/kategori/yasam-konteynerleri",
       "/kategori/tiny-house",
       "/kategori/ahsap-yapilar",
       "/kategori/ikinci-el",
-      "/firmalar",
-      "/firmalar-harita",
-      "/blog",
-      "/talep-olustur",
-      "/sss",
-      "/hakkimizda",
-      "/fiyat-hesapla",
-      "/kvkk",
-      "/gizlilik",
-      "/kullanim-kosullari",
-      "/giris",
-      "/kayit"
+      "/kategori/ozel-projeler",
+      "/prefabrik-ev/istanbul",
+      "/prefabrik-ev/ankara",
+      "/prefabrik-ev/izmir",
+      "/prefabrik-ev/sakarya",
+      "/prefabrik-ev/antalya",
+      "/konteyner-ev/istanbul",
+      "/konteyner-ev/ankara",
+      "/konteyner-ev/izmir",
+      "/konteyner-ev/sakarya",
+      "/konteyner-ev/antalya",
+      "/tiny-house/istanbul",
+      "/tiny-house/ankara",
+      "/tiny-house/izmir",
+      "/tiny-house/sakarya",
+      "/tiny-house/antalya"
     ],
     "minifyHtml": {
       "collapseWhitespace": false
@@ -104,7 +121,12 @@
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage"
     ],
-    "skipThirdPartyRequests": true
+    "puppeteerExecutablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "skipThirdPartyRequests": true,
+    "inlineCss": false,
+    "headless": true,
+    "crawl": false,
+    "concurrency": 1
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
@@ -124,6 +146,7 @@
     "playwright": "1.58.2",
     "playwright-core": "1.58.2",
     "postcss": "8.4.49",
+    "react-snap": "^1.23.0",
     "tailwindcss": "3.4.16",
     "tsx": "^4.21.0",
     "typescript": "~5.6.3",

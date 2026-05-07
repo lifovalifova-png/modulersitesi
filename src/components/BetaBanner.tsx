@@ -16,7 +16,8 @@ export default function BetaBanner() {
     } catch { /* ignore */ }
   }, []);
 
-  if (loading || !settings.betaMode || !settings.betaBannerVisible || dismissed) return null;
+  const isPrerender = typeof navigator !== 'undefined' && navigator.userAgent.includes('ReactSnap');
+  if (isPrerender || loading || !settings.betaMode || !settings.betaBannerVisible || dismissed) return null;
 
   const handleDismiss = () => {
     setDismissed(true);

@@ -113,6 +113,10 @@ export default function HakkimizdaPage() {
       if (snap.exists()) {
         setIcerik({ ...DEFAULT, ...(snap.data() as Partial<Icerik>) });
       }
+    }).catch((err) => {
+      if (typeof navigator !== 'undefined' && !navigator.userAgent.includes('ReactSnap')) {
+        console.error('Hakkımızda fetch error:', err);
+      }
     }).finally(() => setLoading(false));
   }, []);
 
