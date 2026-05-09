@@ -3083,7 +3083,14 @@ const BOSH_HABER: Omit<AdminHaber, 'id'> = {
 
 type HaberDurum = 'all' | 'taslak' | 'yayinda' | 'arsiv';
 
-interface Onerilen { baslik: string; kaynak: string; kaynakUrl: string; ozet: string; icerik?: string; gorselUrl?: string; kategori: string; bolge: string; tarih: string }
+interface Onerilen {
+  baslikTr: string; baslikEn?: string;
+  kaynak: string; kaynakUrl: string;
+  ozetTr: string; ozetEn?: string;
+  icerikTr?: string; icerikEn?: string;
+  gorselUrl?: string; kategori: string; bolge: string; tarih: string;
+  baslik?: string; ozet?: string; icerik?: string;
+}
 
 function haberDurumHesapla(h: AdminHaber): 'taslak' | 'yayinda' | 'arsiv' {
   if (h.arsivlendi) return 'arsiv';
@@ -3489,10 +3496,12 @@ function HaberlerTab() {
         );
       };
 
-      const cleanTitleTR = isPlaceholder(fillData.titleTR) ? '' : fillData.titleTR;
-      const cleanTitleEN = isPlaceholder(fillData.titleEN) ? '' : fillData.titleEN;
-      const cleanSummaryTR = isPlaceholder(fillData.summaryTR) ? '' : fillData.summaryTR;
-      const cleanSummaryEN = isPlaceholder(fillData.summaryEN) ? '' : fillData.summaryEN;
+      const cleanTitleTR = isPlaceholder(fillData.baslikTr ?? fillData.titleTR) ? '' : (fillData.baslikTr ?? fillData.titleTR);
+      const cleanTitleEN = isPlaceholder(fillData.baslikEn ?? fillData.titleEN) ? '' : (fillData.baslikEn ?? fillData.titleEN);
+      const cleanSummaryTR = isPlaceholder(fillData.ozetTr ?? fillData.summaryTR) ? '' : (fillData.ozetTr ?? fillData.summaryTR);
+      const cleanSummaryEN = isPlaceholder(fillData.ozetEn ?? fillData.summaryEN) ? '' : (fillData.ozetEn ?? fillData.summaryEN);
+      const cleanIcerikTR = isPlaceholder(fillData.icerikTr) ? '' : fillData.icerikTr;
+      const cleanIcerikEN = isPlaceholder(fillData.icerikEn) ? '' : fillData.icerikEn;
 
       setForm((f) => ({
         ...f,
@@ -3500,6 +3509,8 @@ function HaberlerTab() {
         baslikEn: cleanTitleEN || f.baslikEn,
         ozet: cleanSummaryTR || f.ozet,
         ozetEn: cleanSummaryEN || f.ozetEn,
+        icerik: cleanIcerikTR || f.icerik,
+        icerikEn: cleanIcerikEN || f.icerikEn,
         kaynak: fillData.sourceName || f.kaynak,
         kaynakUrl: aiFetchUrl.trim(),
         kategori: fillData.category ? (katMap[fillData.category] || f.kategori) : f.kategori,
@@ -3528,13 +3539,18 @@ function HaberlerTab() {
       return;
     }
     setKaydediyor(true);
+    const bilingualFields = {
+      baslikTr: form.baslik,
+      ozetTr: form.ozet,
+      icerikTr: form.icerik,
+    };
     try {
       if (duzenle?.id) {
-        await updateDoc(doc(db, 'haberler', duzenle.id), { ...form, guncellenmeTarih: serverTimestamp() });
+        await updateDoc(doc(db, 'haberler', duzenle.id), { ...form, ...bilingualFields, guncellenmeTarih: serverTimestamp() });
         toast.success('Haber güncellendi.');
       } else {
         await addDoc(collection(db, 'haberler'), {
-          ...form, yayinda: true, arsivlendi: false, tarih: serverTimestamp(),
+          ...form, ...bilingualFields, yayinda: true, arsivlendi: false, tarih: serverTimestamp(),
         });
         toast.success('Haber yayına eklendi.');
       }
@@ -3584,8 +3600,8 @@ function HaberlerTab() {
   }
 
   async function handleOneriEkle(o: Onerilen) {
-    // Duplicate kontrolü — baslik veya kaynakUrl zaten var mı?
-    const q1 = query(collection(db, 'haberler'), where('baslik', '==', o.baslik.trim()));
+    const baslikTr = o.baslikTr || o.baslik || '';
+    const q1 = query(collection(db, 'haberler'), where('baslik', '==', baslikTr.trim()));
     const snap1 = await getDocs(q1);
     if (!snap1.empty) {
       toast.error('Bu başlıkta haber zaten mevcut.');
@@ -3602,9 +3618,11 @@ function HaberlerTab() {
       }
     }
     await addDoc(collection(db, 'haberler'), {
-      baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
-      ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
-      bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
+      baslik: baslikTr, baslikTr, baslikEn: o.baslikEn ?? '',
+      kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
+      ozet: o.ozetTr || o.ozet || '', ozetTr: o.ozetTr || o.ozet || '', ozetEn: o.ozetEn ?? '',
+      icerik: o.icerikTr || o.icerik || '', icerikTr: o.icerikTr || o.icerik || '', icerikEn: o.icerikEn ?? '',
+      kategori: o.kategori, bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
       yayinda: true, arsivlendi: false, otomatik: true, tarih: serverTimestamp(),
     });
     toast.success('Yayına eklendi.');
@@ -3616,8 +3634,8 @@ function HaberlerTab() {
     let eklenen = 0;
     let atlanan = 0;
     for (const o of onerilenler) {
-      // Duplicate kontrolü
-      const q1 = query(collection(db, 'haberler'), where('baslik', '==', o.baslik.trim()));
+      const baslikTr = o.baslikTr || o.baslik || '';
+      const q1 = query(collection(db, 'haberler'), where('baslik', '==', baslikTr.trim()));
       const snap1 = await getDocs(q1);
       if (!snap1.empty) { atlanan++; continue; }
       if (o.kaynakUrl) {
@@ -3626,9 +3644,11 @@ function HaberlerTab() {
         if (!snap2.empty) { atlanan++; continue; }
       }
       await addDoc(collection(db, 'haberler'), {
-        baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
-        ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
-        bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
+        baslik: baslikTr, baslikTr, baslikEn: o.baslikEn ?? '',
+        kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
+        ozet: o.ozetTr || o.ozet || '', ozetTr: o.ozetTr || o.ozet || '', ozetEn: o.ozetEn ?? '',
+        icerik: o.icerikTr || o.icerik || '', icerikTr: o.icerikTr || o.icerik || '', icerikEn: o.icerikEn ?? '',
+        kategori: o.kategori, bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
         yayinda: true, arsivlendi: false, otomatik: true, tarih: serverTimestamp(),
       });
       eklenen++;
@@ -3732,8 +3752,8 @@ function HaberlerTab() {
                 let eklenen = 0;
                 let atlanan = 0;
                 for (const o of haberler) {
-                  // Firestore duplicate kontrolü
-                  const q1 = query(collection(db, 'haberler'), where('baslik', '==', o.baslik.trim()));
+                  const baslikTr = o.baslikTr || o.baslik || '';
+                  const q1 = query(collection(db, 'haberler'), where('baslik', '==', baslikTr.trim()));
                   const snap1 = await getDocs(q1);
                   if (!snap1.empty) { atlanan++; continue; }
                   if (o.kaynakUrl) {
@@ -3742,9 +3762,11 @@ function HaberlerTab() {
                     if (!snap2.empty) { atlanan++; continue; }
                   }
                   await addDoc(collection(db, 'haberler'), {
-                    baslik: o.baslik, kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
-                    ozet: o.ozet, icerik: o.icerik ?? '', kategori: o.kategori,
-                    bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
+                    baslik: baslikTr, baslikTr, baslikEn: o.baslikEn ?? '',
+                    kaynak: o.kaynak, kaynakUrl: o.kaynakUrl,
+                    ozet: o.ozetTr || o.ozet || '', ozetTr: o.ozetTr || o.ozet || '', ozetEn: o.ozetEn ?? '',
+                    icerik: o.icerikTr || o.icerik || '', icerikTr: o.icerikTr || o.icerik || '', icerikEn: o.icerikEn ?? '',
+                    kategori: o.kategori, bolge: o.bolge ?? 'turkiye', gorselUrl: o.gorselUrl ?? '',
                     yayinda: true, arsivlendi: false, otomatik: true, tarih: serverTimestamp(),
                   });
                   eklenen++;
@@ -3831,7 +3853,7 @@ function HaberlerTab() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 line-clamp-1">{o.baslik}</p>
+                      <p className="text-sm font-medium text-gray-800 line-clamp-1">{o.baslikTr || o.baslik}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{o.kaynak} · {o.bolge === 'dunya' ? 'Dünyadan' : 'Türkiye'} · {o.tarih}</p>
                     </div>
                     <button
@@ -3841,8 +3863,8 @@ function HaberlerTab() {
                       Yayınla
                     </button>
                   </div>
-                  {o.icerik && (
-                    <p className="text-xs text-gray-600 mt-2 line-clamp-3">{o.icerik.slice(0, 200)}{o.icerik.length > 200 ? '…' : ''}</p>
+                  {(o.icerikTr || o.icerik) && (
+                    <p className="text-xs text-gray-600 mt-2 line-clamp-3">{(o.icerikTr || o.icerik || '').slice(0, 200)}{(o.icerikTr || o.icerik || '').length > 200 ? '…' : ''}</p>
                   )}
                 </div>
               ))}

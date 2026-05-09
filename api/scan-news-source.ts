@@ -1,57 +1,53 @@
 export const config = { runtime: 'edge' };
 
+const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
+
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 
-// Model fallback sırası: önce 2.0-flash (en bol free quota), sonra 2.0-flash-lite
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+async function callClaude(
+  apiKey: string,
+  system: string,
+  userMessage: string,
+): Promise<{ ok: true; text: string } | { ok: false; error: string; status: number }> {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 4096,
+        system,
+        messages: [{ role: 'user', content: userMessage }],
+      }),
+    });
 
-async function callGemini(apiKey: string, prompt: string): Promise<{ ok: true; text: string } | { ok: false; error: string; status: number }> {
-  let lastError = '';
-  let lastStatus = 0;
+    const data = await res.json() as {
+      content?: Array<{ type: string; text?: string }>;
+      error?: { message: string };
+    };
 
-  for (const model of GEMINI_MODELS) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.1 },
-          }),
-        },
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        lastStatus = res.status;
-        lastError = data?.error?.message || `HTTP ${res.status}`;
-        console.error(`[scan-news] ${model} failed:`, res.status, lastError);
-        // 429 (quota) veya 404 (model gone) ise sonraki modeli dene
-        if (res.status === 429 || res.status === 404) continue;
-        // Diğer hatalar (400, 401, 403) modele özgü değil, doğrudan dön
-        return { ok: false, error: lastError, status: res.status };
-      }
-
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-      if (!text) {
-        lastError = 'Boş yanıt';
-        console.error(`[scan-news] ${model} returned empty text`, JSON.stringify(data).slice(0, 500));
-        continue;
-      }
-
-      console.log(`[scan-news] ${model} success`);
-      return { ok: true, text };
-    } catch (e) {
-      lastError = String(e);
-      console.error(`[scan-news] ${model} exception:`, e);
+    if (!res.ok) {
+      const msg = data?.error?.message || `HTTP ${res.status}`;
+      console.error(`[scan-news] Claude failed:`, res.status, msg);
+      return { ok: false, error: msg, status: res.status };
     }
-  }
 
-  return { ok: false, error: lastError || 'Tüm modeller başarısız', status: lastStatus };
+    const text = data.content?.find(b => b.type === 'text')?.text ?? '';
+    if (!text) {
+      console.error('[scan-news] Claude returned empty text');
+      return { ok: false, error: 'Boş yanıt', status: 200 };
+    }
+
+    return { ok: true, text };
+  } catch (e) {
+    console.error('[scan-news] Claude exception:', e);
+    return { ok: false, error: String(e), status: 0 };
+  }
 }
 
 export default async function handler(req: Request) {
@@ -66,14 +62,13 @@ export default async function handler(req: Request) {
       return json({ error: 'sourceUrl gereklidir.' }, 400);
     }
 
-    const GEMINI_KEY = process.env.GEMINI_API_KEY;
-    if (!GEMINI_KEY) return json({ error: 'GEMINI_API_KEY tanımlı değil.' }, 500);
+    const API_KEY = process.env.ANTHROPIC_API_KEY;
+    if (!API_KEY) return json({ error: 'ANTHROPIC_API_KEY tanımlı değil.' }, 500);
 
     const kelimeler = anahtar_kelimeler?.length
       ? anahtar_kelimeler
       : ['prefabrik', 'modüler yapı', 'konteyner ev', 'tiny house', 'çelik yapı'];
 
-    // Kaynak sayfayı çek
     let pageText = '';
     try {
       const r = await fetch(sourceUrl, {
@@ -107,7 +102,9 @@ export default async function handler(req: Request) {
       return json({ error: 'Sayfa içeriği çok kısa veya boş', bulunan: 0, eklenen: 0, haberler: [] });
     }
 
-    const prompt = `Bu bir haber sitesinin ana sayfası içeriğidir. Sayfadaki haber linklerinden şu anahtar kelimelere uygun olanları bul: [${kelimeler.join(', ')}].
+    const system = 'Sen bir haber sitesi analiz uzmanısın. Verilen web sayfası içeriğinden belirtilen anahtar kelimelerle ilgili haber linklerini bul ve yapılandırılmış JSON olarak döndür.';
+
+    const userMessage = `Bu bir haber sitesinin ana sayfası içeriğidir. Sayfadaki haber linklerinden şu anahtar kelimelere uygun olanları bul: [${kelimeler.join(', ')}].
 
 Her uygun haber için aşağıdaki formatta JSON array döndür, başka hiçbir şey yazma:
 [
@@ -123,14 +120,13 @@ Kurallar:
 Sayfa içeriği:
 ${pageText}`;
 
-    const aiResult = await callGemini(GEMINI_KEY, prompt);
+    const aiResult = await callClaude(API_KEY, system, userMessage);
 
     if (!aiResult.ok) {
-      // Gerçek hata mesajını kullanıcıya geri dön (debug için kritik)
       const userMsg = aiResult.status === 429
-        ? 'AI günlük kullanım limitine ulaşıldı. Yarın tekrar deneyin veya manuel ekleyin.'
-        : aiResult.status === 403
-        ? 'AI API key hatalı veya izinler eksik. Vercel env değişkenlerini kontrol edin.'
+        ? 'AI kullanım limitine ulaşıldı. Daha sonra tekrar deneyin.'
+        : aiResult.status === 401
+        ? 'API key hatalı. Vercel env değişkenlerini kontrol edin.'
         : `AI hatası: ${aiResult.error}`;
       return json({ error: userMsg, bulunan: 0, eklenen: 0, haberler: [] }, 500);
     }
