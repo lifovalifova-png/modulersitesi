@@ -18,6 +18,7 @@ import SEOMeta from '../components/SEOMeta';
 import { db } from '../lib/firebase';
 import { useLanguage } from '../context/LanguageContext';
 import { type Haber, firestoreToHaber, haberBaslik, haberOzet } from '../types/haber';
+import { siralaHaberler } from '../utils/haberSiralama';
 
 /* ── Bölge Filtreleri ────────────────────────────────────── */
 const BOLGELER = [
@@ -138,7 +139,7 @@ export default function HaberlerPage() {
         seen.add(key);
         return true;
       });
-      setHaberler(docs);
+      setHaberler(siralaHaberler(docs));
       setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
       setHasMore(snap.docs.length === PAGE_SIZE);
       setLoading(false);
@@ -166,12 +167,13 @@ export default function HaberlerPage() {
     setHaberler((prev) => {
       const all = [...prev, ...newDocs];
       const seen = new Set<string>();
-      return all.filter((h) => {
+      const unique = all.filter((h) => {
         const key = h.baslikTr.trim().toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       });
+      return siralaHaberler(unique);
     });
     setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
     setHasMore(snap.docs.length === PAGE_SIZE);

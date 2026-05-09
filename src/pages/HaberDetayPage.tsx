@@ -10,6 +10,7 @@ import SEOMeta from '../components/SEOMeta';
 import { db } from '../lib/firebase';
 import { useLanguage } from '../context/LanguageContext';
 import { type Haber, firestoreToHaber, haberBaslik, haberOzet, haberIcerik } from '../types/haber';
+import { siralaHaberler } from '../utils/haberSiralama';
 
 const VARSAYILAN_GORSEL =
   'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&h=600&fit=crop';
@@ -79,7 +80,7 @@ export default function HaberDetayPage() {
           seen.add(key);
           return true;
         });
-        setDigerHaberler(unique.slice(0, 3));
+        setDigerHaberler(siralaHaberler(unique).slice(0, 3));
       } catch { /* silent */ }
     })();
   }, [haberId]);
