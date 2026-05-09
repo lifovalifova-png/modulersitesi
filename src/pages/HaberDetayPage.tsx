@@ -9,23 +9,7 @@ import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import { db } from '../lib/firebase';
 import { useLanguage } from '../context/LanguageContext';
-
-interface Haber {
-  id:         string;
-  baslik:     string;
-  kaynak:     string;
-  kaynakUrl:  string;
-  ozet:       string;
-  icerik?:    string;
-  kategori:   string;
-  bolge?:     string;
-  gorselUrl?: string;
-  tarih:      { seconds: number; nanoseconds: number } | null;
-  yayinda:    boolean;
-  baslikEn?:  string;
-  ozetEn?:    string;
-  icerikEn?:  string;
-}
+import { type Haber, firestoreToHaber, haberBaslik, haberOzet, haberIcerik } from '../types/haber';
 
 const VARSAYILAN_GORSEL =
   'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&h=600&fit=crop';
@@ -61,7 +45,7 @@ export default function HaberDetayPage() {
       try {
         const snap = await getDoc(doc(db, 'haberler', haberId));
         if (snap.exists()) {
-          setHaber({ id: snap.id, ...snap.data() } as Haber);
+          setHaber(firestoreToHaber(snap.id, snap.data() as Record<string, unknown>));
         } else {
           setNotFound(true);
         }
@@ -86,12 +70,11 @@ export default function HaberDetayPage() {
         );
         const snap = await getDocs(q);
         const raw = snap.docs
-          .map((d) => ({ id: d.id, ...d.data() } as Haber))
+          .map((d) => firestoreToHaber(d.id, d.data() as Record<string, unknown>))
           .filter((h) => h.id !== haberId);
-        // Duplicate guard
         const seen = new Set<string>();
         const unique = raw.filter((h) => {
-          const key = h.baslik.trim().toLowerCase();
+          const key = h.baslikTr.trim().toLowerCase();
           if (seen.has(key)) return false;
           seen.add(key);
           return true;
@@ -134,9 +117,9 @@ export default function HaberDetayPage() {
     );
   }
 
-  const baslik = lang === 'en' ? (haber.baslikEn || haber.baslik) : haber.baslik;
-  const ozet   = lang === 'en' ? (haber.ozetEn || haber.ozet) : haber.ozet;
-  const icerikRaw = lang === 'en' ? (haber.icerikEn || haber.icerik) : haber.icerik;
+  const baslik = haberBaslik(haber, lang as 'tr' | 'en');
+  const ozet   = haberOzet(haber, lang as 'tr' | 'en');
+  const icerikRaw = haberIcerik(haber, lang as 'tr' | 'en');
   const icerikVar = Boolean(icerikRaw && icerikRaw.trim().length > 0);
   const sure = okumaSuresi(icerikRaw || ozet);
 
@@ -296,7 +279,7 @@ export default function HaberDetayPage() {
                     <div className="h-32 bg-gray-100 overflow-hidden">
                       <img
                         src={h.gorselUrl || VARSAYILAN_GORSEL}
-                        alt={lang === 'en' ? (h.baslikEn || h.baslik) : h.baslik}
+                        alt={haberBaslik(h, lang as 'tr' | 'en')}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                         onError={(e) => { (e.target as HTMLImageElement).src = VARSAYILAN_GORSEL; }}
@@ -305,7 +288,7 @@ export default function HaberDetayPage() {
                     <div className="p-3">
                       <p className="text-xs text-emerald-600 font-medium mb-1">{h.kaynak}</p>
                       <h3 className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-emerald-700 transition">
-                        {lang === 'en' ? (h.baslikEn || h.baslik) : h.baslik}
+                        {haberBaslik(h, lang as 'tr' | 'en')}
                       </h3>
                       {h.tarih && (
                         <p className="text-xs text-gray-400 mt-1.5">{formatTarih(h.tarih)}</p>

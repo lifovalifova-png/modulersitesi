@@ -17,24 +17,7 @@ import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import { db } from '../lib/firebase';
 import { useLanguage } from '../context/LanguageContext';
-
-/* ── Types ───────────────────────────────────────────────── */
-interface Haber {
-  id:        string;
-  baslik:    string;
-  kaynak:    string;
-  kaynakUrl: string;
-  ozet:      string;
-  icerik?:   string;
-  kategori:  string;
-  bolge?:    string; /* 'turkiye' | 'dunya' */
-  gorselUrl?: string;
-  tarih:     { seconds: number; nanoseconds: number } | null;
-  yayinda:   boolean;
-  baslikEn?: string;
-  ozetEn?:   string;
-  icerikEn?: string;
-}
+import { type Haber, firestoreToHaber, haberBaslik, haberOzet } from '../types/haber';
 
 /* ── Bölge Filtreleri ────────────────────────────────────── */
 const BOLGELER = [
@@ -54,9 +37,9 @@ function formatTarih(tarih: Haber['tarih']): string {
 }
 
 /* ── Haber Kartı ─────────────────────────────────────────── */
-function HaberKart({ haber, lang }: { haber: Haber; lang: string }) {
-  const baslik = lang === 'en' ? (haber.baslikEn || haber.baslik) : haber.baslik;
-  const ozet   = lang === 'en' ? (haber.ozetEn || haber.ozet) : haber.ozet;
+function HaberKart({ haber, lang }: { haber: Haber; lang: 'tr' | 'en' }) {
+  const baslik = haberBaslik(haber, lang);
+  const ozet   = haberOzet(haber, lang);
 
   return (
     <Link
@@ -146,12 +129,11 @@ export default function HaberlerPage() {
 
     const unsub = onSnapshot(q, (snap) => {
       const raw = snap.docs.map(
-        (d) => ({ id: d.id, ...d.data() } as Haber),
+        (d) => firestoreToHaber(d.id, d.data() as Record<string, unknown>),
       );
-      // Duplicate guard — aynı baslik'ten sadece birini göster
       const seen = new Set<string>();
       const docs = raw.filter((h) => {
-        const key = h.baslik.trim().toLowerCase();
+        const key = h.baslikTr.trim().toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -180,12 +162,12 @@ export default function HaberlerPage() {
     );
 
     const snap = await getDocs(q);
-    const newDocs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Haber));
+    const newDocs = snap.docs.map((d) => firestoreToHaber(d.id, d.data() as Record<string, unknown>));
     setHaberler((prev) => {
       const all = [...prev, ...newDocs];
       const seen = new Set<string>();
       return all.filter((h) => {
-        const key = h.baslik.trim().toLowerCase();
+        const key = h.baslikTr.trim().toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
         return true;

@@ -116,7 +116,7 @@ export default function HomePage() {
   }, []);
 
   /* ─── Kayan Haber Bandı ───────────────────────────────────── */
-  interface MiniHaber { id: string; baslik: string; baslikEn?: string; kaynak: string }
+  interface MiniHaber { id: string; baslikTr: string; baslikEn: string; kaynak: string }
   const [haberler, setHaberler] = useState<MiniHaber[]>([]);
 
   useEffect(() => {
@@ -128,12 +128,17 @@ export default function HomePage() {
     );
     const unsub = onSnapshot(q, (snap) => {
       const raw = snap.docs.map((d) => {
-        const data = d.data() as { baslik: string; baslikEn?: string; kaynak: string };
-        return { id: d.id, baslik: data.baslik, baslikEn: data.baslikEn, kaynak: data.kaynak };
+        const data = d.data() as Record<string, unknown>;
+        return {
+          id: d.id,
+          baslikTr: (data.baslikTr ?? data.baslik ?? '') as string,
+          baslikEn: (data.baslikEn ?? '') as string,
+          kaynak: (data.kaynak ?? '') as string,
+        };
       });
       const seen = new Set<string>();
       const docs = raw.filter((h) => {
-        const key = h.baslik.trim().toLowerCase();
+        const key = h.baslikTr.trim().toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -308,7 +313,7 @@ export default function HomePage() {
                           to={`/haberler/${h.id}`}
                           className="text-white/80 text-sm font-body hover:text-tertiary-fixed hover:underline transition"
                         >
-                          {lang === 'en' ? (h.baslikEn || h.baslik) : h.baslik}
+                          {lang === 'en' ? (h.baslikEn || h.baslikTr) : h.baslikTr}
                         </Link>
                         <span className="text-tertiary-fixed/60">|</span>
                       </span>
