@@ -3913,6 +3913,16 @@ function HaberlerTab() {
                       <p className="font-medium text-gray-800 truncate flex items-center gap-1.5">
                         {h.otomatik && <Bot className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" title="Otomatik eklenen" />}
                         {h.baslik}
+                        {(() => {
+                          const acilKelimeler = ['deprem','earthquake','sel','flood','yangın','fire','afet','disaster'];
+                          const regKelimeler = ['yönetmelik','regulation','kanun','law','mevzuat','standart','tse','imar','ruhsat'];
+                          const lower = h.baslik.toLowerCase();
+                          const acil = acilKelimeler.some(k => lower.includes(k));
+                          const reg = regKelimeler.some(k => lower.includes(k));
+                          if (acil) return <span className="ml-1 text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold flex-shrink-0">ACİL</span>;
+                          if (reg) return <span className="ml-1 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold flex-shrink-0">MEVZUAT</span>;
+                          return null;
+                        })()}
                       </p>
                       <a href={h.kaynakUrl} target="_blank" rel="noopener noreferrer"
                          className="text-xs text-emerald-600 hover:underline truncate block">{h.kaynakUrl}</a>
@@ -4015,12 +4025,6 @@ function HaberlerTab() {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Başlık *</label>
-                <input value={form.baslik} onChange={(e) => setForm({ ...form, baslik: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="Haber başlığı" />
-              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Kaynak Adı *</label>
@@ -4032,8 +4036,8 @@ function HaberlerTab() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Bölge</label>
                   <select value={form.bolge} onChange={(e) => setForm({ ...form, bolge: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <option value="turkiye">🇹🇷 Türkiye</option>
-                    <option value="dunya">🌍 Dünyadan</option>
+                    <option value="turkiye">Türkiye</option>
+                    <option value="dunya">Dünyadan</option>
                   </select>
                 </div>
               </div>
@@ -4049,47 +4053,102 @@ function HaberlerTab() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="https://images.unsplash.com/..." />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Kısa Özet</label>
-                <textarea value={form.ozet} onChange={(e) => setForm({ ...form, ozet: e.target.value })}
-                  rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                  placeholder="Kartlarda görünecek kısa özet (2-3 cümle)..." />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">İçerik</label>
-                <textarea value={form.icerik} onChange={(e) => setForm({ ...form, icerik: e.target.value })}
-                  rows={8}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y font-mono"
-                  placeholder="Detay sayfasında gösterilecek uzun içerik (5 paragraf, \n\n ile ayır)..." />
-              </div>
 
-              {/* İngilizce alanlar (opsiyonel) */}
-              <div className="border-t border-gray-200 pt-4 mt-2">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">🌐 İngilizce (Opsiyonel)</p>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Başlık (EN)</label>
-                    <input value={form.baslikEn ?? ''} onChange={(e) => setForm({ ...form, baslikEn: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      placeholder="English title (optional)" />
+              {/* TR/EN Tab İçerik Editörü */}
+              {(() => {
+                const kelimeSay = (t: string) => t.trim() ? t.trim().split(/\s+/).length : 0;
+                return (
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="flex border-b border-gray-200 bg-gray-50">
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, _dilTab: 'tr' } as typeof form)}
+                      className={`flex-1 py-2 text-sm font-medium transition ${(form as Record<string, unknown>)._dilTab !== 'en' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      Türkçe
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, _dilTab: 'en' } as typeof form)}
+                      className={`flex-1 py-2 text-sm font-medium transition ${(form as Record<string, unknown>)._dilTab === 'en' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      English
+                    </button>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Özet (EN)</label>
-                    <textarea value={form.ozetEn ?? ''} onChange={(e) => setForm({ ...form, ozetEn: e.target.value })}
-                      rows={2}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                      placeholder="English summary (optional)" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">İçerik (EN)</label>
-                    <textarea value={form.icerikEn ?? ''} onChange={(e) => setForm({ ...form, icerikEn: e.target.value })}
-                      rows={6}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y font-mono"
-                      placeholder="English content (optional, 5 paragraphs)" />
+                  <div className="p-3 space-y-3">
+                    {(form as Record<string, unknown>)._dilTab !== 'en' ? (
+                      <>
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <label className="text-sm font-medium text-gray-700">Başlık *</label>
+                            <span className="text-xs text-gray-400">{form.baslik.length} karakter</span>
+                          </div>
+                          <input value={form.baslik} onChange={(e) => setForm({ ...form, baslik: e.target.value })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            placeholder="Haber başlığı" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <label className="text-sm font-medium text-gray-700">Özet</label>
+                            <span className="text-xs text-gray-400">{kelimeSay(form.ozet)} kelime</span>
+                          </div>
+                          <textarea value={form.ozet} onChange={(e) => setForm({ ...form, ozet: e.target.value })}
+                            rows={3}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                            placeholder="Kartlarda görünecek kısa özet (2-3 cümle)..." />
+                        </div>
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <label className="text-sm font-medium text-gray-700">İçerik</label>
+                            <span className={`text-xs ${kelimeSay(form.icerik) >= 600 && kelimeSay(form.icerik) <= 800 ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
+                              {kelimeSay(form.icerik)} kelime {kelimeSay(form.icerik) >= 600 && kelimeSay(form.icerik) <= 800 ? '✓' : '(hedef: 600-800)'}
+                            </span>
+                          </div>
+                          <textarea value={form.icerik} onChange={(e) => setForm({ ...form, icerik: e.target.value })}
+                            rows={8}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y font-mono"
+                            placeholder="4 paragraf, paragrafları \n\n ile ayır..." />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <label className="text-sm font-medium text-gray-700">Title</label>
+                            <span className="text-xs text-gray-400">{(form.baslikEn ?? '').length} chars</span>
+                          </div>
+                          <input value={form.baslikEn ?? ''} onChange={(e) => setForm({ ...form, baslikEn: e.target.value })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            placeholder="English title" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <label className="text-sm font-medium text-gray-700">Summary</label>
+                            <span className="text-xs text-gray-400">{kelimeSay(form.ozetEn ?? '')} words</span>
+                          </div>
+                          <textarea value={form.ozetEn ?? ''} onChange={(e) => setForm({ ...form, ozetEn: e.target.value })}
+                            rows={3}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                            placeholder="English summary (2-3 sentences)" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <label className="text-sm font-medium text-gray-700">Content</label>
+                            <span className={`text-xs ${kelimeSay(form.icerikEn ?? '') >= 600 && kelimeSay(form.icerikEn ?? '') <= 800 ? 'text-emerald-600 font-medium' : 'text-gray-400'}`}>
+                              {kelimeSay(form.icerikEn ?? '')} words {kelimeSay(form.icerikEn ?? '') >= 600 && kelimeSay(form.icerikEn ?? '') <= 800 ? '✓' : '(target: 600-800)'}
+                            </span>
+                          </div>
+                          <textarea value={form.icerikEn ?? ''} onChange={(e) => setForm({ ...form, icerikEn: e.target.value })}
+                            rows={8}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y font-mono"
+                            placeholder="English content (4 paragraphs, separated by \n\n)" />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
-              </div>
+                );
+              })()}
             </div>
 
             <div className="flex gap-3 mt-6">
