@@ -55,6 +55,7 @@ function flashDealToIlan(d: (typeof FLASH_DEALS)[0]): Ilan {
 
 /* ── Ozellikler objesini {label,value}[] dizisine çevir ─── */
 function ozelliklerToArray(oz: Ilan['ozellikler']): { label: string; value: string }[] {
+  if (!oz) return [];
   return Object.entries(oz)
     .filter(([, v]) => v)
     .map(([k, v]) => ({ label: k, value: v as string }));

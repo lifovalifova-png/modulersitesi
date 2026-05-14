@@ -1,0 +1,143 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isUnmodified(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    // ── admins: sadece admin okuyabilir ──
+    match /admins/{uid} {
+      allow read: if request.auth != null && isAdmin();
+      allow write: if false;
+    }
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /ilanlar/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.firmaId == request.auth.uid;
+      allow update: if request.auth != null && (
+        isAdmin() ||
+        (resource.data.firmaId == request.auth.uid && isUnmodified('firmaId'))
+      );
+      allow delete: if request.auth != null && (
+        resource.data.firmaId == request.auth.uid || isAdmin()
+      );
+    }
+
+    match /firms/{id} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (
+        isAdmin() ||
+        (resource.data.userId == request.auth.uid && isUnmodified('userId'))
+      );
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+    }
+
+    match /teklifler/{id} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        resource.data.firmaId == request.auth.uid ||
+        (resource.data.musteriEmail != null &&
+         request.auth.token.email == resource.data.musteriEmail)
+      );
+      allow update: if request.auth != null && (
+        isAdmin() ||
+        resource.data.firmaId == request.auth.uid ||
+        (resource.data.musteriEmail != null &&
+         request.auth.token.email == resource.data.musteriEmail)
+      );
+      allow delete: if request.auth != null && isAdmin();
+    }
+
+    match /taleplar/{id} {
+      allow create: if request.resource.data.keys().hasAll(['kategori','sehir','ad','email'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0;
+      allow read, update, delete: if request.auth != null && isAdmin();
+    }
+
+    match /quotes/{id} {
+      allow create: if request.resource.data.keys().hasAll(['firmIds','ad','email'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0;
+      allow read, delete: if request.auth != null && isAdmin();
+    }
+
+    match /yorumlar/{id} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    // ── blog: yayinda kontrolü ──
+    match /blog/{docId} {
+      allow read: if resource.data.aktif == true || (request.auth != null && isAdmin());
+      allow write, delete: if request.auth != null && isAdmin();
+    }
+
+    match /blogSettings/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    match /hakkimizda/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    match /bildirimler/{id} {
+      allow read: if request.auth != null
+        && (resource.data.firmaUserId == request.auth.uid || isAdmin());
+      allow create, update, delete: if request.auth != null && isAdmin();
+    }
+
+    match /geri_bildirimler/{id} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && isAdmin();
+    }
+
+    // ── haberler: yayinda kontrolü ──
+    match /haberler/{id} {
+      allow read: if resource.data.yayinda == true || (request.auth != null && isAdmin());
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    match /haberKaynaklari/{id} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    match /etkinlikler/{id} {
+      allow read: if true;
+      allow create: if request.auth != null && isAdmin();
+      allow update, delete: if request.auth != null && isAdmin();
+    }
+
+    // ── whatsapp: rate-limit yok ama en azından doğrulama ──
+    match /whatsappTiklamalari/{id} {
+      allow create: if request.resource.data.keys().hasAll(['firmaId', 'timestamp'])
+        && request.resource.data.firmaId is string;
+      allow read: if request.auth != null && isAdmin();
+    }
+  }
+}
