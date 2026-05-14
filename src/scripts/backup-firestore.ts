@@ -1,75 +1,54 @@
 /**
  * backup-firestore.ts
- * Tüm Firestore koleksiyonlarını JSON olarak dışa aktarır.
+ * Firestore Export API ile tüm koleksiyonları GCS bucket'a yedekler.
  *
- * Gereksinim: GOOGLE_APPLICATION_CREDENTIALS ortam değişkeni veya
- *             Firebase Admin SDK service account JSON dosyası
+ * Gereksinim:
+ *   - GOOGLE_APPLICATION_CREDENTIALS ortam değişkeni (service account JSON)
+ *   - Service account rolleri: Cloud Datastore Import Export Admin + Storage Object Admin
+ *
+ * Opsiyonel:
+ *   - BACKUP_PATH_PREFIX: "auto" veya "manual" (default: "manual")
  *
  * Kullanım:
- *   GOOGLE_APPLICATION_CREDENTIALS=./service-account.json npx tsx src/scripts/backup-firestore.ts
+ *   GOOGLE_APPLICATION_CREDENTIALS=./sa.json npx tsx src/scripts/backup-firestore.ts
  *
- * Çıktı: backups/firestore-YYYY-MM-DD.json
+ * Çıktı: gs://modulerpazar-backup/{prefix}/{timestamp}/ altına Firestore native export
  */
-import { initializeApp, cert, type ServiceAccount } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-import * as fs from 'fs';
-import * as path from 'path';
+import { v1 } from '@google-cloud/firestore';
 
-const COLLECTIONS = [
-  'ilanlar',
-  'firms',
-  'taleplar',
-  'quotes',
-  'teklifler',
-  'blog',
-  'blogSettings',
-  'haberler',
-  'haberKaynaklari',
-  'etkinlikler',
-  'yorumlar',
-  'bildirimler',
-  'settings',
-  'admins',
-  'users',
-  'geri_bildirimler',
-  'hakkimizda',
-  'whatsappTiklamalari',
-];
+const PROJECT_ID = 'modulerpazar';
+const BUCKET = 'modulerpazar-backup';
+const DATABASE = `projects/${PROJECT_ID}/databases/(default)`;
 
-const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-if (!credPath) {
-  console.error('HATA: GOOGLE_APPLICATION_CREDENTIALS ortam değişkeni tanımlı değil.');
-  console.error('Kullanım: GOOGLE_APPLICATION_CREDENTIALS=./service-account.json npx tsx src/scripts/backup-firestore.ts');
-  process.exit(1);
-}
+const prefix = process.env.BACKUP_PATH_PREFIX || 'manual';
 
-const serviceAccount = JSON.parse(fs.readFileSync(credPath, 'utf-8')) as ServiceAccount;
-initializeApp({ credential: cert(serviceAccount) });
-const db = getFirestore();
+const now = new Date();
+const timestamp =
+  prefix === 'auto'
+    ? now.toISOString().slice(0, 10)
+    : now.toISOString().slice(0, 16).replace(':', '-');
+
+const outputUriPrefix = `gs://${BUCKET}/${prefix}/${timestamp}`;
 
 async function main() {
-  const backup: Record<string, Record<string, unknown>[]> = {};
-  let totalDocs = 0;
+  const client = new v1.FirestoreAdminClient();
 
-  for (const name of COLLECTIONS) {
-    const snap = await db.collection(name).get();
-    backup[name] = snap.docs.map((d) => ({ _id: d.id, ...d.data() }));
-    totalDocs += snap.size;
-    console.log(`  ${name}: ${snap.size} belge`);
-  }
+  console.log(`Firestore export başlatılıyor...`);
+  console.log(`  Database : ${DATABASE}`);
+  console.log(`  Hedef    : ${outputUriPrefix}`);
 
-  const outDir = path.resolve('backups');
-  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  const [operation] = await client.exportDocuments({
+    name: DATABASE,
+    outputUriPrefix,
+    collectionIds: [],
+  });
 
-  const date = new Date().toISOString().slice(0, 10);
-  const outFile = path.join(outDir, `firestore-${date}.json`);
-  fs.writeFileSync(outFile, JSON.stringify(backup, null, 2), 'utf-8');
-
-  const sizeMB = (fs.statSync(outFile).size / (1024 * 1024)).toFixed(2);
-  console.log(`\nToplam: ${totalDocs} belge → ${outFile} (${sizeMB} MB)`);
+  console.log(`\nExport operation başlatıldı.`);
+  console.log(`  Operation: ${operation.name}`);
+  console.log(`  Durum GCP Console'dan takip edilebilir.`);
 }
 
 main().catch((err) => {
-  console.error('Backup hatası:', err);
+  console.error('Export hatası:', err.message || err);
   process.exit(1);
 });

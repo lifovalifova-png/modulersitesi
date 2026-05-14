@@ -32,14 +32,8 @@ jobs:
       - name: Run backup
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          BACKUP_PATH_PREFIX: auto
         run: npx tsx src/scripts/backup-firestore.ts
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: firestore-backup-${{ github.run_id }}
-          path: backups/
-          retention-days: 90
 
       - name: Cleanup
         if: always()
