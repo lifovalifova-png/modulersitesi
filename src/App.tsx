@@ -83,6 +83,7 @@ function App() {
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/"                  element={<HomePage />} />
+                <Route path="/ilanlar"           element={<CategoryPage />} />
                 <Route path="/kategori/:slug"    element={<CategoryPage />} />
                 <Route path="/ilan/:id"          element={<IlanDetayPage />} />
                 <Route path="/firmalar"          element={<FirmalarPage />} />
