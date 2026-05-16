@@ -3911,7 +3911,7 @@ function HaberlerTab() {
                   <tr key={h.id} className="hover:bg-gray-50">
                     <td className="py-3 pr-4 max-w-xs">
                       <p className="font-medium text-gray-800 truncate flex items-center gap-1.5">
-                        {h.otomatik && <Bot className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" title="Otomatik eklenen" />}
+                        {h.otomatik && <Bot className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" aria-label="Otomatik eklenen" />}
                         {h.baslik}
                         {(() => {
                           const acilKelimeler = ['deprem','earthquake','sel','flood','yangın','fire','afet','disaster'];
