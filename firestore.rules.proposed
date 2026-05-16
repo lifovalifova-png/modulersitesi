@@ -11,9 +11,9 @@ service cloud.firestore {
       return request.resource.data[field] == resource.data[field];
     }
 
-    // ── admins: sadece admin okuyabilir ──
+    // ── admins: kullanıcı sadece kendi admin doc'unu okuyabilir ──
     match /admins/{uid} {
-      allow read: if request.auth != null && isAdmin();
+      allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
     }
 

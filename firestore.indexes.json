@@ -15,8 +15,24 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "tarih", "order": "DESCENDING" }
       ]
-    }
-    ,
+    },
+    {
+      "collectionGroup": "ilanlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sehir", "order": "ASCENDING" },
+        { "fieldPath": "kategoriSlug", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "blog",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "aktif", "order": "ASCENDING" },
+        { "fieldPath": "tarih", "order": "DESCENDING" }
+      ]
+    },
     {
       "collectionGroup": "etkinlikler",
       "queryScope": "COLLECTION",
@@ -31,6 +47,14 @@
       "fields": [
         { "fieldPath": "durum", "order": "ASCENDING" },
         { "fieldPath": "bitisTarihi", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "firms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "city", "order": "ASCENDING" }
       ]
     }
   ],

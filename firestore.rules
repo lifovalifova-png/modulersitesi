@@ -11,8 +11,9 @@ service cloud.firestore {
       return request.resource.data[field] == resource.data[field];
     }
 
+    // ── admins: kullanıcı sadece kendi admin doc'unu okuyabilir ──
     match /admins/{uid} {
-      allow read: if true;
+      allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
     }
 
@@ -88,8 +89,9 @@ service cloud.firestore {
       allow write: if request.auth != null && isAdmin();
     }
 
+    // ── blog: yayinda kontrolü ──
     match /blog/{docId} {
-      allow read: if true;
+      allow read: if resource.data.aktif == true || (request.auth != null && isAdmin());
       allow write, delete: if request.auth != null && isAdmin();
     }
 
@@ -114,8 +116,9 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null && isAdmin();
     }
 
+    // ── haberler: yayinda kontrolü ──
     match /haberler/{id} {
-      allow read: if true;
+      allow read: if resource.data.yayinda == true || (request.auth != null && isAdmin());
       allow write: if request.auth != null && isAdmin();
     }
 
@@ -130,8 +133,10 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && isAdmin();
     }
 
+    // ── whatsapp: rate-limit yok ama en azından doğrulama ──
     match /whatsappTiklamalari/{id} {
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasAll(['firmaId', 'timestamp'])
+        && request.resource.data.firmaId is string;
       allow read: if request.auth != null && isAdmin();
     }
   }
