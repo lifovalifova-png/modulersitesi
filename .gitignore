@@ -34,3 +34,5 @@ dist-ssr
 .claude/skills/
 skills-lock.json
 .vercel
+package-lock.json
+package.json.bak
