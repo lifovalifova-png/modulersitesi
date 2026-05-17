@@ -14,7 +14,8 @@
  *
  * Çıktı: gs://modulerpazar-backup/{prefix}/{timestamp}/ altına Firestore native export
  */
-import { v1 } from '@google-cloud/firestore';
+import firestore from '@google-cloud/firestore';
+const { v1 } = firestore;
 
 const PROJECT_ID = 'modulerpazar';
 const BUCKET = 'modulerpazar-backup';
