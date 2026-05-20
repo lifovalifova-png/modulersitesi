@@ -500,7 +500,7 @@ export default function CategoryPage() {
       <SEOMeta
         title={`${pageTitle} İlanları`}
         description={`${pageTitle} ilanları — ModülerPazar'da ${pageTitle.toLowerCase()} fiyatları ve firmaları. Ücretsiz teklif alın.`}
-        url={`/kategori/${slug}`}
+        url={slug ? `/kategori/${slug}` : '/ilanlar'}
       />
       <Header />
 
