@@ -36,3 +36,7 @@ skills-lock.json
 .vercel
 package-lock.json
 package.json.bak
+
+.env
+.env.local
+.env*.local
