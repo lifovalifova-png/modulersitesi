@@ -2666,12 +2666,6 @@ function RaporTab() {
 
   /* Google Sheets aktar */
   async function handleExport() {
-    const webhookUrl = import.meta.env.VITE_SHEETS_WEBHOOK_URL as string | undefined;
-    // debug log kaldırıldı
-    if (!webhookUrl) {
-      toast.error('Google Sheets bağlantısı kurulmamış, lütfen Vercel\'de VITE_SHEETS_WEBHOOK_URL ayarlayın');
-      return;
-    }
     if (recentTalepler.length === 0) return;
     setExporting(true);
     try {
@@ -2686,22 +2680,17 @@ function RaporTab() {
         email:    t.email,
       }));
 
-      /* webhookUrl client'tan gönderilir — Edge Function'da process.env erişemeyebilir */
       const resp = await fetch('/api/sheets-export', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ rows, webhookUrl }),
+        body:    JSON.stringify({ rows }),
       });
 
       if (resp.ok) {
         toast.success(`${rows.length} talep Google Sheets'e aktarıldı.`);
       } else {
         const data = await resp.json() as { error?: string };
-        if (resp.status === 503) {
-          toast.error('Google Sheets bağlantısı kurulmamış, lütfen Vercel\'de VITE_SHEETS_WEBHOOK_URL ayarlayın');
-        } else {
-          toast.error(`Aktarma başarısız: ${data.error ?? resp.statusText}`);
-        }
+        toast.error(`Aktarma başarısız: ${data.error ?? resp.statusText}`);
       }
     } catch {
       toast.error('Bağlantı hatası — /api/sheets-export erişilemiyor.');

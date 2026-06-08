@@ -1,79 +1,76 @@
-/**
- * api/sheets-export.ts — Vercel Edge Function
- * Tarayıcı CORS kısıtlamalarını aşmak için Google Apps Script
- * webhook URL'sine server-side proxy görevi görür.
- *
- * Ortam değişkeni: SHEETS_WEBHOOK_URL
- * Vercel Dashboard → Settings → Environment Variables
- */
 export const config = { runtime: 'edge' };
 
-const CORS = {
-  'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+const ALLOWED_ORIGINS = [
+  'https://modulerpazar.com',
+  'https://www.modulerpazar.com',
+];
 
-function json(data: unknown, status = 200) {
+function getAllowedOrigin(req: Request): string | null {
+  const origin = req.headers.get('origin') || '';
+  if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app')) {
+    return origin;
+  }
+  return null;
+}
+
+function corsHeaders(req: Request): Record<string, string> {
+  const origin = getAllowedOrigin(req);
+  if (!origin) return {};
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+}
+
+function json(data: unknown, status: number, req: Request) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...CORS },
+    headers: { 'Content-Type': 'application/json', ...corsHeaders(req) },
   });
 }
 
 export default async function handler(req: Request) {
-  /* CORS preflight */
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: CORS });
+    return new Response(null, { status: 204, headers: corsHeaders(req) });
   }
 
   if (req.method !== 'POST') {
-    return json({ error: 'Yalnızca POST desteklenmektedir.' }, 405);
+    return json({ error: 'Yalnızca POST desteklenmektedir.' }, 405, req);
   }
 
-  /* Body parse */
   let body: Record<string, unknown>;
   try {
     body = await req.json() as Record<string, unknown>;
   } catch {
-    return json({ error: 'Geçersiz JSON gövdesi.' }, 400);
+    return json({ error: 'Geçersiz JSON gövdesi.' }, 400, req);
   }
 
-  /* Webhook URL: önce client'tan gelen body.webhookUrl, sonra server env */
-  const webhookUrl =
-    (typeof body.webhookUrl === 'string' && body.webhookUrl) ||
-    process.env.VITE_SHEETS_WEBHOOK_URL ||
-    process.env.SHEETS_WEBHOOK_URL;
-
+  const webhookUrl = process.env.SHEETS_WEBHOOK_URL;
   if (!webhookUrl) {
-    return json({
-      error: 'VITE_SHEETS_WEBHOOK_URL ortam değişkeni tanımlı değil.',
-      hint: 'Vercel Dashboard → Settings → Environment Variables → VITE_SHEETS_WEBHOOK_URL ekleyin.',
-    }, 503);
+    console.error('SHEETS_WEBHOOK_URL ortam değişkeni tanımlı değil.');
+    return json({ error: 'Sunucu yapılandırma hatası.' }, 500, req);
   }
 
-  /* Google Apps Script'e yönlendir (webhookUrl alanını çıkar) */
-  const { webhookUrl: _url, ...payload } = body;
-  void _url;
+  const { webhookUrl: _discard, ...payload } = body;
+  void _discard;
+
   try {
     const resp = await fetch(webhookUrl, {
-      method:  'POST',
-      // GAS'ın CORS preflight gerektirmemesi için text/plain kullanılır
+      method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body:    JSON.stringify(payload),
+      body: JSON.stringify(payload),
     });
 
     const text = await resp.text();
-
-    /* GAS bazen HTML döner — JSON ise parse et */
     let gasData: unknown = text;
     try { gasData = JSON.parse(text); } catch { /* ham text döner */ }
 
-    return json({ ok: true, gasResponse: gasData });
+    return json({ ok: true, gasResponse: gasData }, 200, req);
   } catch (err) {
     return json({
-      error:  'Google Apps Script webhook hatası.',
+      error: 'Google Apps Script webhook hatası.',
       detail: String(err),
-    }, 502);
+    }, 502, req);
   }
 }
