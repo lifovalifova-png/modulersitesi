@@ -65,16 +65,26 @@ service cloud.firestore {
     }
 
     match /taleplar/{id} {
-      allow create: if request.resource.data.keys().hasAll(['kategori','sehir','ad','email'])
+      allow create: if request.resource.data.keys().hasAll(['kategori','sehir','ad','email','telefon'])
         && request.resource.data.email is string
-        && request.resource.data.email.size() > 0;
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() < 100
+        && request.resource.data.telefon is string
+        && request.resource.data.telefon.size() > 0
+        && request.resource.data.telefon.size() < 20
+        && request.resource.data.size() <= 16;
       allow read, update, delete: if request.auth != null && isAdmin();
     }
 
     match /quotes/{id} {
-      allow create: if request.resource.data.keys().hasAll(['firmIds','ad','email'])
-        && request.resource.data.email is string
-        && request.resource.data.email.size() > 0;
+      allow create: if request.resource.data.keys().hasAll(['ilanId','musteriAd','musteriEmail','musteriTelefon'])
+        && request.resource.data.musteriEmail is string
+        && request.resource.data.musteriEmail.size() > 0
+        && request.resource.data.musteriEmail.size() < 100
+        && request.resource.data.musteriTelefon is string
+        && request.resource.data.musteriTelefon.size() > 0
+        && request.resource.data.musteriTelefon.size() < 20
+        && request.resource.data.size() <= 14;
       allow read, delete: if request.auth != null && isAdmin();
     }
 
@@ -133,9 +143,9 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && isAdmin();
     }
 
-    // ── whatsapp: rate-limit yok ama en azından doğrulama ──
     match /whatsappTiklamalari/{id} {
-      allow create: if request.resource.data.keys().hasAll(['firmaId', 'timestamp'])
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['firmaId', 'tarih'])
         && request.resource.data.firmaId is string;
       allow read: if request.auth != null && isAdmin();
     }
