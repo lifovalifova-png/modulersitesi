@@ -34,16 +34,27 @@ function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
 }
 
 /* ── CORS ───────────────────────────────────────────────── */
-const CORS = {
-  'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+const ALLOWED_ORIGINS = [
+  'https://modulerpazar.com',
+  'https://www.modulerpazar.com',
+];
 
-function json(data: unknown, status = 200) {
+function corsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin') || '';
+  if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app')) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+  }
+  return {};
+}
+
+function json(data: unknown, status: number, req: Request) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...CORS },
+    headers: { 'Content-Type': 'application/json', ...corsHeaders(req) },
   });
 }
 
@@ -53,18 +64,18 @@ const SYSTEM_PROMPT = "Sen ModülerPazar'ın yapı danışmanısın. SADECE mod�
 /* ── Handler ────────────────────────────────────────────── */
 export default async function handler(req: Request) {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: CORS });
+    return new Response(null, { status: 204, headers: corsHeaders(req) });
   }
 
   if (req.method !== 'POST') {
-    return json({ error: 'Yalnızca POST desteklenmektedir.' }, 405);
+    return json({ error: 'Yalnızca POST desteklenmektedir.' }, 405, req);
   }
 
   /* Rate limit */
   const ip = getIp(req);
   const { allowed, remaining } = checkRateLimit(ip);
   if (!allowed) {
-    return json({ error: 'Günlük soru limitiniz doldu. Yarın tekrar deneyin.', remaining: 0 }, 429);
+    return json({ error: 'Günlük soru limitiniz doldu. Yarın tekrar deneyin.', remaining: 0 }, 429, req);
   }
 
   /* Body */
@@ -72,20 +83,20 @@ export default async function handler(req: Request) {
   try {
     ({ message } = await req.json() as { message: unknown });
   } catch {
-    return json({ error: 'Geçersiz JSON.' }, 400);
+    return json({ error: 'Geçersiz JSON.' }, 400, req);
   }
 
   if (typeof message !== 'string' || !message.trim()) {
-    return json({ error: 'Geçersiz istek.' }, 400);
+    return json({ error: 'Geçersiz istek.' }, 400, req);
   }
   if (message.length > MAX_BODY) {
-    return json({ error: `Mesaj en fazla ${MAX_BODY} karakter olabilir.` }, 400);
+    return json({ error: `Mesaj en fazla ${MAX_BODY} karakter olabilir.` }, 400, req);
   }
 
   /* Groq API */
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return json({ error: 'Sunucu yapılandırma hatası.' }, 500);
+    return json({ error: 'Sunucu yapılandırma hatası.' }, 500, req);
   }
 
   try {
@@ -112,12 +123,12 @@ export default async function handler(req: Request) {
 
     if (!upstream.ok) {
       const detail = data.error?.message ?? `Groq ${upstream.status}`;
-      return json({ error: detail, remaining }, upstream.status);
+      return json({ error: detail, remaining }, upstream.status, req);
     }
 
     const reply = data.choices?.[0]?.message?.content || 'Yanıt alınamadı';
-    return json({ reply, remaining });
+    return json({ reply, remaining }, 200, req);
   } catch {
-    return json({ error: 'Yapay zeka servisine ulaşılamadı.' }, 502);
+    return json({ error: 'Yapay zeka servisine ulaşılamadı.' }, 502, req);
   }
 }
