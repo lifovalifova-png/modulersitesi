@@ -11,6 +11,11 @@ service cloud.firestore {
       return request.resource.data[field] == resource.data[field];
     }
 
+    function verifiedEmail() {
+      return request.auth != null
+        && request.auth.token.email_verified == true;
+    }
+
     // ── admins: kullanıcı sadece kendi admin doc'unu okuyabilir ──
     match /admins/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
@@ -24,10 +29,14 @@ service cloud.firestore {
     match /ilanlar/{id} {
       allow read: if true;
       allow create: if request.auth != null
-        && request.resource.data.firmaId == request.auth.uid;
+        && request.resource.data.firmaId == request.auth.uid
+        && request.resource.data.status == 'pending';
       allow update: if request.auth != null && (
         isAdmin() ||
-        (resource.data.firmaId == request.auth.uid && isUnmodified('firmaId'))
+        (resource.data.firmaId == request.auth.uid
+         && isUnmodified('firmaId')
+         && (request.resource.data.status == resource.data.status
+             || request.resource.data.status == 'pasif'))
       );
       allow delete: if request.auth != null && (
         resource.data.firmaId == request.auth.uid || isAdmin()
@@ -35,16 +44,36 @@ service cloud.firestore {
     }
 
     match /firms/{id} {
-      allow read: if true;
+      allow read: if resource.data.verified == true
+        || (request.auth != null && resource.data.userId == request.auth.uid)
+        || (request.auth != null && isAdmin());
       allow create: if request.auth != null
-        && request.resource.data.userId == request.auth.uid;
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.verified == false
+        && !request.resource.data.keys().hasAny(['vergiNo']);
       allow update: if request.auth != null && (
         isAdmin() ||
-        (resource.data.userId == request.auth.uid && isUnmodified('userId'))
+        (resource.data.userId == request.auth.uid
+          && isUnmodified('userId')
+          && isUnmodified('verified')
+          && isUnmodified('status'))
       );
       allow delete: if request.auth != null && (
         resource.data.userId == request.auth.uid || isAdmin()
       );
+    }
+
+    // ── firmaPrivate: PII (vergiNo) — sadece sahibi ve admin ──
+    match /firmaPrivate/{id} {
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/firms/$(id)).data.userId == request.auth.uid
+      );
+      allow create: if request.auth != null
+        && get(/databases/$(database)/documents/firms/$(id)).data.userId == request.auth.uid;
+      allow update: if request.auth != null && isAdmin();
+      allow delete: if request.auth != null && isAdmin();
     }
 
     match /teklifler/{id} {
@@ -52,14 +81,16 @@ service cloud.firestore {
       allow read: if request.auth != null && (
         isAdmin() ||
         resource.data.firmaId == request.auth.uid ||
-        (resource.data.musteriEmail != null &&
-         request.auth.token.email == resource.data.musteriEmail)
+        (resource.data.musteriEmail != null
+         && request.auth.token.email == resource.data.musteriEmail
+         && verifiedEmail())
       );
       allow update: if request.auth != null && (
         isAdmin() ||
         resource.data.firmaId == request.auth.uid ||
-        (resource.data.musteriEmail != null &&
-         request.auth.token.email == resource.data.musteriEmail)
+        (resource.data.musteriEmail != null
+         && request.auth.token.email == resource.data.musteriEmail
+         && verifiedEmail())
       );
       allow delete: if request.auth != null && isAdmin();
     }
@@ -88,9 +119,22 @@ service cloud.firestore {
       allow read, delete: if request.auth != null && isAdmin();
     }
 
-    match /yorumlar/{id} {
+    match /yorumlar/{yorumId} {
       allow read: if true;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['firmaId','userId','puan'])
+        && request.resource.data.firmaId is string
+        && request.resource.data.userId == request.auth.uid
+        && yorumId == request.resource.data.firmaId + '_' + request.auth.uid
+        && request.resource.data.puan is int
+        && request.resource.data.puan >= 1
+        && request.resource.data.puan <= 5
+        && (!('aciklama' in request.resource.data)
+            || request.resource.data.aciklama == null
+            || (request.resource.data.aciklama is string
+                && request.resource.data.aciklama.size() <= 1000))
+        && request.resource.data.size() <= 8
+        && get(/databases/$(database)/documents/firms/$(request.resource.data.firmaId)).data.userId != request.auth.uid;
       allow update, delete: if request.auth != null && isAdmin();
     }
 

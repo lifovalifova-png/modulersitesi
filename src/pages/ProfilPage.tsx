@@ -17,7 +17,7 @@ import { sendTeklifKabulEmail } from '../lib/emailjs';
 import {
   Mail, Calendar, Edit2, X, Building2, Loader2, MapPin, Tag,
   Trash2, Send, Check, FileText, ShieldCheck, ChevronRight, Zap,
-  Banknote, Clock, CheckCircle, XCircle, Bell, ExternalLink,
+  Banknote, Clock, CheckCircle, XCircle, Bell, ExternalLink, AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -262,7 +262,7 @@ export default function ProfilPage() {
 
       /* Talep bilgilerini al — firma email gönderilecek */
       const talepSnap = await getDocs(
-        query(collection(db, 'firms'), where('userId', '==', teklif.firmaId))
+        query(collection(db, 'firms'), where('userId', '==', teklif.firmaId), where('verified', '==', true))
       );
       const firmaData = talepSnap.docs[0]?.data();
       const firmaEmail = firmaData?.email || firmaData?.eposta || '';
@@ -455,6 +455,27 @@ export default function ProfilPage() {
 
   /* Tekliflerim — tüm teklifler düz liste */
   function TekliflerimTab() {
+    if (currentUser && !currentUser.emailVerified) {
+      return (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+          <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+          <h3 className="text-sm font-semibold text-amber-800 mb-1">{t('profil.emailVerifyTitle')}</h3>
+          <p className="text-xs text-amber-700 mb-4">{t('profil.emailVerifyDesc')}</p>
+          <button
+            onClick={() => {
+              import('firebase/auth').then(({ sendEmailVerification }) => {
+                if (currentUser) sendEmailVerification(currentUser).then(() => {
+                  toast.success(t('profil.emailVerifySent'));
+                }).catch(() => {});
+              });
+            }}
+            className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-700 transition"
+          >
+            {t('profil.emailVerifyBtn')}
+          </button>
+        </div>
+      );
+    }
     if (teklifler.length === 0 && quotes.length === 0) {
       return (
         <EmptyState

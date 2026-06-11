@@ -5,6 +5,7 @@ import {
   Building2, ShoppingBag, Hash, MapPin, Factory, Store, CheckSquare, Square,
 } from 'lucide-react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { toast } from 'sonner';
 import { db } from '../lib/firebase';
 import { useAuth, authErrorMessage } from '../context/AuthContext';
 import { CATEGORIES } from '../data/categories';
@@ -161,6 +162,7 @@ export default function KayitPage() {
     try {
       const user = await register(form.email.trim(), form.password, form.displayName.trim());
       await saveUserDoc(user.uid);
+      toast.success('Doğrulama e-postası gönderildi. Lütfen e-postanızı kontrol edin.', { duration: 6000 });
       navigate(getRedirect(), { replace: true });
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';

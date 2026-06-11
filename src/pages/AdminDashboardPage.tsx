@@ -128,7 +128,7 @@ interface AdminIlan {
   gorseller:         string[];
   acil:              boolean;
   indirimli:         boolean;
-  status:            'aktif' | 'pasif';
+  status:            'aktif' | 'pasif' | 'pending';
   acilSatis?:        boolean;
   acilSatisFiyat?:   number;
   acilSatisNedeni?:  string;
@@ -184,7 +184,7 @@ const EMPTY_ILAN: Omit<AdminIlan, 'id'> = {
 };
 
 const DEFAULT_SETTINGS: SiteSettings = {
-  name: 'ModülerPazar', tagline: 'Türkiye\'nin En Büyük Modüler Yapı Pazarı',
+  name: 'ModülerPazar', tagline: 'Türkiye\'nin Modüler Yapı Pazaryeri',
   email: 'modulerpazar@yandex.com', destekSuresi: '3-5 iş günü', logoUrl: '',
 };
 
@@ -1553,7 +1553,7 @@ function IlanlarTab() {
     const next = ilan.status === 'aktif' ? 'pasif' : 'aktif';
     try {
       await updateDoc(doc(db, 'ilanlar', ilan.id), { status: next });
-      toast.success(`İlan ${next === 'aktif' ? 'aktif edildi' : 'pasife alındı'}.`);
+      toast.success(`İlan ${next === 'aktif' ? 'aktif edildi (onaylandı)' : 'pasife alındı'}.`);
     } catch {
       toast.error('İşlem başarısız.');
     }
@@ -1644,9 +1644,11 @@ function IlanlarTab() {
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                         ilan.status === 'aktif'
                           ? 'bg-emerald-100 text-emerald-700'
+                          : ilan.status === 'pending'
+                          ? 'bg-amber-100 text-amber-700'
                           : 'bg-gray-100 text-gray-500'
                       }`}>
-                        {ilan.status === 'aktif' ? 'Aktif' : 'Pasif'}
+                        {ilan.status === 'aktif' ? 'Aktif' : ilan.status === 'pending' ? 'Onay Bekliyor' : 'Pasif'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -1661,8 +1663,8 @@ function IlanlarTab() {
                         </button>
                         <button
                           onClick={() => toggleStatus(ilan)}
-                          aria-label={ilan.status === 'aktif' ? 'Pasife al' : 'Aktif et'}
-                          title={ilan.status === 'aktif' ? 'Pasife al' : 'Aktif et'}
+                          aria-label={ilan.status === 'aktif' ? 'Pasife al' : 'Onayla / Aktif et'}
+                          title={ilan.status === 'aktif' ? 'Pasife al' : 'Onayla / Aktif et'}
                           className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition"
                         >
                           {ilan.status === 'aktif'

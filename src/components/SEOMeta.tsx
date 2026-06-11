@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 
 const BASE_URL      = 'https://www.modulerpazar.com';
-const DEFAULT_TITLE = "ModülerPazar — Türkiye'nin En Büyük Modüler Yapı Pazarı";
+const DEFAULT_TITLE = "ModülerPazar — Türkiye'nin Modüler Yapı Pazaryeri";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 
 export interface SEOMetaProps {

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  collection, query, where, getCountFromServer,
+  collection, query, where,
   onSnapshot, orderBy, limit,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -23,23 +23,6 @@ import type { Etkinlik } from '../types/etkinlik';
 import { TUR_LABELS, TUR_COLORS } from '../types/etkinlik';
 
 /* ─── CountUp: 0'dan hedefe sayma animasyonu ────────────── */
-function StatCounter({ target, suffix, active }: { target: number; suffix: string; active: boolean }) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!active) return;
-    let frame = 0;
-    const totalFrames = 80;
-    const timer = setInterval(() => {
-      frame++;
-      const ease = 1 - Math.pow(1 - frame / totalFrames, 4);
-      setCount(frame >= totalFrames ? target : Math.round(ease * target));
-      if (frame >= totalFrames) clearInterval(timer);
-    }, 16);
-    return () => clearInterval(timer);
-  }, [target, active]);
-  return <>{count.toLocaleString('tr-TR')}{suffix}</>;
-}
-
 /* Material Symbols ikonları — kategori kartları için */
 const CATEGORY_MATERIAL_ICONS: Record<string, string> = {
   'prefabrik':           'home',
@@ -102,18 +85,6 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'customer' | 'producer'>('customer');
 
   /* ─── Firestore gerçek sayılar ───────────────────────────── */
-  const [ilanCount,  setIlanCount]  = useState(0);
-  const [firmaCount, setFirmaCount] = useState(0);
-
-  useEffect(() => {
-    Promise.all([
-      getCountFromServer(query(collection(db, 'ilanlar'), where('status', '==', 'aktif'))),
-      getCountFromServer(query(collection(db, 'firms'),   where('status', '==', 'approved'))),
-    ]).then(([ilanSnap, firmaSnap]) => {
-      setIlanCount(ilanSnap.data().count);
-      setFirmaCount(firmaSnap.data().count);
-    }).catch(() => {});
-  }, []);
 
   /* ─── Kayan Haber Bandı ───────────────────────────────────── */
   interface MiniHaber { id: string; baslikTr: string; baslikEn: string; kaynak: string }
@@ -186,26 +157,6 @@ export default function HomePage() {
   }, []);
 
   /* ─── Translated data arrays ────────────────────────────── */
-  const STATS = [
-    { label: t('stats.activeAds'),       target: ilanCount,  suffix: '+', icon: 'real_estate_agent' },
-    { label: t('stats.registeredFirms'), target: firmaCount, suffix: '+', icon: 'business' },
-    { label: t('stats.happyCustomers'),  target: 12000,      suffix: '+', icon: 'groups' },
-    { label: t('stats.cities'),          target: 81,         suffix: '',  icon: 'location_city' },
-  ];
-
-  const [statsActive, setStatsActive] = useState(false);
-  const statsRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = statsRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setStatsActive(true); obs.disconnect(); } },
-      { threshold: 0.4 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
   const CUSTOMER_STEPS = [
     { icon: Search,      title: t('step.b1.title'), desc: t('step.b1.desc'), materialIcon: 'search' },
     { icon: CheckSquare, title: t('step.b2.title'), desc: t('step.b2.desc'), materialIcon: 'compare_arrows' },
@@ -280,8 +231,8 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen font-body">
       <SEOMeta
-        title="ModülerPazar — Türkiye'nin En Büyük Modüler Yapı Pazarı"
-        description="Prefabrik ev, çelik yapı, konteyner ev, tiny house ilanları. Türkiye genelinde 2500+ ilan, 850+ firma. Aynı anda 2 firmadan ücretsiz teklif alın."
+        title="ModülerPazar — Türkiye'nin Modüler Yapı Pazaryeri"
+        description="Prefabrik ev, çelik yapı, konteyner ev ve tiny house ilanları. Doğrulanmış firmalardan ücretsiz teklif alın."
         url="/"
       />
       <Header />
@@ -503,20 +454,19 @@ export default function HomePage() {
         </section>
 
         {/* ── Stats Bar ───────────────────────────────────── */}
-        <div ref={statsRef} className="bg-surface-container-low border-b border-outline-variant/30">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {STATS.map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-2xl text-primary" aria-hidden="true">{stat.icon}</span>
+        <div className="bg-surface-container-low border-b border-outline-variant/30">
+          <div className="max-w-5xl mx-auto px-4 py-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { step: '1', icon: 'edit_note',       label: t('howItWorks.step1') },
+                { step: '2', icon: 'forward_to_inbox', label: t('howItWorks.step2') },
+                { step: '3', icon: 'compare_arrows',   label: t('howItWorks.step3') },
+              ].map((s) => (
+                <div key={s.step} className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">{s.icon}</span>
                   </div>
-                  <div>
-                    <div className="text-2xl font-extrabold text-on-surface font-headline">
-                      <StatCounter target={stat.target} suffix={stat.suffix} active={statsActive} />
-                    </div>
-                    <div className="text-on-surface-variant text-xs font-body">{stat.label}</div>
-                  </div>
+                  <p className="text-sm text-on-surface font-medium font-body">{s.label}</p>
                 </div>
               ))}
             </div>

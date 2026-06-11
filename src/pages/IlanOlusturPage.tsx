@@ -240,11 +240,11 @@ export default function IlanOlusturPage() {
           : null,
         acilSatisNedeni:  acilSatis ? (acilSatisNedeni.trim() || null) : null,
         stokDurumu,
-        status:           'aktif',
+        status:           'pending',
         tarih:            serverTimestamp(),
       });
 
-      toast.success(t('ilanOlustur.published'));
+      toast.success(t('ilanOlustur.pendingSuccess'));
       navigate('/firma-paneli');
     } catch (err) {
       // ilan oluşturma hatası

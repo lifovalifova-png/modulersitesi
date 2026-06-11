@@ -11,6 +11,7 @@ import {
   signInWithPopup,
   updateProfile,
   onAuthStateChanged,
+  sendEmailVerification,
 } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function register(email: string, password: string, displayName: string): Promise<User> {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName });
+    sendEmailVerification(cred.user).catch(() => {});
     return cred.user;
   }
 

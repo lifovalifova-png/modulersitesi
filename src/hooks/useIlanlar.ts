@@ -26,7 +26,7 @@ export interface Ilan {
   firmaDogrulanmis: boolean;
   acil: boolean;
   indirimli: boolean;
-  status: 'aktif' | 'pasif';
+  status: 'aktif' | 'pasif' | 'pending';
   tarih: { seconds: number; nanoseconds: number } | null;
   acilSatis?: boolean;
   acilSatisFiyat?: number;

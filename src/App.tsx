@@ -10,6 +10,7 @@ import AdminRoute      from './components/AdminRoute';
 import BetaBanner      from './components/BetaBanner';
 import TeklifSepeti   from './components/TeklifSepeti';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import CookieConsent from './components/CookieConsent';
 import { useFeatureFlags } from './hooks/useFeatureFlags';
 import './App.css';
 
@@ -79,6 +80,7 @@ function App() {
             <BetaBanner />
             <Toaster position="top-right" richColors />
             <GatedTeklifSepeti />
+            <CookieConsent />
             <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes>

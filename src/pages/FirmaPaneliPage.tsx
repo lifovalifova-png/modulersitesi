@@ -693,7 +693,10 @@ export default function FirmaPaneliPage() {
                           <p className="font-medium text-gray-800 text-sm leading-snug truncate max-w-xs">{ilan.baslik}</p>
                           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                             <p className="text-xs text-gray-400">{formatFiyat(ilan.fiyat)}</p>
-                            {ilanBitisDays !== null && (
+                            {ilan.status === 'pending' && (
+                              <span className="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">{t('ilanSuresi.pendingBadge')}</span>
+                            )}
+                            {ilanBitisDays !== null && ilan.status !== 'pending' && (
                               ilanBitisDays <= 0
                                 ? <span className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">{t('ilanSuresi.expiredBadge')}</span>
                                 : ilanBitisDays <= 7

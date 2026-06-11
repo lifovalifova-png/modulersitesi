@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, getDocs, collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, query, where, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -219,7 +219,7 @@ export default function FirmaProfilPage() {
     }
     setYorumLoading(true);
     try {
-      await addDoc(collection(db, 'yorumlar'), {
+      await setDoc(doc(db, 'yorumlar', `${id}_${currentUser.uid}`), {
         firmaId:  id,
         userId:   currentUser.uid,
         userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Kullanıcı',

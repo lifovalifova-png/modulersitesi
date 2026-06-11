@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { CATEGORIES } from '../data/categories';
 import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
@@ -214,11 +214,10 @@ export default function SellerFormPage() {
     if (!validateStep(4)) return;
     setStatus('loading');
     try {
-      await addDoc(collection(db, 'firms'), {
+      const docRef = await addDoc(collection(db, 'firms'), {
         userId:          currentUser?.uid ?? null,
         firmaType:       form.firmaType,
         name:            sanitizeText(form.firmaAdi, 150),
-        vergiNo:         form.vergiNo.trim(),
         firmaYapisi:     form.firmaYapisi,
         phone:           form.telefon.trim(),
         eposta:          form.eposta.trim().toLowerCase(),
@@ -234,6 +233,14 @@ export default function SellerFormPage() {
         verified:        false,
         olusturmaTarihi: serverTimestamp(),
       });
+      try {
+        await setDoc(doc(db, 'firmaPrivate', docRef.id), {
+          vergiNo: form.vergiNo.trim(),
+          olusturmaTarihi: serverTimestamp(),
+        });
+      } catch (privErr) {
+        console.error('firmaPrivate yazılamadı:', privErr);
+      }
       /* Admin e-posta bildirimi — fire and forget */
       sendFirmaBasvuruEmail({
         firmaAdi:    form.firmaAdi,

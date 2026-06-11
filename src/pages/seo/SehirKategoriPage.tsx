@@ -27,6 +27,7 @@ export default function SehirKategoriPage() {
         const firmaQ = query(
           collection(db, 'firms'),
           where('status', '==', 'approved'),
+          where('verified', '==', true),
           where('city', '==', cityData.name),
           limit(20)
         );

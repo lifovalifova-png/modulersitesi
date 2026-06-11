@@ -72,7 +72,7 @@ export default function FirmalarPage() {
 
   /* Firestore'dan onaylı firmaları çek */
   useEffect(() => {
-    const q = query(collection(db, 'firms'), where('status', '==', 'approved'), limit(200));
+    const q = query(collection(db, 'firms'), where('status', '==', 'approved'), where('verified', '==', true), limit(200));
     const unsub = onSnapshot(q, (snap) => {
       const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Firm));
       setFirms(docs);

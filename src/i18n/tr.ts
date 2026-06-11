@@ -28,7 +28,7 @@ const tr: Record<string, string> = {
 
   /* ── Hero ────────────────────────────────────── */
   'hero.badge':      'Aynı anda 2 firmadan teklif al, en iyisini seç!',
-  'hero.title':      "Modüler Yapı Çözümlerinde Türkiye'nin En Büyük Pazarı",
+  'hero.title':      "Modüler Yapı Çözümlerinde Türkiye'nin Pazaryeri",
   'hero.subtitle':   'Prefabrik evler, konteynerler, tiny house ve daha fazlası. Binlerce ilan arasından size uygun olanı bulun veya kendi ilanınızı verin.',
   'hero.btnPostAd':  'Ücretsiz İlan Ver',
   'hero.btnExplore': 'İlanları Keşfet',
@@ -38,6 +38,9 @@ const tr: Record<string, string> = {
   'stats.registeredFirms': 'Kayıtlı Firma',
   'stats.happyCustomers':  'Mutlu Müşteri',
   'stats.cities':          'Şehir',
+  'howItWorks.step1':      'Talebini oluştur',
+  'howItWorks.step2':      'Doğrulanmış firmalara iletelim',
+  'howItWorks.step3':      'Teklifleri karşılaştır',
 
   /* ── Categories ──────────────────────────────── */
   'cats.title':    'Kategoriler',
@@ -166,6 +169,7 @@ const tr: Record<string, string> = {
   'ilanSuresi.expiredDetail': 'İlan sahibiyle iletişime geçebilirsiniz ancak ilan artık aktif listede görünmüyor.',
   'ilanSuresi.yenile':        '🔄 Yenile',
   'ilanSuresi.yenileTooltip': 'İlan süresini 30 gün uzat',
+  'ilanSuresi.pendingBadge':  'Onay Bekliyor',
   'ilanSuresi.yenilendi':     'İlan 30 gün uzatıldı.',
   'ilanSuresi.yenileHata':    'Yenileme sırasında hata oluştu.',
 
@@ -448,6 +452,10 @@ const tr: Record<string, string> = {
   'profil.redDurum':          'Reddedildi',
   'profil.yeniTeklifBildirim': '{n} adet yeni teklifiniz var!',
   'profil.talepDetay':        'Talep Detayına Git',
+  'profil.emailVerifyTitle':  'E-posta Doğrulaması Gerekli',
+  'profil.emailVerifyDesc':   'Tekliflerinizi görmek için e-posta adresinizi doğrulayın.',
+  'profil.emailVerifyBtn':    'Doğrulama E-postası Gönder',
+  'profil.emailVerifySent':   'Doğrulama e-postası gönderildi.',
 
   /* ── Başlangıç Rehberi ─────────────────────────────────── */
   'rehber.panelTab':       'Panel',
@@ -507,6 +515,7 @@ const tr: Record<string, string> = {
   'ilanOlustur.gorselRequired':    'En az 1 görsel yükleyiniz.',
   'ilanOlustur.waitUploading':     'Görseller yüklenirken lütfen bekleyin.',
   'ilanOlustur.published':         'İlanınız yayınlandı!',
+  'ilanOlustur.pendingSuccess':    'İlanınız alındı, onay sonrası yayına girecek.',
   'ilanOlustur.publishError':      'İlan eklenirken hata oluştu. Lütfen tekrar deneyin.',
   'ilanOlustur.acilFiyatRequired': 'Geçerli bir acil satış fiyatı giriniz.',
   'ilanOlustur.acilFiyatLow':      'Acil satış fiyatı normal fiyattan düşük olmalıdır.',
@@ -586,6 +595,12 @@ const tr: Record<string, string> = {
   'haber.okumaSuresi':             'dk okuma',
   'haber.devaminiOku':             'Devamını Oku',
   'haber.orijinalHabereGit':       'Orijinal Habere Git',
+
+  // Cookie consent
+  'cookie.text':       'Deneyiminizi iyileştirmek için analitik çerezler kullanıyoruz.',
+  'cookie.policyLink': 'Gizlilik Politikası',
+  'cookie.accept':     'Kabul Et',
+  'cookie.deny':       'Reddet',
 };
 
 export default tr;

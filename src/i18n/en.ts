@@ -28,7 +28,7 @@ const en: Record<string, string> = {
 
   /* ── Hero ────────────────────────────────────── */
   'hero.badge':      'Get quotes from 2 firms at once, choose the best!',
-  'hero.title':      "Turkey's Largest Marketplace for Modular Building Solutions",
+  'hero.title':      "Turkey's Marketplace for Modular Building Solutions",
   'hero.subtitle':   'Prefab homes, containers, tiny houses and more. Find the one that suits you among thousands of listings or post your own.',
   'hero.btnPostAd':  'Post Free Ad',
   'hero.btnExplore': 'Explore Listings',
@@ -38,6 +38,9 @@ const en: Record<string, string> = {
   'stats.registeredFirms': 'Registered Firms',
   'stats.happyCustomers':  'Happy Customers',
   'stats.cities':          'Cities',
+  'howItWorks.step1':      'Create your request',
+  'howItWorks.step2':      'We forward to verified firms',
+  'howItWorks.step3':      'Compare quotes',
 
   /* ── Categories ──────────────────────────────── */
   'cats.title':    'Categories',
@@ -166,6 +169,7 @@ const en: Record<string, string> = {
   'ilanSuresi.expiredDetail': 'You may contact the owner, but the listing is no longer active.',
   'ilanSuresi.yenile':        '🔄 Renew',
   'ilanSuresi.yenileTooltip': 'Extend listing by 30 days',
+  'ilanSuresi.pendingBadge':  'Pending Review',
   'ilanSuresi.yenilendi':     'Listing extended by 30 days.',
   'ilanSuresi.yenileHata':    'Renewal failed. Please try again.',
 
@@ -448,6 +452,10 @@ const en: Record<string, string> = {
   'profil.redDurum':          'Rejected',
   'profil.yeniTeklifBildirim': 'You have {n} new offer(s)!',
   'profil.talepDetay':        'View Request Details',
+  'profil.emailVerifyTitle':  'Email Verification Required',
+  'profil.emailVerifyDesc':   'Verify your email address to view your quotes.',
+  'profil.emailVerifyBtn':    'Send Verification Email',
+  'profil.emailVerifySent':   'Verification email sent.',
 
   /* ── Getting Started Guide ─────────────────────────────── */
   'rehber.panelTab':       'Panel',
@@ -507,6 +515,7 @@ const en: Record<string, string> = {
   'ilanOlustur.gorselRequired':    'Please upload at least 1 image.',
   'ilanOlustur.waitUploading':     'Please wait while images are uploading.',
   'ilanOlustur.published':         'Your listing has been published!',
+  'ilanOlustur.pendingSuccess':    'Your listing has been received and will be published after review.',
   'ilanOlustur.publishError':      'Error publishing listing. Please try again.',
   'ilanOlustur.acilFiyatRequired': 'Please enter a valid urgent sale price.',
   'ilanOlustur.acilFiyatLow':      'Urgent sale price must be lower than regular price.',
@@ -586,6 +595,12 @@ const en: Record<string, string> = {
   'haber.okumaSuresi':             'min read',
   'haber.devaminiOku':             'Read More',
   'haber.orijinalHabereGit':       'Go to Original Article',
+
+  // Cookie consent
+  'cookie.text':       'We use analytics cookies to improve your experience.',
+  'cookie.policyLink': 'Privacy Policy',
+  'cookie.accept':     'Accept',
+  'cookie.deny':       'Deny',
 };
 
 export default en;
