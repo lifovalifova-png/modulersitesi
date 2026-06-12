@@ -393,7 +393,6 @@ export default function HomePage() {
                           <p className="text-white font-semibold text-xs font-headline truncate group-hover:text-secondary-container transition">
                             {t(CATEGORY_NAME_KEYS[cat.slug])}
                           </p>
-                          <p className="text-white/40 text-[10px] font-body">{cat.count} {t('cats.listings')}</p>
                         </div>
                       </Link>
                     ))}
@@ -616,7 +615,6 @@ export default function HomePage() {
                     <h3 className="font-bold text-white text-base font-headline relative z-10">
                       {t(CATEGORY_NAME_KEYS[category.slug])}
                     </h3>
-                    <p className="text-white/70 text-sm mt-1 font-body relative z-10">{category.count} {t('cats.listings')}</p>
                   </Link>
                 );
               })}
