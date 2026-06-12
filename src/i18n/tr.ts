@@ -102,7 +102,7 @@ const tr: Record<string, string> = {
   'firmCta.btn':      'Şimdi Başla',
 
   /* ── Footer ──────────────────────────────────── */
-  'footer.desc':       "Türkiye'nin en büyük modüler yapı pazarı. Prefabrik evler, konteynerler, tiny house ve daha fazlası.",
+  'footer.desc':       "Türkiye'nin modüler yapı pazaryeri. Prefabrik evler, konteynerler, tiny house ve daha fazlası.",
   'footer.quickLinks': 'Hızlı Bağlantılar',
   'footer.legal':      'Yasal',
   'footer.contact':    'İletişim',

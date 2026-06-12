@@ -137,7 +137,7 @@ export default function Footer() {
           name: 'ModülerPazar',
           url: 'https://www.modulerpazar.com',
           logo: 'https://www.modulerpazar.com/favicon.svg',
-          description: 'Türkiye\'nin en büyük modüler yapı pazarı. Prefabrik ev, çelik yapı, konteyner ev, tiny house fiyatları ve firmaları.',
+          description: 'Türkiye\'nin modüler yapı pazaryeri. Prefabrik ev, çelik yapı, konteyner ev, tiny house fiyatları ve firmaları.',
           contactPoint: {
             '@type': 'ContactPoint',
             email: SITE_CONFIG.email,

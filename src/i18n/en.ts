@@ -102,7 +102,7 @@ const en: Record<string, string> = {
   'firmCta.btn':      'Get Started',
 
   /* ── Footer ──────────────────────────────────── */
-  'footer.desc':       "Turkey's largest modular building marketplace. Prefab homes, containers, tiny houses and more.",
+  'footer.desc':       "Turkey's modular building marketplace. Prefab homes, containers, tiny houses and more.",
   'footer.quickLinks': 'Quick Links',
   'footer.legal':      'Legal',
   'footer.contact':    'Contact',
