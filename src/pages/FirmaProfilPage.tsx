@@ -307,7 +307,8 @@ export default function FirmaProfilPage() {
         url={`/firma/${id}`}
       />
 
-      {/* LocalBusiness JSON-LD — uses only server-owned config values, safe */}
+      {/* LocalBusiness JSON-LD — alanlar firma sahibi tarafından düzenlenebilir,
+          </script kırılımına karşı < karakterleri escape edilir */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -329,7 +330,7 @@ export default function FirmaProfilPage() {
               worstRating: 1,
             },
           }),
-        }) }}
+        }).replace(/</g, '\\u003c') }}
       />
       <Header />
 
