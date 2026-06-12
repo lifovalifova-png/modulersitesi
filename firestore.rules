@@ -192,9 +192,11 @@ service cloud.firestore {
     }
 
     match /whatsappTiklamalari/{id} {
-      allow create: if request.auth != null
-        && request.resource.data.keys().hasAll(['firmaId', 'tarih'])
-        && request.resource.data.firmaId is string;
+      allow create: if request.resource.data.keys()
+          .hasOnly(['firmaId', 'ilanId', 'tarih', 'userAgent'])
+        && request.resource.data.firmaId is string
+        && request.resource.data.firmaId.size() < 60
+        && request.resource.data.tarih == request.time;
       allow read: if request.auth != null && isAdmin();
     }
   }
