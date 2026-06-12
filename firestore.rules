@@ -120,7 +120,11 @@ service cloud.firestore {
         && request.resource.data.musteriTelefon.size() > 0
         && request.resource.data.musteriTelefon.size() < 20
         && request.resource.data.size() <= 14;
-      allow read, delete: if request.auth != null && isAdmin();
+      allow read: if (request.auth != null && isAdmin())
+        || (request.auth != null
+            && resource.data.musteriEmail == request.auth.token.email
+            && verifiedEmail());
+      allow delete: if request.auth != null && isAdmin();
     }
 
     match /yorumlar/{yorumId} {

@@ -194,12 +194,16 @@ export default function ProfilPage() {
         }));
       }
 
-      /* Alıcı — eski quotes (ilan bazlı teklifler) */
-      const q3 = query(collection(db, 'quotes'), where('musteriEmail', '==', currentUser.email ?? ''));
-      unsubs.push(onSnapshot(q3,
-        snap => setQuotes(snap.docs.map(d => ({ id: d.id, ...d.data() } as Quote))),
-        () => {},
-      ));
+      /* Alıcı — eski quotes (ilan bazlı teklifler, musteriEmail eşleşen) */
+      if (currentUser.email) {
+        const q3 = query(collection(db, 'quotes'), where('musteriEmail', '==', currentUser.email));
+        unsubs.push(onSnapshot(q3,
+          snap => setQuotes(snap.docs.map(d => ({ id: d.id, ...d.data() } as Quote))),
+          (err) => {
+            if (err?.code === 'permission-denied') toast.error(t('profil.accessDenied'), { id: 'profil-access' });
+          },
+        ));
+      }
     } else {
       /* Satıcı — ilanlarım */
       const q1 = query(collection(db, 'ilanlar'), where('firmaId', '==', currentUser.uid));
