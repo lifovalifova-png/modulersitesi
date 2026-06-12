@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   collection, query, where, onSnapshot, doc, getDoc, updateDoc,
 } from 'firebase/firestore';
@@ -9,6 +9,7 @@ import {
   Building2, MapPin, Tag, ArrowLeft,
 } from 'lucide-react';
 import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { sendTeklifKabulEmail } from '../lib/emailjs';
 import Header from '../components/Header';
@@ -54,33 +55,53 @@ interface Teklif {
 export default function TalepDetayPage() {
   const { talepId } = useParams<{ talepId: string }>();
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { currentUser, loading: authLoading } = useAuth();
   const [talep, setTalep] = useState<TalepData | null>(null);
   const [teklifler, setTeklifler] = useState<Teklif[]>([]);
   const [loading, setLoading] = useState(true);
+  const [erisimHatasi, setErisimHatasi] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
+
+  /* Login zorunlu — giriş sonrası bu sayfaya geri dön */
+  useEffect(() => {
+    if (!authLoading && !currentUser) {
+      navigate('/giris', { state: { from: location.pathname }, replace: true });
+    }
+  }, [authLoading, currentUser, navigate, location.pathname]);
 
   /* Talep verisini çek */
   useEffect(() => {
-    if (!talepId) return;
+    if (!talepId || !currentUser) return;
     getDoc(doc(db, 'taleplar', talepId)).then((snap) => {
       if (snap.exists()) setTalep(snap.data() as TalepData);
       setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [talepId]);
+    }).catch((err) => {
+      if (err?.code === 'permission-denied') setErisimHatasi(true);
+      setLoading(false);
+    });
+  }, [talepId, currentUser]);
 
-  /* Teklifleri dinle */
+  /* Teklifleri dinle — kural gereği sorgu alıcının e-postasıyla sınırlı */
   useEffect(() => {
-    if (!talepId) return;
-    const q = query(collection(db, 'teklifler'), where('talepId', '==', talepId));
+    if (!talepId || !currentUser?.email) return;
+    const q = query(
+      collection(db, 'teklifler'),
+      where('talepId', '==', talepId),
+      where('musteri.email', '==', currentUser.email),
+    );
     const unsub = onSnapshot(q, (snap) => {
       setTeklifler(
         snap.docs
           .map((d) => ({ id: d.id, ...d.data() } as Teklif))
           .sort((a, b) => (b.tarih?.seconds ?? 0) - (a.tarih?.seconds ?? 0)),
       );
+    }, (err) => {
+      if (err?.code === 'permission-denied') setErisimHatasi(true);
     });
     return unsub;
-  }, [talepId]);
+  }, [talepId, currentUser?.email]);
 
   /* Teklifi kabul et */
   const handleKabul = async (teklif: Teklif) => {
@@ -152,6 +173,22 @@ export default function TalepDetayPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (erisimHatasi) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 bg-gray-50 flex items-center justify-center">
+          <div className="text-center max-w-md px-4">
+            <XCircle className="w-12 h-12 text-amber-400 mx-auto mb-3" />
+            <p className="text-gray-600">{t('teklif.accessDenied')}</p>
+            <Link to="/" className="text-emerald-600 hover:underline text-sm mt-2 inline-block">{t('firmaPanel.backHome')}</Link>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }

@@ -81,15 +81,15 @@ service cloud.firestore {
       allow read: if request.auth != null && (
         isAdmin() ||
         resource.data.firmaId == request.auth.uid ||
-        (resource.data.musteriEmail != null
-         && request.auth.token.email == resource.data.musteriEmail
+        (resource.data.musteri.email != null
+         && request.auth.token.email == resource.data.musteri.email
          && verifiedEmail())
       );
       allow update: if request.auth != null && (
         isAdmin() ||
         resource.data.firmaId == request.auth.uid ||
-        (resource.data.musteriEmail != null
-         && request.auth.token.email == resource.data.musteriEmail
+        (resource.data.musteri.email != null
+         && request.auth.token.email == resource.data.musteri.email
          && verifiedEmail())
       );
       allow delete: if request.auth != null && isAdmin();
@@ -104,7 +104,11 @@ service cloud.firestore {
         && request.resource.data.telefon.size() > 0
         && request.resource.data.telefon.size() < 20
         && request.resource.data.size() <= 16;
-      allow read, update, delete: if request.auth != null && isAdmin();
+      allow read: if (request.auth != null && isAdmin())
+        || (request.auth != null
+            && resource.data.email == request.auth.token.email
+            && verifiedEmail());
+      allow update, delete: if request.auth != null && isAdmin();
     }
 
     match /quotes/{id} {

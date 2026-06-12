@@ -155,16 +155,23 @@ export default function ProfilPage() {
     const done = () => { if (!settled) { settled = true; setDataLoading(false); } };
 
     if (!isSeller) {
-      /* Alıcı — taleplerim (userId veya email eşleşen) */
-      const q1 = query(collection(db, 'taleplar'), where('userId', '==', currentUser.uid));
-      unsubs.push(onSnapshot(q1,
-        snap => { setTaleplar(snap.docs.map(d => ({ id: d.id, ...d.data() } as Talep))); done(); },
-        () => done(),
-      ));
-
-      /* Alıcı — gelen teklifler (teklifler koleksiyonu, musteriEmail eşleşen) */
+      /* Alıcı — taleplerim (talep formuna girilen email eşleşen; kural self-read'i bununla kanıtlar) */
       if (currentUser.email) {
-        const q2 = query(collection(db, 'teklifler'), where('musteriEmail', '==', currentUser.email));
+        const q1 = query(collection(db, 'taleplar'), where('email', '==', currentUser.email));
+        unsubs.push(onSnapshot(q1,
+          snap => { setTaleplar(snap.docs.map(d => ({ id: d.id, ...d.data() } as Talep))); done(); },
+          (err) => {
+            if (err?.code === 'permission-denied') toast.error(t('profil.accessDenied'), { id: 'profil-access' });
+            done();
+          },
+        ));
+      } else {
+        done();
+      }
+
+      /* Alıcı — gelen teklifler (teklifler koleksiyonu, musteri.email eşleşen) */
+      if (currentUser.email) {
+        const q2 = query(collection(db, 'teklifler'), where('musteri.email', '==', currentUser.email));
         unsubs.push(onSnapshot(q2, snap => {
           const items = snap.docs
             .map(d => ({ id: d.id, ...d.data() } as Teklif))
@@ -182,7 +189,9 @@ export default function ProfilPage() {
             }
             notifiedRef.current = true;
           }
-        }, () => {}));
+        }, (err) => {
+          if (err?.code === 'permission-denied') toast.error(t('profil.accessDenied'), { id: 'profil-access' });
+        }));
       }
 
       /* Alıcı — eski quotes (ilan bazlı teklifler) */
