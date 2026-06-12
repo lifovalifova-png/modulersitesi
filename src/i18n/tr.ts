@@ -29,7 +29,7 @@ const tr: Record<string, string> = {
   /* ── Hero ────────────────────────────────────── */
   'hero.badge':      'Aynı anda 2 firmadan teklif al, en iyisini seç!',
   'hero.title':      "Modüler Yapı Çözümlerinde Türkiye'nin Pazaryeri",
-  'hero.subtitle':   'Prefabrik evler, konteynerler, tiny house ve daha fazlası. Binlerce ilan arasından size uygun olanı bulun veya kendi ilanınızı verin.',
+  'hero.subtitle':   'Prefabrik evler, konteynerler, tiny house ve daha fazlası. Size uygun ilanı bulun veya kendi ilanınızı verin.',
   'hero.btnPostAd':  'Ücretsiz İlan Ver',
   'hero.btnExplore': 'İlanları Keşfet',
 

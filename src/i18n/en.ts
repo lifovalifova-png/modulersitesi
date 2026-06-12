@@ -29,7 +29,7 @@ const en: Record<string, string> = {
   /* ── Hero ────────────────────────────────────── */
   'hero.badge':      'Get quotes from 2 firms at once, choose the best!',
   'hero.title':      "Turkey's Marketplace for Modular Building Solutions",
-  'hero.subtitle':   'Prefab homes, containers, tiny houses and more. Find the one that suits you among thousands of listings or post your own.',
+  'hero.subtitle':   'Prefab homes, containers, tiny houses and more. Find the listing that suits you or post your own.',
   'hero.btnPostAd':  'Post Free Ad',
   'hero.btnExplore': 'Explore Listings',
 
