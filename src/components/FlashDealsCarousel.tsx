@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, MapPin, Clock, Flame, Tag } from 'lucide-react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { FLASH_DEALS, type FlashDeal } from '../data/flashDeals';
 import { type Ilan } from '../hooks/useIlanlar';
 
 /* ── Unified display type ───────────────────────────────────── */
@@ -47,21 +46,6 @@ function ilanToItem(d: Ilan): CarouselItem {
   };
 }
 
-function flashDealToItem(d: FlashDeal): CarouselItem {
-  return {
-    id:            String(d.id),
-    title:         d.title,
-    location:      d.location,
-    price:         d.price,
-    originalPrice: d.originalPrice,
-    image:         d.image,
-    category:      d.category,
-    urgent:        d.urgent,
-    indirimli:     (d.discount ?? 0) > 0,
-    href:          `/ilan/${d.id}`,
-  };
-}
-
 /* ── Category badge colors ──────────────────────────────────── */
 const CATEGORY_COLORS: Record<string, string> = {
   'Prefabrik':           'bg-emerald-100 text-emerald-700',
@@ -90,13 +74,13 @@ export default function FlashDealsCarousel() {
         .map((d) => ({ id: d.id, ...d.data() } as Ilan))
         .filter((d) => d.status === 'aktif' && (d.acil || d.indirimli || d.acilSatis))
         .map(ilanToItem);
-      setFirestoreItems(docs.length > 0 ? docs : null);
+      setFirestoreItems(docs);
     });
     return unsub;
   }, []);
 
-  /* Gösterilecek ilanlar: Firestore varsa kullan, yoksa static fallback */
-  const items: CarouselItem[] = firestoreItems ?? FLASH_DEALS.map(flashDealToItem);
+  /* Gerçek ilan yoksa bölüm hiç gösterilmez (sahte/static veri yok) */
+  const items: CarouselItem[] = firestoreItems ?? [];
 
   /* ── Scroll helpers ─────────────────────────────────────── */
   const scrollToIndex = useCallback((index: number) => {
@@ -141,6 +125,8 @@ export default function FlashDealsCarousel() {
 
   const canScrollLeft  = activeIndex > 0;
   const canScrollRight = activeIndex < items.length - 1;
+
+  if (items.length === 0) return null;
 
   return (
     <section className="py-12 md:py-16 bg-gradient-to-b from-amber-50 to-white">

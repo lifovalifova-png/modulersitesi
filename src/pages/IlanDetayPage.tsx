@@ -5,7 +5,6 @@ import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { CATEGORIES } from '../data/categories';
-import { FLASH_DEALS } from '../data/flashDeals';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
 import SEOMeta from '../components/SEOMeta';
@@ -29,29 +28,6 @@ const CAT_COLORS: Record<string, string> = {
   'Özel Projeler':       'bg-pink-100 text-pink-700',
   '2. El':               'bg-orange-100 text-orange-700',
 };
-
-/* ── Statik ilanı Ilan tipine çevir ─────────────────────── */
-function flashDealToIlan(d: (typeof FLASH_DEALS)[0]): Ilan {
-  const categSlug = CATEGORIES.find((c) => c.name === d.category)?.slug ?? 'prefabrik';
-  return {
-    id:               String(d.id),
-    baslik:           d.title,
-    kategori:         d.category,
-    kategoriSlug:     categSlug,
-    sehir:            d.location,
-    fiyat:            parseInt(d.price.replace(/[^\d]/g, ''), 10) || 0,
-    aciklama:         d.description,
-    ozellikler:       Object.fromEntries(d.features.map((f) => [f.label, f.value])),
-    gorseller:        d.images,
-    firmaId:          '',
-    firmaAdi:         d.firmName,
-    firmaDogrulanmis: d.firmVerified,
-    acil:             d.urgent,
-    indirimli:        !!d.discount,
-    status:           'aktif',
-    tarih:            { seconds: new Date(d.date).getTime() / 1000, nanoseconds: 0 },
-  };
-}
 
 /* ── Ozellikler objesini {label,value}[] dizisine çevir ─── */
 function ozelliklerToArray(oz: Ilan['ozellikler']): { label: string; value: string }[] {
@@ -292,7 +268,7 @@ export default function IlanDetayPage() {
   const [notFound, setNotFound] = useState(false);
 
 
-  /* Firestore'dan çek; bulunamazsa statik fallback */
+  /* Firestore'dan çek */
   useEffect(() => {
     if (!id) { setNotFound(true); setFetching(false); return; }
     setFetching(true);
@@ -303,18 +279,10 @@ export default function IlanDetayPage() {
         if (snap.exists()) {
           setIlan({ id: snap.id, ...snap.data() } as Ilan);
         } else {
-          /* Numeric ID → statik veri fallback */
-          const numId = Number(id);
-          const found = FLASH_DEALS.find((d) => d.id === numId);
-          if (found) setIlan(flashDealToIlan(found));
-          else setNotFound(true);
+          setNotFound(true);
         }
       } catch {
-        /* Firestore erişim hatası → statik fallback dene */
-        const numId = Number(id);
-        const found = FLASH_DEALS.find((d) => d.id === numId);
-        if (found) setIlan(flashDealToIlan(found));
-        else setNotFound(true);
+        setNotFound(true);
       } finally {
         setFetching(false);
       }
