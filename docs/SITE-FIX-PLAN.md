@@ -79,7 +79,7 @@ Index build süresi: 5-15 dakika. Firebase Console → Firestore → Indexes sek
 1. Firebase Console → Project Settings → Service Accounts → "Generate new private key"
 2. JSON'u kopyala
 3. GitHub repo → Settings → Secrets → Actions → New secret:
-   - İsim: `FIREBASE_SERVICE_ACCOUNT_JSON`
+   - İsim: `FIREBASE_SERVICE_ACCOUNT`
    - Değer: JSON içeriği
 4. Test: GitHub Actions → "Firestore Weekly Backup" → "Run workflow"
 
