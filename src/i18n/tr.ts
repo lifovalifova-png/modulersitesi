@@ -510,6 +510,8 @@ const tr: Record<string, string> = {
   'ilanOlustur.fileSelect':        'Dosya Seç',
   'ilanOlustur.gorselCountLabel':  'görsel yüklendi',
   'ilanOlustur.uploading':         'Görseller yükleniyor…',
+  'talep.gorselSection':           'Referans Görseller',
+  'talep.gorselInfo':              'İsteğe bağlı — projenize ait görselleri sürükleyip bırakın (maks. 3).',
   'ilanOlustur.publishing':        'Yayınlanıyor…',
   'ilanOlustur.publish':           'İlanı Yayınla',
   'ilanOlustur.baslikRequired':    'Başlık zorunludur.',

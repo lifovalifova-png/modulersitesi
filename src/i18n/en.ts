@@ -510,6 +510,8 @@ const en: Record<string, string> = {
   'ilanOlustur.fileSelect':        'Select File',
   'ilanOlustur.gorselCountLabel':  'images uploaded',
   'ilanOlustur.uploading':         'Uploading images…',
+  'talep.gorselSection':           'Reference Images',
+  'talep.gorselInfo':              'Optional — drag and drop images of your project (max 3).',
   'ilanOlustur.publishing':        'Publishing…',
   'ilanOlustur.publish':           'Publish Listing',
   'ilanOlustur.baslikRequired':    'Title is required.',

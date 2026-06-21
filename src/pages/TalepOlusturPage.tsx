@@ -1,18 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { addDoc, collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { toast } from 'sonner';
-import { CheckCircle, Lock, ImageIcon, CalendarDays, MapPin } from 'lucide-react';
+import { CheckCircle, Lock, ImageIcon, CalendarDays, MapPin, Upload, X, AlertCircle, Loader2, LogIn } from 'lucide-react';
 import { CATEGORIES } from '../data/categories';
-import { db } from '../lib/firebase';
+import { db, storage } from '../lib/firebase';
 import { sendTalepEmail } from '../lib/emailjs';
-import { sanitizeText, sanitizeUrl } from '../utils/sanitize';
+import { sanitizeText } from '../utils/sanitize';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import Disclaimer from '../components/Disclaimer';
 import { trackEvent } from '../lib/analytics';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 /* ─── Sabitler ────────────────────────────────────────────── */
 const CITIES = [
@@ -38,7 +41,23 @@ const BUDGET_RANGES = [
   { value: '2m_ustu',   label: '2.000.000 TL ve üzeri'    },
 ];
 
+/* Görsel yükleme — IlanOlusturPage ile aynı sınırlar */
+const MAX_IMAGES   = 3;
+const MAX_SIZE     = 5 * 1024 * 1024; // 5 MB
+const ACCEPT_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ACCEPT_ATTR  = ACCEPT_TYPES.join(',');
+
 /* ─── Tipler ──────────────────────────────────────────────── */
+interface UploadItem {
+  id:          string;
+  file:        File;
+  previewUrl:  string;
+  storageUrl:  string;
+  storagePath: string;
+  progress:    number;
+  status:      'uploading' | 'done' | 'error';
+}
+
 interface FormState {
   kategori: string;
   sehir: string;
@@ -47,9 +66,6 @@ interface FormState {
   metrekare: string;
   aciklama: string;
   teslimTarihi: string;
-  foto1: string;
-  foto2: string;
-  foto3: string;
   ad: string;
   telefon: string;
   email: string;
@@ -61,7 +77,7 @@ type Errors = Partial<Record<keyof FormState, string>>;
 
 const EMPTY: FormState = {
   kategori: '', sehir: '', ilce: '', butce: '', metrekare: '',
-  aciklama: '', teslimTarihi: '', foto1: '', foto2: '', foto3: '',
+  aciklama: '', teslimTarihi: '',
   ad: '', telefon: '', email: '', kvkk: false, kosullar: false,
 };
 
@@ -71,11 +87,18 @@ const LS_KEY = `talepLimit_${TODAY}`;
 
 export default function TalepOlusturPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const { currentUser, loading: authLoading } = useAuth();
   const { flags, loading: flagsLoading } = useFeatureFlags();
   const [form,             setForm]             = useState<FormState>(EMPTY);
   const [done,             setDone]             = useState(false);
   const [submitting,       setSubmitting]       = useState(false);
   const [errors,           setErrors]           = useState<Errors>({});
+  /* Görseller */
+  const [images,   setImages]   = useState<UploadItem[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
+  const objectUrlsRef = useRef<string[]>([]);   // unmount'ta revoke
   const [gunlukLimit,      setGunlukLimit]      = useState(1);
   // Senkron başlangıç: localStorage sayacı >= 1 ise hemen kilitli göster, flicker olmaz
   const [limitAsimi,       setLimitAsimi]       = useState(
@@ -104,6 +127,84 @@ export default function TalepOlusturPage() {
   const set = (field: keyof FormState, val: string | boolean) =>
     setForm((p) => ({ ...p, [field]: val }));
 
+  /* ── ObjectURL temizle (memory leak önleme) ────────────── */
+  useEffect(() => {
+    return () => objectUrlsRef.current.forEach(URL.revokeObjectURL);
+  }, []);
+
+  /* ── Tek dosya yükleme (drop/seçim anında, submit'ten önce) ── */
+  const uploadFile = useCallback((file: File) => {
+    if (!currentUser) return;
+
+    if (!ACCEPT_TYPES.includes(file.type)) {
+      toast.error(`${file.name}: JPG, PNG veya WebP kullanın.`);
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast.error(`${file.name}: Maksimum 5 MB.`);
+      return;
+    }
+
+    const id          = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const previewUrl  = URL.createObjectURL(file);
+    const storagePath = `ilanlar/${currentUser.uid}/talep_${id}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+
+    objectUrlsRef.current.push(previewUrl);
+    setImages((prev) => [...prev, {
+      id, file, previewUrl, storagePath,
+      storageUrl: '', progress: 0, status: 'uploading',
+    }]);
+
+    const task = uploadBytesResumable(ref(storage, storagePath), file, { contentType: file.type });
+
+    task.on(
+      'state_changed',
+      (snap) => {
+        const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+        setImages((prev) => prev.map((img) => img.id === id ? { ...img, progress: pct } : img));
+      },
+      (storageError) => {
+        setImages((prev) => prev.map((img) => img.id === id ? { ...img, status: 'error' } : img));
+        toast.error(`${file.name} yüklenemedi. (${storageError.code})`);
+      },
+      async () => {
+        const url = await getDownloadURL(task.snapshot.ref);
+        setImages((prev) => prev.map((img) =>
+          img.id === id ? { ...img, storageUrl: url, status: 'done', progress: 100 } : img,
+        ));
+      },
+    );
+  }, [currentUser]);
+
+  /* ── Çoklu dosya işle ─────────────────────────────────── */
+  function handleFiles(files: FileList | File[]) {
+    const remaining = MAX_IMAGES - images.length;
+    if (remaining <= 0) {
+      toast.error(`En fazla ${MAX_IMAGES} görsel ekleyebilirsiniz.`);
+      return;
+    }
+    Array.from(files).slice(0, remaining).forEach(uploadFile);
+  }
+
+  /* ── Drag & Drop ──────────────────────────────────────── */
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    handleFiles(e.dataTransfer.files);
+  }
+
+  /* ── Görsel sil ───────────────────────────────────────── */
+  function removeImage(img: UploadItem) {
+    URL.revokeObjectURL(img.previewUrl);
+    objectUrlsRef.current = objectUrlsRef.current.filter((u) => u !== img.previewUrl);
+    setImages((prev) => prev.filter((i) => i.id !== img.id));
+    if (img.storageUrl) {
+      deleteObject(ref(storage, img.storagePath)).catch(() => {});
+    }
+  }
+
+  const uploading = images.some((i) => i.status === 'uploading');
+
   /* ── Doğrulama ────────────────────────────────────────── */
   function validate(): boolean {
     const e: Errors = {};
@@ -127,15 +228,17 @@ export default function TalepOlusturPage() {
       toast.error('Günlük teklif talebi limitinizi kullandınız. Yarın tekrar deneyin.');
       return;
     }
+    if (uploading) {
+      toast.error('Görseller yükleniyor, lütfen bekleyin.');
+      return;
+    }
     if (!validate()) {
       toast.error('Lütfen zorunlu alanları doldurunuz.');
       return;
     }
     setSubmitting(true);
     try {
-      const fotograflar = [form.foto1, form.foto2, form.foto3]
-        .map(sanitizeUrl)
-        .filter(Boolean);
+      const fotograflar = images.filter((i) => i.status === 'done').map((i) => i.storageUrl);
       await addDoc(collection(db, 'taleplar'), {
         kategori:           form.kategori,
         sehir:              form.sehir,
@@ -224,6 +327,41 @@ export default function TalepOlusturPage() {
             >
               Ana Sayfaya Dön
             </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  /* ── Giriş zorunlu — görseller güvenli yüklensin diye ─── */
+  if (!authLoading && !currentUser) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <SEOMeta title="Talep Oluştur — ModülerPazar" description="Modüler yapı teklif talebi oluşturun." />
+        <Header />
+        <main className="flex-1 bg-gray-50 flex items-center justify-center py-16 px-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md w-full text-center">
+            <LogIn className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Talep oluşturmak için giriş yapın</h2>
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">
+              Görsellerinizi güvenle yükleyebilmek ve tekliflerinizi takip edebilmek için
+              lütfen giriş yapın veya ücretsiz hesap oluşturun.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                to="/giris"
+                className="bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition"
+              >
+                Giriş Yap
+              </Link>
+              <Link
+                to="/kayit"
+                className="border border-emerald-600 text-emerald-600 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-50 transition"
+              >
+                Hesap Oluştur
+              </Link>
+            </div>
           </div>
         </main>
         <Footer />
@@ -429,18 +567,91 @@ export default function TalepOlusturPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-3">
               <h2 className="font-semibold text-gray-800 text-sm uppercase tracking-wide flex items-center gap-2">
                 <ImageIcon className="w-4 h-4 text-emerald-600" />
-                Referans Görseller
-                <span className="text-xs text-gray-400 font-normal normal-case">(isteğe bağlı, maks. 3 URL)</span>
+                {t('talep.gorselSection')}
               </h2>
-              {(['foto1', 'foto2', 'foto3'] as const).map((f, i) => (
-                <input
-                  key={f}
-                  value={form[f]}
-                  onChange={(e) => set(f, e.target.value)}
-                  placeholder={`Görsel URL ${i + 1} — https://...`}
-                  className={`${inputBase} border-gray-300`}
-                />
-              ))}
+              <p className="text-xs text-gray-400">{t('talep.gorselInfo')}</p>
+
+              {/* Drag-drop zone */}
+              {images.length < MAX_IMAGES && (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors select-none ${
+                    dragOver
+                      ? 'border-emerald-400 bg-emerald-50'
+                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <ImageIcon className="w-10 h-10 mx-auto text-gray-300 mb-3" />
+                  <p className="text-sm font-medium text-gray-600">{t('ilanOlustur.dragDrop')}</p>
+                  <p className="text-xs text-gray-400 mt-1">JPG, PNG veya <span className="text-emerald-600 font-medium">WebP</span> (önerilen)</p>
+                  <p className="text-xs text-gray-400 mt-0.5 mb-3">{t('ilanOlustur.or')}</p>
+                  <span className="inline-flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-emerald-700 transition pointer-events-none">
+                    <Upload className="w-3.5 h-3.5" /> {t('ilanOlustur.fileSelect')}
+                  </span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ACCEPT_ATTR}
+                    multiple
+                    className="hidden"
+                    onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                  />
+                </div>
+              )}
+
+              {/* Önizleme grid */}
+              {images.length > 0 && (
+                <div className={`grid grid-cols-3 sm:grid-cols-5 gap-3 ${images.length < MAX_IMAGES ? 'mt-4' : ''}`}>
+                  {images.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-100"
+                    >
+                      <img src={img.previewUrl} alt="Referans görsel önizleme" loading="lazy" className="w-full h-full object-cover" />
+
+                      {img.status === 'uploading' && (
+                        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1">
+                          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span className="text-white text-xs font-semibold">{img.progress}%</span>
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+                            <div className="h-full bg-emerald-400 transition-all" style={{ width: `${img.progress}%` }} />
+                          </div>
+                        </div>
+                      )}
+
+                      {img.status === 'done' && (
+                        <div className="absolute bottom-1.5 right-1.5 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shadow">
+                          <CheckCircle className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+
+                      {img.status === 'error' && (
+                        <div className="absolute inset-0 bg-red-500/70 flex items-center justify-center">
+                          <AlertCircle className="w-7 h-7 text-white" />
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => removeImage(img)}
+                        className="absolute top-1.5 left-1.5 w-5 h-5 bg-black/60 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+                        title="Görseli kaldır"
+                      >
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {images.length > 0 && (
+                <p className="text-xs text-gray-400 mt-1">
+                  {images.filter((i) => i.status === 'done').length} / {MAX_IMAGES} {t('ilanOlustur.gorselCountLabel')}
+                </p>
+              )}
             </div>
 
             {/* ── 3. İletişim Bilgileri ─────────────────── */}
@@ -537,14 +748,16 @@ export default function TalepOlusturPage() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={submitting || limitAsimi}
+              disabled={submitting || limitAsimi || uploading}
               className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {submitting
                 ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Gönderiliyor…</>
-                : limitAsimi
-                  ? 'Günlük Limit Doldu'
-                  : 'Teklif İste →'
+                : uploading
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('ilanOlustur.uploading')}</>
+                  : limitAsimi
+                    ? 'Günlük Limit Doldu'
+                    : 'Teklif İste →'
               }
             </button>
           </form>
