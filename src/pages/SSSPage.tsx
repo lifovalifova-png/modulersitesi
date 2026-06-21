@@ -25,7 +25,7 @@ const KATEGORILER: SSSKategori[] = [
     sorular: [
       {
         soru: 'ModülerPazar nedir?',
-        cevap: 'ModülerPazar, Türkiye\'nin en büyük modüler yapı pazar yeridir. Prefabrik evler, çelik yapılar, konteyner evler, tiny house\'lar ve ahşap yapılar için alıcıları ve onaylı üretici firmalar ile buluşturuyoruz. Platformumuzda binlerce ilan arasında arama yapabilir, aynı anda birden fazla firmadan teklif alabilirsiniz.',
+        cevap: 'ModülerPazar, Türkiye\'nin modüler yapı pazaryeridir. Prefabrik evler, çelik yapılar, konteyner evler, tiny house\'lar ve ahşap yapılar için alıcıları ve onaylı üretici firmalar ile buluşturuyoruz. Platformumuzda ilanlar arasında arama yapabilir, aynı anda birden fazla firmadan teklif alabilirsiniz.',
       },
       {
         soru: 'Üyelik ücretli mi?',

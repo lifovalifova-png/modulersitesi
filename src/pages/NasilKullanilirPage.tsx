@@ -227,7 +227,7 @@ export default function NasilKullanilirPage() {
           <div className="max-w-3xl mx-auto px-4 text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">ModülerPazar'ı Keşfedin</h1>
             <p className="text-emerald-100 text-base md:text-lg mb-8">
-              Türkiye'nin en büyük modüler yapı pazarında alıcı ve satıcı olarak nasıl hareket edeceğinizi öğrenin. Birkaç adımda hayalinizdeki yapıya ulaşın.
+              Türkiye'nin modüler yapı pazaryerinde alıcı ve satıcı olarak nasıl hareket edeceğinizi öğrenin. Birkaç adımda hayalinizdeki yapıya ulaşın.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link

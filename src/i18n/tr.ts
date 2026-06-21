@@ -29,7 +29,7 @@ const tr: Record<string, string> = {
   /* ── Hero ────────────────────────────────────── */
   'hero.badge':      'Aynı anda 2 firmadan teklif al, en iyisini seç!',
   'hero.title':      "Modüler Yapı Çözümlerinde Türkiye'nin Pazaryeri",
-  'hero.subtitle':   'Prefabrik evler, konteynerler, tiny house ve daha fazlası. Binlerce ilan arasından size uygun olanı bulun veya kendi ilanınızı verin.',
+  'hero.subtitle':   'Prefabrik evler, konteynerler, tiny house ve daha fazlası. Size uygun ilanı bulun veya kendi ilanınızı verin.',
   'hero.btnPostAd':  'Ücretsiz İlan Ver',
   'hero.btnExplore': 'İlanları Keşfet',
 
@@ -102,7 +102,7 @@ const tr: Record<string, string> = {
   'firmCta.btn':      'Şimdi Başla',
 
   /* ── Footer ──────────────────────────────────── */
-  'footer.desc':       "Türkiye'nin en büyük modüler yapı pazarı. Prefabrik evler, konteynerler, tiny house ve daha fazlası.",
+  'footer.desc':       "Türkiye'nin modüler yapı pazaryeri. Prefabrik evler, konteynerler, tiny house ve daha fazlası.",
   'footer.quickLinks': 'Hızlı Bağlantılar',
   'footer.legal':      'Yasal',
   'footer.contact':    'İletişim',
@@ -357,6 +357,7 @@ const tr: Record<string, string> = {
   'listing.successMsg':     'En kısa sürede sizinle iletişime geçilecek.',
   'listing.nameError':      'Ad soyad zorunludur.',
   'listing.phoneError':     'Geçerli bir telefon giriniz.',
+  'listing.emailError':     'Geçerli bir e-posta adresi giriniz.',
   'listing.kvkkError':      'KVKK metnini kabul etmelisiniz.',
   'listing.prevImage':      'Önceki görsel',
   'listing.nextImage':      'Sonraki görsel',
@@ -422,6 +423,7 @@ const tr: Record<string, string> = {
   'teklif.incomingOffers':    'Gelen Teklifler',
   'teklif.noOffers':          'Henüz teklif gelmedi. Firmalar inceledikçe teklifler burada görünecek.',
   'teklif.notFound':          'Talep bulunamadı.',
+  'teklif.accessDenied':      'Bu talebi görüntülemek için talebi oluşturduğunuz e-postayla giriş yapın ve e-postanızı doğrulayın.',
   'teklif.acceptBtn':         'Teklifi Kabul Et',
   'teklif.rejectBtn':         'Reddet',
   'teklif.accepted':          'Teklif kabul edildi! Firma bilgilendirilecek.',
@@ -451,6 +453,7 @@ const tr: Record<string, string> = {
   'profil.kabulDurum':        'Kabul Edildi',
   'profil.redDurum':          'Reddedildi',
   'profil.yeniTeklifBildirim': '{n} adet yeni teklifiniz var!',
+  'profil.accessDenied':       'Talep ve tekliflerinizi görüntülemek için e-posta adresinizi doğrulayın.',
   'profil.talepDetay':        'Talep Detayına Git',
   'profil.emailVerifyTitle':  'E-posta Doğrulaması Gerekli',
   'profil.emailVerifyDesc':   'Tekliflerinizi görmek için e-posta adresinizi doğrulayın.',

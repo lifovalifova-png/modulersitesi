@@ -29,7 +29,7 @@ const en: Record<string, string> = {
   /* ── Hero ────────────────────────────────────── */
   'hero.badge':      'Get quotes from 2 firms at once, choose the best!',
   'hero.title':      "Turkey's Marketplace for Modular Building Solutions",
-  'hero.subtitle':   'Prefab homes, containers, tiny houses and more. Find the one that suits you among thousands of listings or post your own.',
+  'hero.subtitle':   'Prefab homes, containers, tiny houses and more. Find the listing that suits you or post your own.',
   'hero.btnPostAd':  'Post Free Ad',
   'hero.btnExplore': 'Explore Listings',
 
@@ -102,7 +102,7 @@ const en: Record<string, string> = {
   'firmCta.btn':      'Get Started',
 
   /* ── Footer ──────────────────────────────────── */
-  'footer.desc':       "Turkey's largest modular building marketplace. Prefab homes, containers, tiny houses and more.",
+  'footer.desc':       "Turkey's modular building marketplace. Prefab homes, containers, tiny houses and more.",
   'footer.quickLinks': 'Quick Links',
   'footer.legal':      'Legal',
   'footer.contact':    'Contact',
@@ -357,6 +357,7 @@ const en: Record<string, string> = {
   'listing.successMsg':     'You will be contacted as soon as possible.',
   'listing.nameError':      'Full name is required.',
   'listing.phoneError':     'Please enter a valid phone number.',
+  'listing.emailError':     'Please enter a valid e-mail address.',
   'listing.kvkkError':      'You must accept the KVKK disclosure.',
   'listing.prevImage':      'Previous image',
   'listing.nextImage':      'Next image',
@@ -422,6 +423,7 @@ const en: Record<string, string> = {
   'teklif.incomingOffers':    'Incoming Offers',
   'teklif.noOffers':          'No offers yet. Offers will appear here as firms review your request.',
   'teklif.notFound':          'Request not found.',
+  'teklif.accessDenied':      'To view this request, sign in with the e-mail you used to create it and verify your e-mail address.',
   'teklif.acceptBtn':         'Accept Offer',
   'teklif.rejectBtn':         'Reject',
   'teklif.accepted':          'Offer accepted! The firm will be notified.',
@@ -451,6 +453,7 @@ const en: Record<string, string> = {
   'profil.kabulDurum':        'Accepted',
   'profil.redDurum':          'Rejected',
   'profil.yeniTeklifBildirim': 'You have {n} new offer(s)!',
+  'profil.accessDenied':       'Verify your e-mail address to view your requests and offers.',
   'profil.talepDetay':        'View Request Details',
   'profil.emailVerifyTitle':  'Email Verification Required',
   'profil.emailVerifyDesc':   'Verify your email address to view your quotes.',

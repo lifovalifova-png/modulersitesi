@@ -5,7 +5,6 @@ import { db } from '../lib/firebase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { CATEGORIES } from '../data/categories';
-import { FLASH_DEALS } from '../data/flashDeals';
 import { useIlanlar, formatFiyat, formatTarih, type Ilan } from '../hooks/useIlanlar';
 import { useTeklifSepet } from '../context/TeklifSepetContext';
 import SEOMeta from '../components/SEOMeta';
@@ -29,29 +28,6 @@ const CAT_COLORS: Record<string, string> = {
   'Özel Projeler':       'bg-pink-100 text-pink-700',
   '2. El':               'bg-orange-100 text-orange-700',
 };
-
-/* ── Statik ilanı Ilan tipine çevir ─────────────────────── */
-function flashDealToIlan(d: (typeof FLASH_DEALS)[0]): Ilan {
-  const categSlug = CATEGORIES.find((c) => c.name === d.category)?.slug ?? 'prefabrik';
-  return {
-    id:               String(d.id),
-    baslik:           d.title,
-    kategori:         d.category,
-    kategoriSlug:     categSlug,
-    sehir:            d.location,
-    fiyat:            parseInt(d.price.replace(/[^\d]/g, ''), 10) || 0,
-    aciklama:         d.description,
-    ozellikler:       Object.fromEntries(d.features.map((f) => [f.label, f.value])),
-    gorseller:        d.images,
-    firmaId:          '',
-    firmaAdi:         d.firmName,
-    firmaDogrulanmis: d.firmVerified,
-    acil:             d.urgent,
-    indirimli:        !!d.discount,
-    status:           'aktif',
-    tarih:            { seconds: new Date(d.date).getTime() / 1000, nanoseconds: 0 },
-  };
-}
 
 /* ── Ozellikler objesini {label,value}[] dizisine çevir ─── */
 function ozelliklerToArray(oz: Ilan['ozellikler']): { label: string; value: string }[] {
@@ -83,6 +59,7 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
     const e: Record<string, string> = {};
     if (!form.name.trim())                         e.name  = t('listing.nameError');
     if (!/^[0-9+\s()\-]{10,}$/.test(form.phone)) e.phone = t('listing.phoneError');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = t('listing.emailError');
     if (!form.kvkk)                                e.kvkk  = t('listing.kvkkError');
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -179,9 +156,10 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('listing.formEmail')}</label>
-              <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)}
+              <input type="email" required value={form.email} onChange={(e) => set('email', e.target.value)}
                 placeholder={t('listing.formEmailPh')}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              {errors.email && <p className="mt-1 text-xs text-red-600 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.email}</p>}
             </div>
 
             <div>
@@ -292,7 +270,7 @@ export default function IlanDetayPage() {
   const [notFound, setNotFound] = useState(false);
 
 
-  /* Firestore'dan çek; bulunamazsa statik fallback */
+  /* Firestore'dan çek */
   useEffect(() => {
     if (!id) { setNotFound(true); setFetching(false); return; }
     setFetching(true);
@@ -303,18 +281,10 @@ export default function IlanDetayPage() {
         if (snap.exists()) {
           setIlan({ id: snap.id, ...snap.data() } as Ilan);
         } else {
-          /* Numeric ID → statik veri fallback */
-          const numId = Number(id);
-          const found = FLASH_DEALS.find((d) => d.id === numId);
-          if (found) setIlan(flashDealToIlan(found));
-          else setNotFound(true);
+          setNotFound(true);
         }
       } catch {
-        /* Firestore erişim hatası → statik fallback dene */
-        const numId = Number(id);
-        const found = FLASH_DEALS.find((d) => d.id === numId);
-        if (found) setIlan(flashDealToIlan(found));
-        else setNotFound(true);
+        setNotFound(true);
       } finally {
         setFetching(false);
       }
