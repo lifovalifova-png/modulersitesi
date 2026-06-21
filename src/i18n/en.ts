@@ -357,6 +357,7 @@ const en: Record<string, string> = {
   'listing.successMsg':     'You will be contacted as soon as possible.',
   'listing.nameError':      'Full name is required.',
   'listing.phoneError':     'Please enter a valid phone number.',
+  'listing.emailError':     'Please enter a valid e-mail address.',
   'listing.kvkkError':      'You must accept the KVKK disclosure.',
   'listing.prevImage':      'Previous image',
   'listing.nextImage':      'Next image',

@@ -357,6 +357,7 @@ const tr: Record<string, string> = {
   'listing.successMsg':     'En kısa sürede sizinle iletişime geçilecek.',
   'listing.nameError':      'Ad soyad zorunludur.',
   'listing.phoneError':     'Geçerli bir telefon giriniz.',
+  'listing.emailError':     'Geçerli bir e-posta adresi giriniz.',
   'listing.kvkkError':      'KVKK metnini kabul etmelisiniz.',
   'listing.prevImage':      'Önceki görsel',
   'listing.nextImage':      'Sonraki görsel',
