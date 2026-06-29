@@ -452,26 +452,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Stats Bar ───────────────────────────────────── */}
-        <div className="bg-surface-container-low border-b border-outline-variant/30">
-          <div className="max-w-5xl mx-auto px-4 py-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { step: '1', icon: 'edit_note',       label: t('howItWorks.step1') },
-                { step: '2', icon: 'forward_to_inbox', label: t('howItWorks.step2') },
-                { step: '3', icon: 'compare_arrows',   label: t('howItWorks.step3') },
-              ].map((s) => (
-                <div key={s.step} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">{s.icon}</span>
-                  </div>
-                  <p className="text-sm text-on-surface font-medium font-body">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* ── AI Sonuç Kutusu ─────── */}
         {flags.aiAsistan && (aiResponse || aiLoading || aiError) && (
           <div ref={resultRef} className="bg-white border-b border-outline-variant/30 shadow-sm">
@@ -752,45 +732,23 @@ export default function HomePage() {
         {/* ── Hakkımızda (kısa) ────────────────────────────── */}
         <section className="py-14 md:py-20 bg-surface-container-low">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-14">
-              <div className="flex-1">
-                <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2 block font-headline">
-                  Hakkımızda
-                </span>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-on-surface mb-3 font-headline">
-                  Türkiye'nin Modüler Yapı Pazarı
-                </h2>
-                <p className="text-on-surface-variant text-sm leading-relaxed mb-5 font-body">
-                  ModülerPazar, alıcıları ve üreticileri tek platformda buluşturan dijital
-                  pazaryeridir. Doğrulanmış firmalar, ücretsiz teklif alma ve yapay zeka
-                  destekli öneri sistemiyle modüler yapı sürecinizi kolaylaştırıyoruz.
-                </p>
-                <Link
-                  to="/hakkimizda"
-                  className="inline-flex items-center gap-1.5 text-primary font-bold hover:underline text-sm font-headline"
-                >
-                  Daha fazla bilgi al <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="flex-1 grid grid-cols-2 gap-3 w-full">
-                {[
-                  { materialIcon: 'verified_user', text: 'Doğrulanmış Firmalar',  color: 'bg-emerald-100 text-emerald-600' },
-                  { materialIcon: 'sell',          text: 'Ücretsiz Teklif',        color: 'bg-blue-100 text-blue-600'       },
-                  { materialIcon: 'smart_toy',     text: 'AI Destekli Öneri',      color: 'bg-amber-100 text-amber-600'     },
-                  { materialIcon: 'lock',          text: 'KVKK Uyumlu',            color: 'bg-purple-100 text-purple-600'   },
-                ].map(({ materialIcon, text, color }) => (
-                  <div
-                    key={text}
-                    className="flex items-center gap-3 bg-white rounded-2xl p-4 border border-outline-variant/20 shadow-sm"
-                  >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-                      <span className="material-symbols-outlined text-xl" aria-hidden="true">{materialIcon}</span>
-                    </div>
-                    <span className="text-sm font-semibold text-on-surface font-headline">{text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2 block font-headline">
+              Hakkımızda
+            </span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-on-surface mb-3 font-headline">
+              Türkiye'nin Modüler Yapı Pazarı
+            </h2>
+            <p className="text-on-surface-variant text-sm leading-relaxed mb-5 font-body">
+              ModülerPazar, alıcıları ve üreticileri tek platformda buluşturan dijital
+              pazaryeridir. Doğrulanmış firmalar, ücretsiz teklif alma ve yapay zeka
+              destekli öneri sistemiyle modüler yapı sürecinizi kolaylaştırıyoruz.
+            </p>
+            <Link
+              to="/hakkimizda"
+              className="inline-flex items-center gap-1.5 text-primary font-bold hover:underline text-sm font-headline"
+            >
+              Daha fazla bilgi al <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </section>
 
