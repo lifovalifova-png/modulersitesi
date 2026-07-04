@@ -16,6 +16,7 @@ interface CarouselItem {
   category:      string;
   urgent:        boolean;
   indirimli:     boolean;
+  ikinciEl:      boolean;
   href:          string;
   acilSatis?:    boolean;
   daysLeft?:     number;
@@ -40,6 +41,7 @@ function ilanToItem(d: Ilan): CarouselItem {
     category:      d.kategori,
     urgent:        d.acil,
     indirimli:     d.indirimli,
+    ikinciEl:      d.kategoriSlug === 'ikinci-el',
     href:          `/ilan/${d.id}`,
     acilSatis:     isAcil,
     daysLeft:      daysLeft && daysLeft > 0 ? daysLeft : undefined,
@@ -72,7 +74,7 @@ export default function FlashDealsCarousel() {
     const unsub = onSnapshot(collection(db, 'ilanlar'), (snap) => {
       const docs = snap.docs
         .map((d) => ({ id: d.id, ...d.data() } as Ilan))
-        .filter((d) => d.status === 'aktif' && (d.acil || d.indirimli || d.acilSatis))
+        .filter((d) => d.status === 'aktif' && (d.acil || d.indirimli || d.acilSatis || d.kategoriSlug === 'ikinci-el'))
         .map(ilanToItem);
       setFirestoreItems(docs);
     });
@@ -139,9 +141,9 @@ export default function FlashDealsCarousel() {
               <Flame className="w-6 h-6" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Flaş Fırsatlar</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Fırsat Vitrini</h2>
               <p className="text-gray-600 text-sm flex items-center gap-1 mt-1">
-                <Clock className="w-4 h-4" aria-hidden="true" /> Sınırlı süreli indirimli ilanlar
+                <Clock className="w-4 h-4" aria-hidden="true" /> Acil satılık ve 2. el ilanlar
               </p>
             </div>
           </div>
@@ -154,7 +156,7 @@ export default function FlashDealsCarousel() {
               aria-label="Önceki ilanlar"
               className={`p-2 rounded-full border transition ${
                 canScrollLeft
-                  ? 'border-gray-300 hover:bg-emerald-50 hover:border-emerald-300 text-gray-600 hover:text-emerald-600'
+                  ? 'border-gray-300 hover:bg-primary/10 hover:border-primary text-gray-600 hover:text-primary'
                   : 'border-gray-200 text-gray-300 cursor-not-allowed'
               }`}
             >
@@ -166,7 +168,7 @@ export default function FlashDealsCarousel() {
               aria-label="Sonraki ilanlar"
               className={`p-2 rounded-full border transition ${
                 canScrollRight
-                  ? 'border-gray-300 hover:bg-emerald-50 hover:border-emerald-300 text-gray-600 hover:text-emerald-600'
+                  ? 'border-gray-300 hover:bg-primary/10 hover:border-primary text-gray-600 hover:text-primary'
                   : 'border-gray-200 text-gray-300 cursor-not-allowed'
               }`}
             >
@@ -219,6 +221,11 @@ export default function FlashDealsCarousel() {
                           ACİL
                         </div>
                       )}
+                      {item.ikinciEl && !item.acilSatis && !item.urgent && (
+                        <div className="absolute top-3 left-3 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
+                          2. EL
+                        </div>
+                      )}
                       {item.indirimli && (
                         <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
                           İNDİRİMLİ
@@ -243,14 +250,14 @@ export default function FlashDealsCarousel() {
 
                     <Link
                       to={item.href}
-                      className="font-semibold text-gray-800 mb-3 line-clamp-2 min-h-[48px] hover:text-emerald-600 transition text-sm"
+                      className="font-semibold text-gray-800 mb-3 line-clamp-2 min-h-[48px] hover:text-primary transition text-sm"
                     >
                       {item.title}
                     </Link>
 
                     <div className="flex items-center justify-between mb-4 mt-auto">
                       <div>
-                        <div className={`text-lg font-bold ${item.acilSatis ? 'text-red-600' : 'text-emerald-600'}`}>{item.price}</div>
+                        <div className={`text-lg font-bold ${item.acilSatis ? 'text-red-600' : 'text-primary'}`}>{item.price}</div>
                         {item.originalPrice && (
                           <div className="text-sm text-gray-400 line-through">{item.originalPrice}</div>
                         )}
@@ -262,7 +269,7 @@ export default function FlashDealsCarousel() {
 
                     <Link
                       to={item.href}
-                      className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition text-center text-sm"
+                      className="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-primary-container transition text-center text-sm"
                     >
                       Teklif Al
                     </Link>
@@ -280,7 +287,7 @@ export default function FlashDealsCarousel() {
                 onClick={() => { scrollToIndex(i); startAutoScroll(); }}
                 aria-label={`${i + 1}. ilana git`}
                 className={`rounded-full transition-all duration-300 ${
-                  i === activeIndex ? 'w-5 h-2 bg-emerald-500' : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                  i === activeIndex ? 'w-5 h-2 bg-primary' : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
                 }`}
               />
             ))}
