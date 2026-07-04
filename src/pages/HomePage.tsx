@@ -15,6 +15,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
+import IlanMiniCard from '../components/IlanMiniCard';
 import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
 import { useLanguage } from '../context/LanguageContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
@@ -502,6 +503,35 @@ export default function HomePage() {
 
         {/* ── Flaş Fırsatlar ───────────────────────────────── */}
         <FlashDealsCarousel />
+
+        {/* ── Öne Çıkan İlanlar ────────────────────────────── */}
+        {sonIlanlar.length > 0 && (
+          <section className="py-14 md:py-20 bg-surface-container-lowest">
+            <div className="max-w-7xl mx-auto px-4">
+              <div className="flex items-end justify-between gap-6 mb-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-on-surface font-headline">
+                    Öne Çıkan İlanlar
+                  </h2>
+                  <p className="text-on-surface-variant mt-1 font-body text-sm">
+                    Farklı kategorilerden seçili ilanlar
+                  </p>
+                </div>
+                <Link
+                  to="/ilanlar"
+                  className="inline-flex items-center gap-1.5 text-primary font-bold text-sm hover:underline font-headline whitespace-nowrap"
+                >
+                  Tümünü Gör <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {sonIlanlar.slice(0, 12).map((ilan) => (
+                  <IlanMiniCard key={ilan.id} ilan={ilan} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── Yaklaşan Fuarlar & Etkinlikler ──────────────── */}
         {yakinEtkinlikler.length > 0 && (
