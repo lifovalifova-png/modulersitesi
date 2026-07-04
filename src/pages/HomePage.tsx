@@ -130,7 +130,7 @@ export default function HomePage() {
       collection(db, 'ilanlar'),
       where('status', '==', 'aktif'),
       orderBy('tarih', 'desc'),
-      limit(8),
+      limit(12),
     );
     const unsub = onSnapshot(q, (snap) => {
       setSonIlanlar(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Ilan)));
