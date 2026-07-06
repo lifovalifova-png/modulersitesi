@@ -46,6 +46,15 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   'tiny-house':          'from-teal-500 to-teal-700',
 };
 
+/* Foto katmanı olan kategoriler — yoksa gradient+ikon render'ına düşer */
+const CATEGORY_IMAGES: Record<string, string> = {
+  'prefabrik':           '/categories/prefabrik.webp',
+  'celik-yapilar':       '/categories/celik-yapilar.webp',
+  'yasam-konteynerleri': '/categories/yasam-konteynerleri.webp',
+  'ahsap-yapilar':       '/categories/ahsap-yapilar.webp',
+  'tiny-house':          '/categories/tiny-house.webp',
+};
+
 /* ─── AI rate limit — localStorage kalıcılığı ───────────── */
 const RL_KEY = 'mp_chat_rl';
 
@@ -611,20 +620,41 @@ export default function HomePage() {
               {CATEGORIES.map((category) => {
                 const gradient = CATEGORY_GRADIENTS[category.slug] || 'from-gray-500 to-gray-700';
                 const materialIcon = CATEGORY_MATERIAL_ICONS[category.slug] || 'home';
+                const image = CATEGORY_IMAGES[category.slug];
+                const label = t(CATEGORY_NAME_KEYS[category.slug]);
                 return (
                   <Link
                     key={category.slug}
                     to={`/kategori/${category.slug}`}
-                    className={`group relative bg-gradient-to-br ${gradient} rounded-2xl p-6 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
+                    className={`group relative rounded-2xl p-6 overflow-hidden aspect-[4/3] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ${
+                      image ? 'flex flex-col justify-end' : `bg-gradient-to-br ${gradient}`
+                    }`}
                   >
-                    {/* Decorative circle */}
-                    <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full" />
-                    <span className="material-symbols-outlined text-4xl text-white/90 mb-3 block group-hover:scale-110 transition-transform" aria-hidden="true" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      {materialIcon}
-                    </span>
-                    <h3 className="font-bold text-white text-base font-headline relative z-10">
-                      {t(CATEGORY_NAME_KEYS[category.slug])}
-                    </h3>
+                    {image ? (
+                      <>
+                        <img
+                          src={image}
+                          alt={label}
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                        <h3 className="font-bold text-white text-base font-headline relative z-10">
+                          {label}
+                        </h3>
+                      </>
+                    ) : (
+                      <>
+                        {/* Decorative circle */}
+                        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full" />
+                        <span className="material-symbols-outlined text-4xl text-white/90 mb-3 block group-hover:scale-110 transition-transform" aria-hidden="true" style={{ fontVariationSettings: "'FILL' 1" }}>
+                          {materialIcon}
+                        </span>
+                        <h3 className="font-bold text-white text-base font-headline relative z-10">
+                          {label}
+                        </h3>
+                      </>
+                    )}
                   </Link>
                 );
               })}
