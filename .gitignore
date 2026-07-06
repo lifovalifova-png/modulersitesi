@@ -40,3 +40,6 @@ package.json.bak
 .env
 .env.local
 .env*.local
+
+# graphify knowledge-graph output (yerel; hook kaldırıldı)
+graphify-out/
