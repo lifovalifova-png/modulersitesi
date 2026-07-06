@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, MapPin, Clock, Flame, Tag } from 'lucide-react';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { type Ilan } from '../hooks/useIlanlar';
 
@@ -69,12 +69,16 @@ export default function FlashDealsCarousel() {
   const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isPausedRef   = useRef(false);
 
-  /* Firestore ilanlar — acil veya indirimli olanları çek */
+  /* Firestore ilanlar — aktif ilanlar sunucudan (limit 100), acil/indirimli/
+     acilSatis/ikinci-el olanlar client'ta filtrelenir; carousel en çok 20 gösterir.
+     Tek-alanlı equality where → composite index gerekmez. */
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'ilanlar'), (snap) => {
+    const q = query(collection(db, 'ilanlar'), where('status', '==', 'aktif'), limit(100));
+    const unsub = onSnapshot(q, (snap) => {
       const docs = snap.docs
         .map((d) => ({ id: d.id, ...d.data() } as Ilan))
-        .filter((d) => d.status === 'aktif' && (d.acil || d.indirimli || d.acilSatis || d.kategoriSlug === 'ikinci-el'))
+        .filter((d) => d.acil || d.indirimli || d.acilSatis || d.kategoriSlug === 'ikinci-el')
+        .slice(0, 20)
         .map(ilanToItem);
       setFirestoreItems(docs);
     });
