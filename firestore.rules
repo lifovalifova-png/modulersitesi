@@ -35,6 +35,7 @@ service cloud.firestore {
         isAdmin() ||
         (resource.data.firmaId == request.auth.uid
          && isUnmodified('firmaId')
+         && isUnmodified('firmaDogrulanmis')
          && (request.resource.data.status == resource.data.status
              || request.resource.data.status == 'pasif'))
       );
