@@ -58,3 +58,32 @@ h1, h2, h3, h4, h5, h6 {
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Hero Ken Burns crossfade — 5 görsel, ~6sn/görsel, toplam 30sn döngü.
+   Katmanlar üst üste; animationDelay (0/6/12/18/24sn) inline verilir. */
+@keyframes heroKenBurns {
+  0%    { opacity: 0; transform: scale(1); }
+  2.5%  { opacity: 1; }
+  20%   { opacity: 1; }
+  23%   { opacity: 0; }
+  100%  { opacity: 0; transform: scale(1.12); }
+}
+.hero-kb-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  will-change: opacity, transform;
+  animation: heroKenBurns 30s linear infinite;
+}
+/* İlk görsel — reduced-motion'da sabit görünsün diye base opacity 1 */
+.hero-kb-layer--first {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-kb-layer {
+    animation: none;
+  }
+}

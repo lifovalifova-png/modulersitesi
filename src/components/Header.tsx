@@ -2,26 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, Search, Building2, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
 import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
+import { CITIES } from '../data/sehirler';
 import { SITE_CONFIG } from '../config/site';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import UserMenu from './UserMenu';
 import logoSrc from '../assets/logo.svg';
-
-/* ─── 81 il listesi ───────────────────────────────────────── */
-const CITIES = [
-  'Adana','Adıyaman','Afyonkarahisar','Ağrı','Amasya','Ankara','Antalya','Artvin',
-  'Aydın','Balıkesir','Bilecik','Bingöl','Bitlis','Bolu','Burdur','Bursa','Çanakkale',
-  'Çankırı','Çorum','Denizli','Diyarbakır','Edirne','Elazığ','Erzincan','Erzurum',
-  'Eskişehir','Gaziantep','Giresun','Gümüşhane','Hakkari','Hatay','Isparta','Mersin',
-  'İstanbul','İzmir','Kars','Kastamonu','Kayseri','Kırklareli','Kırşehir','Kocaeli',
-  'Konya','Kütahya','Malatya','Manisa','Kahramanmaraş','Mardin','Muğla','Muş',
-  'Nevşehir','Niğde','Ordu','Rize','Sakarya','Samsun','Siirt','Sinop','Sivas',
-  'Tekirdağ','Tokat','Trabzon','Tunceli','Şanlıurfa','Uşak','Van','Yozgat',
-  'Zonguldak','Aksaray','Bayburt','Karaman','Kırıkkale','Batman','Şırnak',
-  'Bartın','Ardahan','Iğdır','Yalova','Karabük','Kilis','Osmaniye','Düzce',
-];
 
 export default function Header() {
   const navigate = useNavigate();
