@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, Search, Building2, UserCircle, FileText, LogOut, Calculator } from 'lucide-react';
 import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
-import { CITIES } from '../data/sehirler';
+import { CITIES } from '@/data/sehirler';
 import { SITE_CONFIG } from '../config/site';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';

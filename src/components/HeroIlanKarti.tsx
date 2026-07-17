@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
-import { type Ilan, formatFiyat } from '../hooks/useIlanlar';
+import { type Ilan, formatFiyat } from '@/hooks/useIlanlar';
+import { useLanguage } from '@/context/LanguageContext';
 
 /* Yatay ilan kartı — koyu zeminli Hero sağ paneli için.
    IlanMiniCard'ın (dikey, açık zemin) yatay/karanlık muadili. Foto solda,
    içerik sağda. Tüm kart /ilan/{id}'ye gider. */
 export default function HeroIlanKarti({ ilan }: { ilan: Ilan }) {
+  const { t } = useLanguage();
   const img   = ilan.gorseller?.[0] ?? '';
   const fiyat = ilan.acilSatis && ilan.acilSatisFiyat ? ilan.acilSatisFiyat : ilan.fiyat;
 
@@ -42,12 +44,12 @@ export default function HeroIlanKarti({ ilan }: { ilan: Ilan }) {
           <span className="text-xs text-white/70 font-body truncate">{ilan.sehir}</span>
           {ilan.acilSatis && (
             <span className="flex-none inline-flex items-center gap-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full font-headline">
-              🔴 Acil
+              🔴 {t('common.urgent')}
             </span>
           )}
           {ilan.firmaDogrulanmis && (
             <span className="flex-none inline-flex items-center gap-0.5 text-primary-container text-[10px] font-semibold font-headline">
-              <ShieldCheck className="w-3 h-3" aria-hidden="true" /> Doğrulanmış
+              <ShieldCheck className="w-3 h-3" aria-hidden="true" /> {t('common.verified')}
             </span>
           )}
         </div>

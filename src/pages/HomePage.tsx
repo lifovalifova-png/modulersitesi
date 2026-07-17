@@ -16,9 +16,9 @@ import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
 import IlanMiniCard from '../components/IlanMiniCard';
-import HeroIlanKarti from '../components/HeroIlanKarti';
-import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
-import { CITIES } from '../data/sehirler';
+import HeroIlanKarti from '@/components/HeroIlanKarti';
+import { CATEGORIES, CATEGORY_NAME_KEYS } from '@/data/categories';
+import { CITIES } from '@/data/sehirler';
 import { useLanguage } from '../context/LanguageContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import type { Ilan } from '../hooks/useIlanlar';
@@ -110,9 +110,9 @@ export default function HomePage() {
   const [heroCat,  setHeroCat]  = useState('');
 
   function handleHeroSearch() {
-    const slug = heroCat || 'prefabrik';
     const qs   = heroCity ? `?sehir=${encodeURIComponent(heroCity)}` : '';
-    navigate(`/kategori/${slug}${qs}`);
+    const path = heroCat ? `/kategori/${heroCat}` : '/ilanlar';
+    navigate(`${path}${qs}`);
   }
 
   /* ─── Firestore gerçek sayılar ───────────────────────────── */
@@ -384,7 +384,7 @@ export default function HomePage() {
                         type="text"
                         value={aiQuery}
                         onChange={(e) => setAiQuery(e.target.value)}
-                        placeholder={aiRemaining === 0 ? 'Yarın tekrar deneyin…' : t('ai.placeholder')}
+                        placeholder={aiRemaining === 0 ? t('ai.placeholderExhausted') : t('ai.placeholder')}
                         disabled={aiRemaining === 0}
                         aria-label="AI asistana soru sor"
                         className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white/80 placeholder-white/30 font-body focus:outline-none focus:ring-1 focus:ring-primary/60 focus:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -393,6 +393,7 @@ export default function HomePage() {
                     <button
                       type="submit"
                       disabled={!aiQuery.trim() || aiLoading || aiRemaining === 0}
+                      aria-label={t('ai.btnAsk')}
                       className="flex-shrink-0 flex items-center gap-1.5 text-white/50 hover:text-white/80 px-3 py-2 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed text-xs whitespace-nowrap font-body"
                     >
                       {aiLoading
@@ -450,10 +451,8 @@ export default function HomePage() {
 
                 {sonIlanlar.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {sonIlanlar.slice(0, 6).map((ilan, i) => (
-                      <div key={ilan.id} className={i >= 3 ? 'hidden sm:block' : ''}>
-                        <HeroIlanKarti ilan={ilan} />
-                      </div>
+                    {sonIlanlar.slice(0, 6).map((ilan) => (
+                      <HeroIlanKarti key={ilan.id} ilan={ilan} />
                     ))}
                   </div>
                 ) : (
@@ -530,10 +529,10 @@ export default function HomePage() {
               <div className="flex items-end justify-between gap-6 mb-8">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-extrabold text-on-surface font-headline">
-                    Son Eklenen İlanlar
+                    {t('home.latestTitle')}
                   </h2>
                   <p className="text-on-surface-variant mt-1 font-body text-sm">
-                    En son eklenen ilanlar
+                    {t('home.latestDesc')}
                   </p>
                 </div>
                 <Link

@@ -32,6 +32,8 @@ const tr: Record<string, string> = {
   'hero.subtitle':   'Prefabrik evler, konteynerler, tiny house ve daha fazlası. Size uygun ilanı bulun veya kendi ilanınızı verin.',
   'hero.btnPostAd':  'Ücretsiz İlan Ver',
   'hero.btnExplore': 'İlanları Keşfet',
+  'home.latestTitle': 'Son Eklenen İlanlar',
+  'home.latestDesc':  'En son eklenen ilanlar',
 
   /* ── Stats ───────────────────────────────────── */
   'stats.activeAds':       'Aktif İlan',
@@ -78,6 +80,7 @@ const tr: Record<string, string> = {
   'ai.title':        'Size Uygun Yapıyı Bulalım',
   'ai.subtitle':     'Şehrinizi ve ihtiyacınızı yazın, size özel öneri alalım',
   'ai.placeholder':  'örn. "Ankara\'da 80 m² yazlık prefabrik" veya "İzmir\'de ucuz depo"',
+  'ai.placeholderExhausted': 'Yarın tekrar deneyin…',
   'ai.btnAsk':       'Öneri Al',
   'ai.analyzing':    'Analiz ediliyor…',
   'ai.resultLabel':  'Yapı Asistanı Önerisi',
@@ -135,6 +138,7 @@ const tr: Record<string, string> = {
   'common.home':       'Ana Sayfa',
   'common.getQuote':   'Teklif İste',
   'common.verified':   'Doğrulanmış',
+  'common.urgent':     'Acil',
   'common.allCities':  'Tüm Şehirler',
   'common.days':       'gün',
   'common.listings':   'ilan',
