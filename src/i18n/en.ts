@@ -32,6 +32,8 @@ const en: Record<string, string> = {
   'hero.subtitle':   'Prefab homes, containers, tiny houses and more. Find the listing that suits you or post your own.',
   'hero.btnPostAd':  'Post Free Ad',
   'hero.btnExplore': 'Explore Listings',
+  'home.latestTitle': 'Latest Listings',
+  'home.latestDesc':  'Recently added listings',
 
   /* ── Stats ───────────────────────────────────── */
   'stats.activeAds':       'Active Listings',
@@ -78,6 +80,7 @@ const en: Record<string, string> = {
   'ai.title':        'Let\'s Find the Right Structure for You',
   'ai.subtitle':     'Enter your city and needs, get a personalised recommendation',
   'ai.placeholder':  'e.g. "80 m² summer prefab in Ankara" or "cheap warehouse in İzmir"',
+  'ai.placeholderExhausted': 'Try again tomorrow…',
   'ai.btnAsk':       'Get Recommendation',
   'ai.analyzing':    'Analysing…',
   'ai.resultLabel':  'Building Assistant Recommendation',
@@ -135,6 +138,7 @@ const en: Record<string, string> = {
   'common.home':       'Home',
   'common.getQuote':   'Request Quote',
   'common.verified':   'Verified',
+  'common.urgent':     'Urgent',
   'common.allCities':  'All Cities',
   'common.days':       'days',
   'common.listings':   'listings',

@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import {
-  ArrowRight, Search, CheckSquare, FileText, BarChart2,
+  ArrowRight, ChevronRight, Search, CheckSquare, FileText, BarChart2,
   UserPlus, ClipboardList, Handshake,
   ShieldCheck, Tag, MapPin, Lock,
   Sparkles, MessageSquare,
@@ -16,7 +16,9 @@ import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
 import FlashDealsCarousel from '../components/FlashDealsCarousel';
 import IlanMiniCard from '../components/IlanMiniCard';
-import { CATEGORIES, CATEGORY_NAME_KEYS } from '../data/categories';
+import HeroIlanKarti from '@/components/HeroIlanKarti';
+import { CATEGORIES, CATEGORY_NAME_KEYS } from '@/data/categories';
+import { CITIES } from '@/data/sehirler';
 import { useLanguage } from '../context/LanguageContext';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import type { Ilan } from '../hooks/useIlanlar';
@@ -54,6 +56,15 @@ const CATEGORY_IMAGES: Record<string, string> = {
   'ahsap-yapilar':       '/categories/ahsap-yapilar.webp',
   'tiny-house':          '/categories/tiny-house.webp',
 };
+
+/* Hero arka planı — Ken Burns crossfade sırası (5 görsel, ~6sn/görsel) */
+const HERO_BG_IMAGES = [
+  '/categories/prefabrik.webp',
+  '/categories/celik-yapilar.webp',
+  '/categories/yasam-konteynerleri.webp',
+  '/categories/ahsap-yapilar.webp',
+  '/categories/tiny-house.webp',
+];
 
 /* ─── AI rate limit — localStorage kalıcılığı ───────────── */
 const RL_KEY = 'mp_chat_rl';
@@ -94,6 +105,16 @@ export default function HomePage() {
   const { flags } = useFeatureFlags();
   const [activeTab, setActiveTab] = useState<'customer' | 'producer'>('customer');
 
+  /* ─── Hero arama (şehir + kategori dropdown → CategoryPage) ─── */
+  const [heroCity, setHeroCity] = useState('');
+  const [heroCat,  setHeroCat]  = useState('');
+
+  function handleHeroSearch() {
+    const qs   = heroCity ? `?sehir=${encodeURIComponent(heroCity)}` : '';
+    const path = heroCat ? `/kategori/${heroCat}` : '/ilanlar';
+    navigate(`${path}${qs}`);
+  }
+
   /* ─── Firestore gerçek sayılar ───────────────────────────── */
 
   /* ─── Kayan Haber Bandı ───────────────────────────────────── */
@@ -131,7 +152,7 @@ export default function HomePage() {
     return unsub;
   }, []);
 
-  /* ─── Son 8 ilan (Hero grid) ──────────────────────────────── */
+  /* ─── Son ilanlar — Hero sağ paneli (ilk 6) + "Son Eklenen" grid (6-18) ─── */
   const [sonIlanlar, setSonIlanlar] = useState<Ilan[]>([]);
 
   useEffect(() => {
@@ -139,7 +160,7 @@ export default function HomePage() {
       collection(db, 'ilanlar'),
       where('status', '==', 'aktif'),
       orderBy('tarih', 'desc'),
-      limit(12),
+      limit(18),
     );
     const unsub = onSnapshot(q, (snap) => {
       setSonIlanlar(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Ilan)));
@@ -251,12 +272,23 @@ export default function HomePage() {
 
         {/* ── Hero ─────────────────────────────────────────── */}
         <section className="relative overflow-hidden bg-on-surface">
-          {/* Background image overlay */}
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-20"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1920&h=800&fit=crop')" }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-on-surface via-on-surface/90 to-on-surface/70" />
+          {/* Ken Burns crossfade arka plan — 5 kategori görseli */}
+          <div className="absolute inset-0" aria-hidden="true">
+            {HERO_BG_IMAGES.map((src, i) => (
+              <img
+                key={src}
+                src={src}
+                alt=""
+                aria-hidden="true"
+                loading={i === 0 ? 'eager' : 'lazy'}
+                fetchPriority={i === 0 ? 'high' : undefined}
+                style={{ animationDelay: `${i * 6}s` }}
+                className={`hero-kb-layer${i === 0 ? ' hero-kb-layer--first' : ''}`}
+              />
+            ))}
+          </div>
+          {/* Okunabilirlik overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-on-surface/90 via-on-surface/80 to-on-surface/70" />
 
           {/* ── Kayan Haber Bandı ────── */}
           {haberler.length > 0 && (
@@ -288,175 +320,155 @@ export default function HomePage() {
             </div>
           )}
 
-          <div className="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Sağ (desktop): Metin — mobilde önce görünsün */}
-              <div className="order-1 lg:order-2">
-                <div className="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container text-sm font-bold px-4 py-1.5 rounded-full mb-6 font-headline">
-                  <span className="material-symbols-outlined text-base" aria-hidden="true">bolt</span>
-                  {t('hero.badge')}
-                </div>
+          <div className="relative max-w-7xl mx-auto px-4 py-8 md:py-10">
+            {/* ── ÜST BLOK ─────────────────────────────────── */}
+            <div className="max-w-3xl mb-6 md:mb-8">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white mb-2.5 leading-tight font-headline">
+                {t('hero.title')}
+              </h1>
+              <p className="text-sm md:text-base text-white/70 mb-5 font-body leading-relaxed">
+                {t('hero.subtitle')}
+              </p>
 
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white mb-5 leading-tight font-headline">
-                  {t('hero.title')}
-                </h1>
-                <p className="text-lg md:text-xl text-white/70 mb-8 font-body leading-relaxed">
-                  {t('hero.subtitle')}
-                </p>
-
-                {/* CTA butonları */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                  <Link
-                    to="/satici-formu"
-                    className="bg-primary text-on-primary px-7 py-3.5 rounded-2xl font-bold hover:bg-primary-container transition text-center font-headline text-base"
+              {/* Arama: şehir + kategori dropdown → CategoryPage yönlendirme */}
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                <div className="relative flex-1">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" aria-hidden="true" />
+                  <select
+                    value={heroCity}
+                    onChange={(e) => setHeroCity(e.target.value)}
+                    aria-label={lang === 'en' ? 'Select city' : 'Şehir seçin'}
+                    className="w-full appearance-none pl-9 pr-8 py-3 bg-white/10 backdrop-blur border border-white/20 rounded-xl text-sm text-white font-body focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white/15 transition [&>option]:text-on-surface"
                   >
-                    {t('hero.btnPostAd')}
-                  </Link>
-                  <Link
-                    to="/kategori/prefabrik"
-                    className="bg-white/10 backdrop-blur text-white border border-white/20 px-7 py-3.5 rounded-2xl font-bold hover:bg-white/20 transition text-center flex items-center justify-center gap-2 font-headline text-base"
-                  >
-                    {t('hero.btnExplore')} <ArrowRight className="w-5 h-5" aria-hidden="true" />
-                  </Link>
+                    <option value="">{lang === 'en' ? 'All cities' : 'Tüm şehirler'}</option>
+                    {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
-
-                {/* ── AI Mini Input ──────────────────────────── */}
-                {flags.aiAsistan ? (
-                  <>
-                    <form onSubmit={handleAsk} className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" aria-hidden="true" />
-                        <input
-                          type="text"
-                          value={aiQuery}
-                          onChange={(e) => setAiQuery(e.target.value)}
-                          placeholder={aiRemaining === 0 ? 'Yarın tekrar deneyin…' : t('ai.placeholder')}
-                          disabled={aiRemaining === 0}
-                          aria-label="AI asistana soru sor"
-                          className="w-full pl-9 pr-3 py-3 bg-white/10 backdrop-blur border border-white/20 rounded-xl text-sm text-white placeholder-white/40 font-body focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white/15 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={!aiQuery.trim() || aiLoading || aiRemaining === 0}
-                        className="flex-shrink-0 flex items-center gap-2 bg-tertiary-fixed hover:bg-yellow-300 text-tertiary font-bold px-4 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap font-headline"
-                      >
-                        {aiLoading
-                          ? <span className="w-4 h-4 border-2 border-tertiary/30 border-t-tertiary rounded-full animate-spin" />
-                          : <Sparkles className="w-4 h-4" aria-hidden="true" />
-                        }
-                        <span className="hidden sm:inline">{t('ai.btnAsk')}</span>
-                      </button>
-                    </form>
-
-                    <p className="mt-2 text-xs text-white/40 font-body">
-                      {aiRemaining === 0
-                        ? t('ai.queryExhausted')
-                        : t('ai.queryRemaining').replace('{n}', String(aiRemaining))
-                      }
-                    </p>
-                  </>
-                ) : (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {[
-                      { label: 'Prefabrik Ev', slug: 'prefabrik' },
-                      { label: 'Konteyner', slug: 'yasam-konteynerleri' },
-                      { label: 'Tiny House', slug: 'tiny-house' },
-                      { label: 'Çelik Yapı', slug: 'celik-yapilar' },
-                      { label: 'Ahşap Yapı', slug: 'ahsap-yapilar' },
-                      { label: 'Modüler Yapı', slug: 'ozel-projeler' },
-                    ].map((cat) => (
-                      <Link
-                        key={cat.slug}
-                        to={`/kategori/${cat.slug}`}
-                        className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold rounded-full transition font-body"
-                      >
-                        {cat.label}
-                      </Link>
+                <div className="relative flex-1">
+                  <select
+                    value={heroCat}
+                    onChange={(e) => setHeroCat(e.target.value)}
+                    aria-label={lang === 'en' ? 'Select category' : 'Kategori seçin'}
+                    className="w-full appearance-none px-3 pr-8 py-3 bg-white/10 backdrop-blur border border-white/20 rounded-xl text-sm text-white font-body focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white/15 transition [&>option]:text-on-surface"
+                  >
+                    <option value="">{lang === 'en' ? 'All categories' : 'Tüm kategoriler'}</option>
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat.slug} value={cat.slug}>{t(CATEGORY_NAME_KEYS[cat.slug])}</option>
                     ))}
-                  </div>
-                )}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleHeroSearch}
+                  className="flex-shrink-0 flex items-center justify-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-xl font-bold hover:bg-primary-container transition font-headline text-sm"
+                >
+                  <Search className="w-4 h-4" aria-hidden="true" />
+                  {lang === 'en' ? 'View Listings' : 'İlanları Gör'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/satici-formu')}
+                  className="flex-shrink-0 flex items-center justify-center bg-transparent text-white border border-white/30 px-6 py-3 rounded-xl font-bold hover:bg-white/10 transition font-headline text-sm"
+                >
+                  {t('hero.btnPostAd')}
+                </button>
               </div>
 
-              {/* Sol (desktop): İkili Panel */}
-              <div className="hidden lg:flex gap-4 order-2 lg:order-1">
-                {/* Sol dar: Popüler kategoriler */}
-                <div className="w-1/3 bg-white/10 backdrop-blur-lg border border-white/15 rounded-3xl p-6 shadow-2xl">
-                  <div className="flex items-center gap-2 mb-5">
-                    <span className="material-symbols-outlined text-2xl text-secondary-container" aria-hidden="true">trending_up</span>
-                    <div>
-                      <p className="text-white font-bold font-headline text-sm">{lang === 'en' ? 'Popular This Week' : 'Bu Hafta Popüler'}</p>
-                      <p className="text-white/50 text-xs font-body">{lang === 'en' ? 'Top categories' : 'En çok görüntülenen'}</p>
-                    </div>
+              {/* AI Asistanı — ikincil ama fark edilir vurgulu kutu */}
+              {flags.aiAsistan && (
+                <div className="mt-4 bg-white/10 border border-white/15 rounded-xl p-3.5">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Sparkles className="w-4 h-4 text-primary-container" aria-hidden="true" />
+                    <span className="text-xs font-bold text-white font-headline">
+                      {lang === 'en' ? 'AI Assistant — Describe your project' : 'Yapay Zeka Asistanı — Projenizi anlatın'}
+                    </span>
                   </div>
-                  <div className="space-y-2">
-                    {CATEGORIES.slice(0, 5).map((cat) => (
-                      <Link
-                        key={cat.slug}
-                        to={`/kategori/${cat.slug}`}
-                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 transition group"
-                      >
-                        <span className="material-symbols-outlined text-xl text-secondary-container" aria-hidden="true">
-                          {CATEGORY_MATERIAL_ICONS[cat.slug] || 'home'}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white font-semibold text-xs font-headline truncate group-hover:text-secondary-container transition">
-                            {t(CATEGORY_NAME_KEYS[cat.slug])}
-                          </p>
-                        </div>
-                      </Link>
+                  <form onSubmit={handleAsk} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={aiQuery}
+                      onChange={(e) => setAiQuery(e.target.value)}
+                      placeholder={aiRemaining === 0 ? t('ai.placeholderExhausted') : t('ai.placeholder')}
+                      disabled={aiRemaining === 0}
+                      aria-label="AI asistana soru sor"
+                      className="flex-1 min-w-0 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-xs text-white placeholder-white/40 font-body focus:outline-none focus:ring-1 focus:ring-primary focus:bg-white/15 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!aiQuery.trim() || aiLoading || aiRemaining === 0}
+                      aria-label={t('ai.btnAsk')}
+                      className="flex-shrink-0 flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white px-3.5 py-2 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed text-xs whitespace-nowrap font-headline font-semibold"
+                    >
+                      {aiLoading
+                        ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        : <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                      }
+                      <span className="hidden sm:inline">{t('ai.btnAsk')}</span>
+                    </button>
+                  </form>
+                  <p className="mt-1.5 text-[11px] text-white/40 font-body">
+                    {aiRemaining === 0
+                      ? t('ai.queryExhausted')
+                      : t('ai.queryRemaining').replace('{n}', String(aiRemaining))
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* ── İKİLİ PANEL ──────────────────────────────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Sol: Popüler Kategoriler */}
+              <div className="lg:col-span-1 bg-white/10 backdrop-blur-lg border border-white/15 rounded-3xl p-5 shadow-2xl">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-xl text-primary-container" aria-hidden="true">trending_up</span>
+                  <p className="text-white font-bold font-headline text-sm">{lang === 'en' ? 'Popular Categories' : 'Popüler Kategoriler'}</p>
+                </div>
+                <div className="space-y-2">
+                  {CATEGORIES.slice(0, 5).map((cat) => (
+                    <Link
+                      key={cat.slug}
+                      to={`/kategori/${cat.slug}`}
+                      className="flex items-center gap-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 transition group"
+                    >
+                      <span className="material-symbols-outlined text-xl text-primary-container" aria-hidden="true">
+                        {CATEGORY_MATERIAL_ICONS[cat.slug] || 'home'}
+                      </span>
+                      <span className="flex-1 min-w-0 text-white font-semibold text-sm font-headline truncate group-hover:text-primary-container transition">
+                        {t(CATEGORY_NAME_KEYS[cat.slug])}
+                      </span>
+                      <ChevronRight className="flex-none w-4 h-4 text-white/40 group-hover:text-white/70 transition" aria-hidden="true" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sağ: 6 yatay ilan kartı (2×3) */}
+              <div className="lg:col-span-2 bg-white/10 backdrop-blur-lg border border-white/15 rounded-3xl p-5 shadow-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-headline font-bold text-base">{lang === 'en' ? 'Modular Building Solutions' : 'Modüler Yapı Çözümleri'}</h3>
+                  <Link to="/ilanlar" className="text-primary-container text-xs hover:text-white transition-colors flex items-center gap-1 font-body">
+                    {lang === 'en' ? 'View All' : 'Tümü'} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                  </Link>
+                </div>
+
+                {sonIlanlar.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {sonIlanlar.slice(0, 6).map((ilan) => (
+                      <HeroIlanKarti key={ilan.id} ilan={ilan} />
                     ))}
                   </div>
-                </div>
-
-                {/* Sağ geniş: Son ilanlar grid */}
-                <div className="w-2/3 bg-white/10 backdrop-blur-lg border border-white/15 rounded-3xl p-6 shadow-2xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-headline font-bold text-lg">{lang === 'en' ? 'Modular Building Solutions' : 'Modüler Yapı Çözümleri'}</h3>
-                    <Link to="/kategori/prefabrik" className="text-secondary-container text-xs hover:text-white transition-colors flex items-center gap-1 font-body">
-                      {lang === 'en' ? 'View All' : 'Tümü'} <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48 text-center">
+                    <span className="material-symbols-outlined text-white/20 text-5xl mb-3">storefront</span>
+                    <p className="text-white/60 text-sm font-medium font-headline">{lang === 'en' ? 'No listings yet' : 'Henüz ilan yok'}</p>
+                    <p className="text-white/30 text-xs mt-1 font-body">{lang === 'en' ? 'Listings will appear here automatically' : 'İlanlar buraya otomatik eklenecek'}</p>
+                    <Link to="/satici-formu"
+                          className="mt-4 bg-primary hover:bg-primary-container text-on-primary text-xs font-bold px-4 py-2 rounded-full transition-colors font-headline">
+                      {lang === 'en' ? 'Post the First Listing' : 'İlk İlanı Siz Verin'}
                     </Link>
                   </div>
-
-                  {sonIlanlar.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-72 scrollbar-hide">
-                      {sonIlanlar.map((ilan) => (
-                        <Link
-                          key={ilan.id}
-                          to={`/ilan/${ilan.id}`}
-                          className="bg-white/10 hover:bg-white/20 backdrop-blur border border-white/10 rounded-xl p-3 transition-all group"
-                        >
-                          {ilan.gorseller?.[0] ? (
-                            <div className="aspect-video rounded-lg overflow-hidden mb-2">
-                              <img src={ilan.gorseller[0]} alt={ilan.baslik}
-                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                   loading="lazy" />
-                            </div>
-                          ) : (
-                            <div className="aspect-video rounded-lg bg-white/5 flex items-center justify-center mb-2">
-                              <span className="material-symbols-outlined text-white/30 text-2xl">home</span>
-                            </div>
-                          )}
-                          <p className="text-white text-xs font-semibold line-clamp-1 font-headline">{ilan.baslik}</p>
-                          <p className="text-secondary-container text-xs font-bold mt-0.5 font-headline">
-                            {ilan.fiyat ? `₺${ilan.fiyat.toLocaleString('tr-TR')}` : (lang === 'en' ? 'Ask price' : 'Fiyat sorun')}
-                          </p>
-                          <p className="text-white/50 text-[10px] mt-0.5 font-body">{ilan.sehir}</p>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-48 text-center">
-                      <span className="material-symbols-outlined text-white/20 text-5xl mb-3">storefront</span>
-                      <p className="text-white/60 text-sm font-medium font-headline">{lang === 'en' ? 'No listings yet' : 'Henüz ilan yok'}</p>
-                      <p className="text-white/30 text-xs mt-1 font-body">{lang === 'en' ? 'Listings will appear here automatically' : 'İlanlar buraya otomatik eklenecek'}</p>
-                      <Link to="/satici-formu"
-                            className="mt-4 bg-primary hover:bg-primary-container text-on-primary text-xs font-bold px-4 py-2 rounded-full transition-colors font-headline">
-                        {lang === 'en' ? 'Post the First Listing' : 'İlk İlanı Siz Verin'}
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -513,17 +525,17 @@ export default function HomePage() {
         {/* ── Flaş Fırsatlar ───────────────────────────────── */}
         <FlashDealsCarousel />
 
-        {/* ── Öne Çıkan İlanlar ────────────────────────────── */}
-        {sonIlanlar.length > 0 && (
+        {/* ── Son Eklenen İlanlar ──────────────────────────── */}
+        {sonIlanlar.length > 6 && (
           <section className="py-14 md:py-20 bg-surface-container-lowest">
             <div className="max-w-7xl mx-auto px-4">
               <div className="flex items-end justify-between gap-6 mb-8">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-extrabold text-on-surface font-headline">
-                    Öne Çıkan İlanlar
+                    {t('home.latestTitle')}
                   </h2>
                   <p className="text-on-surface-variant mt-1 font-body text-sm">
-                    Farklı kategorilerden seçili ilanlar
+                    {t('home.latestDesc')}
                   </p>
                 </div>
                 <Link
@@ -534,7 +546,7 @@ export default function HomePage() {
                 </Link>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {sonIlanlar.slice(0, 12).map((ilan) => (
+                {sonIlanlar.slice(6, 18).map((ilan) => (
                   <IlanMiniCard key={ilan.id} ilan={ilan} />
                 ))}
               </div>
