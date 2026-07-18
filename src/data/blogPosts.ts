@@ -146,4 +146,15 @@ export const BLOG_POSTS: BlogPost[] = [
     yazar: 'ModülerPazar Editörü',
     kapakGorseli: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=500&fit=crop',
   },
+  {
+    id: 13,
+    slug: 'prefabrik-evlerde-125-cm-aks-sistemi',
+    baslik: 'Prefabrik Evler Neden Hep 125 cm\'nin Katları Ölçülerde Üretilir?',
+    ozet: 'Prefabrik ev kataloglarındaki oda ve genişlik ölçüleri neden hep 125 cm\'nin katları? Türk prefabrik sektörünün üzerine kurulu olduğu sessiz standardı — 125 cm aks sistemini — levha ölçüsünden nakliyeye ve montaj hızına kadar açıklıyoruz.',
+    kategori: 'prefabrik',
+    tarih: '2026-06-12',
+    okumaSuresi: 6,
+    yazar: 'ModülerPazar Editörü',
+    kapakGorseli: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&h=500&fit=crop',
+  },
 ];
