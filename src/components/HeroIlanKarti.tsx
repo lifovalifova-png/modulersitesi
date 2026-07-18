@@ -14,10 +14,10 @@ export default function HeroIlanKarti({ ilan }: { ilan: Ilan }) {
   return (
     <Link
       to={`/ilan/${ilan.id}`}
-      className="group flex gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-2.5 transition"
+      className="group flex gap-3.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3 transition"
     >
-      {/* Foto — sol, 96px kare */}
-      <div className="flex-none w-24 h-24 rounded-lg overflow-hidden bg-white/5">
+      {/* Foto — sol, 128px kare */}
+      <div className="flex-none w-32 h-32 rounded-lg overflow-hidden bg-white/5">
         {img ? (
           <img
             src={img}
@@ -32,11 +32,11 @@ export default function HeroIlanKarti({ ilan }: { ilan: Ilan }) {
 
       {/* İçerik — sağ */}
       <div className="flex flex-col min-w-0 flex-1 py-0.5">
-        <h3 className="font-headline font-bold text-sm text-white leading-snug line-clamp-2">
+        <h3 className="font-headline font-bold text-base text-white leading-snug line-clamp-2">
           {ilan.baslik}
         </h3>
 
-        <span className="mt-1 font-headline font-semibold text-sm text-primary-container">
+        <span className="mt-1.5 font-headline font-bold text-lg text-primary-container">
           {formatFiyat(fiyat)}
         </span>
 

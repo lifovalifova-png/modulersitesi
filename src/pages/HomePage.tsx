@@ -320,13 +320,13 @@ export default function HomePage() {
             </div>
           )}
 
-          <div className="relative max-w-7xl mx-auto px-4 py-12 md:py-16">
+          <div className="relative max-w-7xl mx-auto px-4 py-8 md:py-10">
             {/* ── ÜST BLOK ─────────────────────────────────── */}
-            <div className="max-w-3xl mb-10 md:mb-12">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight font-headline">
+            <div className="max-w-3xl mb-6 md:mb-8">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white mb-2.5 leading-tight font-headline">
                 {t('hero.title')}
               </h1>
-              <p className="text-base md:text-lg text-white/70 mb-6 font-body leading-relaxed">
+              <p className="text-sm md:text-base text-white/70 mb-5 font-body leading-relaxed">
                 {t('hero.subtitle')}
               </p>
 
@@ -374,42 +374,45 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* AI Mini Input — yalnız flag açıkken ince/düşük-görünürlük satır */}
+              {/* AI Asistanı — ikincil ama fark edilir vurgulu kutu */}
               {flags.aiAsistan && (
-                <>
-                  <form onSubmit={handleAsk} className="mt-3 flex gap-2">
-                    <div className="relative flex-1">
-                      <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" aria-hidden="true" />
-                      <input
-                        type="text"
-                        value={aiQuery}
-                        onChange={(e) => setAiQuery(e.target.value)}
-                        placeholder={aiRemaining === 0 ? t('ai.placeholderExhausted') : t('ai.placeholder')}
-                        disabled={aiRemaining === 0}
-                        aria-label="AI asistana soru sor"
-                        className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white/80 placeholder-white/30 font-body focus:outline-none focus:ring-1 focus:ring-primary/60 focus:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                    </div>
+                <div className="mt-4 bg-white/10 border border-white/15 rounded-xl p-3.5">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Sparkles className="w-4 h-4 text-primary-container" aria-hidden="true" />
+                    <span className="text-xs font-bold text-white font-headline">
+                      {lang === 'en' ? 'AI Assistant — Describe your project' : 'Yapay Zeka Asistanı — Projenizi anlatın'}
+                    </span>
+                  </div>
+                  <form onSubmit={handleAsk} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={aiQuery}
+                      onChange={(e) => setAiQuery(e.target.value)}
+                      placeholder={aiRemaining === 0 ? t('ai.placeholderExhausted') : t('ai.placeholder')}
+                      disabled={aiRemaining === 0}
+                      aria-label="AI asistana soru sor"
+                      className="flex-1 min-w-0 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-xs text-white placeholder-white/40 font-body focus:outline-none focus:ring-1 focus:ring-primary focus:bg-white/15 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
                     <button
                       type="submit"
                       disabled={!aiQuery.trim() || aiLoading || aiRemaining === 0}
                       aria-label={t('ai.btnAsk')}
-                      className="flex-shrink-0 flex items-center gap-1.5 text-white/50 hover:text-white/80 px-3 py-2 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed text-xs whitespace-nowrap font-body"
+                      className="flex-shrink-0 flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white px-3.5 py-2 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed text-xs whitespace-nowrap font-headline font-semibold"
                     >
                       {aiLoading
-                        ? <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                        ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         : <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                       }
                       <span className="hidden sm:inline">{t('ai.btnAsk')}</span>
                     </button>
                   </form>
-                  <p className="mt-1.5 text-[11px] text-white/30 font-body">
+                  <p className="mt-1.5 text-[11px] text-white/40 font-body">
                     {aiRemaining === 0
                       ? t('ai.queryExhausted')
                       : t('ai.queryRemaining').replace('{n}', String(aiRemaining))
                     }
                   </p>
-                </>
+                </div>
               )}
             </div>
 
@@ -450,7 +453,7 @@ export default function HomePage() {
                 </div>
 
                 {sonIlanlar.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {sonIlanlar.slice(0, 6).map((ilan) => (
                       <HeroIlanKarti key={ilan.id} ilan={ilan} />
                     ))}
