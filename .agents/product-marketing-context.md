@@ -100,11 +100,12 @@ The vertical-specific marketplace for modular construction in Turkey — focused
 
 ### Earned
 1. **LinkedIn (TR + EN)** — Active, targeted at firm owners and contractors
-2. **Sector publications** — Yapı Magazin, İnşaat Tek, Emlak Kulisi (PR placements)
-3. **Verified Customer Reviews** — Long-term moat for trust
+2. **Instagram (TR)** — Active since May 2026
+3. **Sector publications** — Yapı Magazin, İnşaat Tek, Emlak Kulisi (PR placements)
+4. **Verified Customer Reviews** — Long-term moat for trust
 
 ### Disabled / Not Pursuing
-1. **Instagram & Facebook** — Not yet opened (Phase 1 leftover)
+1. **Facebook** — Not yet opened (Phase 1 leftover)
 2. **Paid Ads** — Not until product-market fit on organic side
 3. **Google Display** — Not aligned with audience search behavior
 
