@@ -15,6 +15,7 @@ import {
   setDoc,
   arrayUnion,
   serverTimestamp,
+  getDoc,
   getDocs,
   query,
   where,
@@ -2282,6 +2283,7 @@ interface BlogForm {
   uyariMetni:    string;
   ekMetin:       string;
   yayinda:       boolean;
+  icerik:        string;   // blog/{slug}.icerik — yazının gövdesi (Markdown)
 }
 
 const EMPTY_BLOG_FORM: BlogForm = {
@@ -2290,6 +2292,7 @@ const EMPTY_BLOG_FORM: BlogForm = {
   uyariMetni:    '',
   ekMetin:       '',
   yayinda:       true,
+  icerik:        '',
 };
 
 function BlogTab() {
@@ -2297,6 +2300,8 @@ function BlogTab() {
   const [editing,  setEditing]  = useState<BlogPost | null>(null);
   const [form,     setForm]     = useState<BlogForm>(EMPTY_BLOG_FORM);
   const [saving,   setSaving]   = useState(false);
+  const [originalIcerik, setOriginalIcerik] = useState('');   // blog/{slug}.icerik yükleme anındaki değer (değişti mi kıyası için)
+  const [icerikLoading,  setIcerikLoading]  = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'blogSettings'), (snap) => {
@@ -2310,7 +2315,7 @@ function BlogTab() {
     return unsub;
   }, []);
 
-  function openEdit(post: BlogPost) {
+  async function openEdit(post: BlogPost) {
     const saved = settings[post.slug];
     setEditing(post);
     setForm({
@@ -2319,7 +2324,21 @@ function BlogTab() {
       uyariMetni:    saved?.uyariMetni    ?? '',
       ekMetin:       saved?.ekMetin       ?? '',
       yayinda:       saved?.yayinda       ?? true,
+      icerik:        '',
     });
+    // Mevcut gövdeyi blog/{slug} dökümanından yükle (döküman yoksa boş kalır)
+    setOriginalIcerik('');
+    setIcerikLoading(true);
+    try {
+      const snap = await getDoc(doc(db, 'blog', post.slug));
+      const mevcut = snap.exists() ? ((snap.data() as { icerik?: string }).icerik ?? '') : '';
+      setOriginalIcerik(mevcut);
+      setForm((p) => ({ ...p, icerik: mevcut }));
+    } catch {
+      // erişilemezse boş bırak
+    } finally {
+      setIcerikLoading(false);
+    }
   }
 
   const setField = <K extends keyof BlogForm>(k: K, v: BlogForm[K]) =>
@@ -2338,6 +2357,13 @@ function BlogTab() {
         yayinda:       form.yayinda,
         guncelleme:    serverTimestamp(),
       });
+
+      // blog/{slug}: yayın durumu (aktif) her zaman senkronlanır → "yayından kaldır"
+      // gerçekten public okumayı kapatır (rules:157). icerik yalnız değiştiyse yazılır.
+      const blogPayload: { aktif: boolean; icerik?: string } = { aktif: form.yayinda };
+      if (form.icerik !== originalIcerik) blogPayload.icerik = form.icerik;
+      await setDoc(doc(db, 'blog', editing.slug), blogPayload, { merge: true });
+
       toast.success('Blog ayarları kaydedildi.');
       setEditing(null);
     } catch {
@@ -2438,6 +2464,26 @@ function BlogTab() {
             {/* Scrollable içerik */}
             <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
 
+              {/* 0 — Gövde (blog/{slug}.icerik) */}
+              <div>
+                <label className="flex items-center gap-2 text-xs font-semibold text-gray-800 mb-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-gray-800 flex-shrink-0" />
+                  İçerik (Markdown)
+                  <span className="font-normal text-gray-400">(yazının gövdesi)</span>
+                </label>
+                <textarea
+                  value={form.icerik}
+                  onChange={(e) => setField('icerik', e.target.value)}
+                  rows={12}
+                  disabled={icerikLoading}
+                  placeholder={icerikLoading ? 'İçerik yükleniyor…' : 'Yazının tam gövdesi (Markdown)…'}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:bg-gray-50 disabled:text-gray-400"
+                />
+                {icerikLoading && (
+                  <p className="text-[11px] text-gray-400 mt-1">Mevcut içerik yükleniyor…</p>
+                )}
+              </div>
+
               {/* 1 — Öne Çıkan Bilgi */}
               <div>
                 <label className="flex items-center gap-2 text-xs font-semibold text-emerald-700 mb-1.5">
@@ -2513,7 +2559,7 @@ function BlogTab() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || icerikLoading}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-60 transition"
               >
                 <Save className="w-4 h-4" />
