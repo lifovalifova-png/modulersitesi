@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Calendar, ChevronRight } from 'lucide-react';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SEOMeta from '../components/SEOMeta';
-import { BLOG_POSTS, type BlogKategori } from '../data/blogPosts';
+import { db } from '../lib/firebase';
+import { BLOG_POSTS, type BlogKategori, type BlogPost } from '../data/blogPosts';
 
 /* ── Kategori renkleri ──────────────────────────────────────── */
 const KAT_COLORS: Record<BlogKategori, string> = {
@@ -41,12 +43,36 @@ function formatTarih(tarih: string) {
 /* ── Component ──────────────────────────────────────────────── */
 export default function BlogPage() {
   const [activeFilter, setActiveFilter] = useState<FilterKey>('hepsi');
+  // İlk render SENKRON: statik tam liste (SEO — crawler yazı linklerini ilk boyamada görür).
+  const [posts, setPosts] = useState<BlogPost[]>(BLOG_POSTS);
+
+  // Mount sonrası: yalnız aktif (yayında) yazılara daralt + başlık override uygula.
+  // Sorgu where('aktif','==',true) ile kısıtlı olduğundan rules:157 tarafından İZİNLİ.
+  useEffect(() => {
+    (async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'blog'), where('aktif', '==', true)));
+        const aktif = new Map<string, string | undefined>();  // slug → baslik override (yoksa undefined)
+        snap.forEach((d) => aktif.set(d.id, (d.data() as { baslik?: string }).baslik));
+        setPosts(
+          BLOG_POSTS
+            .filter((p) => aktif.has(p.slug))                       // dönmeyen slug = gizli
+            .map((p) => {
+              const ov = aktif.get(p.slug);
+              return ov ? { ...p, baslik: ov } : p;                 // baslik override varsa uygula
+            }),
+        );
+      } catch {
+        // Hata → başlangıç state (tam statik liste) kalsın; ekstra fallback yok.
+      }
+    })();
+  }, []);
 
   const filtered = useMemo(() =>
     activeFilter === 'hepsi'
-      ? BLOG_POSTS
-      : BLOG_POSTS.filter((p) => p.kategori === activeFilter),
-    [activeFilter],
+      ? posts
+      : posts.filter((p) => p.kategori === activeFilter),
+    [activeFilter, posts],
   );
 
   return (

@@ -65,6 +65,7 @@ export default function BlogDetayPage() {
   const navigate     = useNavigate();
   const [copied, setCopied] = useState(false);
   const [icerik, setIcerik] = useState<string | null>(null);
+  const [firestoreBaslik, setFirestoreBaslik] = useState<string | null>(null);   // blog/{slug}.baslik override (yoksa statik başlık)
   const [icerikLoading, setIcerikLoading] = useState(true);
   const [blogSetting, setBlogSetting] = useState<{
     fiyatBilgisi:  string;
@@ -78,9 +79,13 @@ export default function BlogDetayPage() {
   useEffect(() => {
     if (!slug) return;
     setIcerikLoading(true);
-    // İçeriği Firestore "blog/{slug}" koleksiyonundan çek
+    // İçerik + başlık override'ı Firestore "blog/{slug}" koleksiyonundan çek
     getDoc(doc(db, 'blog', slug)).then((snap) => {
-      if (snap.exists()) setIcerik((snap.data() as { icerik: string }).icerik ?? null);
+      if (snap.exists()) {
+        const data = snap.data() as { icerik?: string; baslik?: string };
+        setIcerik(data.icerik ?? null);
+        if (data.baslik) setFirestoreBaslik(data.baslik);
+      }
       setIcerikLoading(false);
     }).catch(() => setIcerikLoading(false));
     // Blog ayarlarını "blogSettings/{slug}" den çek
@@ -113,6 +118,9 @@ export default function BlogDetayPage() {
     );
   }
 
+  // Görüntülenen başlık: Firestore override varsa o, yoksa statik başlık
+  const gosterilenBaslik = firestoreBaslik ?? post.baslik;
+
   const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   const handleCopy = async () => {
@@ -126,15 +134,15 @@ export default function BlogDetayPage() {
     }
   };
 
-  const waUrl = `https://wa.me/?text=${encodeURIComponent(post.baslik + ' ' + pageUrl)}`;
-  const twUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.baslik)}&url=${encodeURIComponent(pageUrl)}`;
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(gosterilenBaslik + ' ' + pageUrl)}`;
+  const twUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(gosterilenBaslik)}&url=${encodeURIComponent(pageUrl)}`;
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
 
       <SEOMeta
-        title={post.baslik}
+        title={gosterilenBaslik}
         description={post.ozet}
         image={post.kapakGorseli}
         url={`/blog/${post.slug}`}
@@ -147,7 +155,7 @@ export default function BlogDetayPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'BlogPosting',
-          headline: post.baslik,
+          headline: gosterilenBaslik,
           description: post.ozet,
           image: post.kapakGorseli,
           datePublished: post.tarih,
@@ -176,7 +184,7 @@ export default function BlogDetayPage() {
         <div className="relative h-56 md:h-72 bg-gray-800 overflow-hidden">
           <img
             src={post.kapakGorseli}
-            alt={post.baslik}
+            alt={gosterilenBaslik}
             className="absolute inset-0 w-full h-full object-cover opacity-60"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
@@ -188,13 +196,13 @@ export default function BlogDetayPage() {
               <ChevronRight className="w-3 h-3" />
               <Link to="/blog" className="hover:text-white transition">Blog</Link>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-white line-clamp-1">{post.baslik}</span>
+              <span className="text-white line-clamp-1">{gosterilenBaslik}</span>
             </nav>
             <span className={`self-start text-xs font-semibold px-2.5 py-1 rounded-full mb-2 ${KAT_COLORS[post.kategori]}`}>
               {KAT_LABELS[post.kategori]}
             </span>
             <h1 className="text-xl md:text-3xl font-bold text-white leading-snug max-w-3xl">
-              {post.baslik}
+              {gosterilenBaslik}
             </h1>
           </div>
         </div>
