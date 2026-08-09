@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 9002 --host 0.0.0.0",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && tsx --tsconfig tsconfig.app.json scripts/prerender-blog.ts",
     "build:prod": "tsc -b && BUILD_MODE=prod vite build",
     "lint": "eslint .",
     "test": "vitest",

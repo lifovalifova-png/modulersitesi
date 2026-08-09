@@ -1,3 +1,4 @@
+// UYARI: Bu bileşenin head çıktısı scripts/prerender-blog.ts tarafından elle taklit edilir — burada değişiklik yaparsan orayı da güncelle.
 import { Helmet } from 'react-helmet-async';
 
 const BASE_URL      = 'https://www.modulerpazar.com';
