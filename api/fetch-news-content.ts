@@ -1,3 +1,6 @@
+import { requireAdmin } from './_lib/requireAdmin';
+import { safeUrl } from './_lib/safeUrl';
+
 export const config = { runtime: 'edge' };
 
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
@@ -154,12 +157,18 @@ export default async function handler(req: Request) {
     return new Response('Method not allowed', { status: 405 });
   }
 
+  const gate = await requireAdmin(req);
+  if (!gate.ok) return jsonResponse({ error: gate.error }, gate.status);
+
   let url = '';
 
   try {
     const body = await req.json();
     url = body.url ?? '';
     if (!url) return jsonResponse({ error: 'URL gerekli' }, 400);
+
+    const safe = safeUrl(url);
+    if (!safe.ok) return jsonResponse({ error: safe.error }, 400);
 
     const API_KEY = process.env.ANTHROPIC_API_KEY;
     if (!API_KEY) return jsonResponse({ error: 'ANTHROPIC_API_KEY tanımlı değil' }, 500);
@@ -168,13 +177,14 @@ export default async function handler(req: Request) {
 
     let pageText = '';
     try {
-      const pageRes = await fetch(url, {
+      const pageRes = await fetch(safe.url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.8',
         },
         signal: AbortSignal.timeout(8000),
+        redirect: 'manual',
       });
 
       if (!pageRes.ok) {

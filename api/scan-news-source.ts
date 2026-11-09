@@ -1,3 +1,6 @@
+import { requireAdmin } from './_lib/requireAdmin';
+import { safeUrl } from './_lib/safeUrl';
+
 export const config = { runtime: 'edge' };
 
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
@@ -55,12 +58,18 @@ export default async function handler(req: Request) {
     return new Response('Method not allowed', { status: 405 });
   }
 
+  const gate = await requireAdmin(req);
+  if (!gate.ok) return json({ error: gate.error }, gate.status);
+
   try {
     const { sourceUrl, anahtar_kelimeler } = await req.json();
 
     if (!sourceUrl || typeof sourceUrl !== 'string') {
       return json({ error: 'sourceUrl gereklidir.' }, 400);
     }
+
+    const safe = safeUrl(sourceUrl);
+    if (!safe.ok) return json({ error: safe.error }, 400);
 
     const API_KEY = process.env.ANTHROPIC_API_KEY;
     if (!API_KEY) return json({ error: 'ANTHROPIC_API_KEY tanımlı değil.' }, 500);
@@ -71,13 +80,14 @@ export default async function handler(req: Request) {
 
     let pageText = '';
     try {
-      const r = await fetch(sourceUrl, {
+      const r = await fetch(safe.url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.8',
         },
         signal: AbortSignal.timeout(10_000),
+        redirect: 'manual',
       });
       if (!r.ok) {
         console.error(`[scan-news] Source fetch failed: ${sourceUrl} HTTP ${r.status}`);
