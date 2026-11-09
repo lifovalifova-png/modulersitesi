@@ -43,3 +43,6 @@ package.json.bak
 
 # graphify knowledge-graph output (yerel; hook kaldırıldı)
 graphify-out/
+
+# Yerel denetim/çalışma dokümanları — repoya dahil değil
+docs/denetim/

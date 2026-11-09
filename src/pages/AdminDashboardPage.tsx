@@ -3249,9 +3249,14 @@ function KaynaklarTabContent() {
     if (!kaynak.id) return;
     setTaramaYapilan(kaynak.id);
     try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        toast.error('Oturum süresi doldu, tekrar giriş yap.');
+        return;
+      }
       const r = await fetch('/api/scan-news-source', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ sourceUrl: kaynak.url, anahtar_kelimeler: kaynak.anahtar_kelimeler ?? [] }),
       });
       const data = await r.json();
@@ -3528,9 +3533,14 @@ function HaberlerTab() {
     setAiFetching(true);
     setAiFetchMsg(null);
     try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        toast.error('Oturum süresi doldu, tekrar giriş yap.');
+        return;
+      }
       const r = await fetch('/api/fetch-news-content', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ url: aiFetchUrl.trim() }),
       });
       const data = await r.json();
