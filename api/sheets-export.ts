@@ -1,3 +1,5 @@
+import { requireAdmin } from './_lib/requireAdmin';
+
 export const config = { runtime: 'edge' };
 
 const ALLOWED_ORIGINS = [
@@ -30,6 +32,16 @@ function json(data: unknown, status: number, req: Request) {
   });
 }
 
+const ROW_FIELDS = ['ad', 'telefon', 'email', 'kategori', 'sehir', 'butce', 'tarih', 'status'] as const;
+const MAX_ROWS = 500;
+const MAX_LEN = 200;
+
+/* Sheets formül enjeksiyonu: = + - @ ile başlayan değerin başına ' ekle */
+function cell(v: unknown): string {
+  const str = (v == null ? '' : String(v)).slice(0, MAX_LEN);
+  return /^[=+\-@]/.test(str) ? `'${str}` : str;
+}
+
 export default async function handler(req: Request) {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders(req) });
@@ -39,12 +51,26 @@ export default async function handler(req: Request) {
     return json({ error: 'Yalnızca POST desteklenmektedir.' }, 405, req);
   }
 
-  let body: Record<string, unknown>;
+  const gate = await requireAdmin(req);
+  if (!gate.ok) return json({ error: gate.error }, gate.status, req);
+
+  let body: unknown;
   try {
-    body = await req.json() as Record<string, unknown>;
+    body = await req.json();
   } catch {
-    return json({ error: 'Geçersiz JSON gövdesi.' }, 400, req);
+    return json({ error: 'Geçersiz istek.' }, 400, req);
   }
+
+  const rawRows = (body as { rows?: unknown } | null)?.rows;
+  if (!Array.isArray(rawRows) || rawRows.length < 1 || rawRows.length > MAX_ROWS) {
+    return json({ error: 'Geçersiz istek.' }, 400, req);
+  }
+  const rows = rawRows.map((r) => {
+    const src = (r && typeof r === 'object' ? r : {}) as Record<string, unknown>;
+    const out: Record<string, string> = {};
+    for (const k of ROW_FIELDS) out[k] = cell(src[k]);
+    return out;
+  });
 
   const webhookUrl = process.env.SHEETS_WEBHOOK_URL;
   if (!webhookUrl) {
@@ -52,25 +78,19 @@ export default async function handler(req: Request) {
     return json({ error: 'Sunucu yapılandırma hatası.' }, 500, req);
   }
 
-  const { webhookUrl: _discard, ...payload } = body;
-  void _discard;
-
   try {
     const resp = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ rows }),
     });
-
-    const text = await resp.text();
-    let gasData: unknown = text;
-    try { gasData = JSON.parse(text); } catch { /* ham text döner */ }
-
-    return json({ ok: true, gasResponse: gasData }, 200, req);
+    if (!resp.ok) {
+      console.error('Sheets webhook HTTP', resp.status);
+      return json({ error: 'Aktarım başarısız.' }, 502, req);
+    }
+    return json({ ok: true, count: rows.length }, 200, req);
   } catch (err) {
-    return json({
-      error: 'Google Apps Script webhook hatası.',
-      detail: String(err),
-    }, 502, req);
+    console.error('Sheets webhook hatası:', err);
+    return json({ error: 'Aktarım başarısız.' }, 502, req);
   }
 }
