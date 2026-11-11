@@ -2756,9 +2756,14 @@ function RaporTab() {
         email:    t.email,
       }));
 
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        toast.error('Oturum süresi doldu, tekrar giriş yap.');
+        return;
+      }
       const resp = await fetch('/api/sheets-export', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body:    JSON.stringify({ rows }),
       });
 

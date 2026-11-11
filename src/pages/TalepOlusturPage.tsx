@@ -169,22 +169,6 @@ export default function TalepOlusturPage() {
         // Email bildirimi gönderilemedi — talep yine de kaydedildi
       }
 
-      /* Google Sheets webhook — fire & forget, hata oluşursa sessizce geç */
-      void fetch('/api/sheets-export', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          kategori: form.kategori,
-          sehir:    form.sehir,
-          butce:    form.butce,
-          tarih:    new Date().toISOString(),
-          ad:       sanitizeText(form.ad, 100),
-          telefon:  form.telefon.trim(),
-          email:    form.email.trim().toLowerCase(),
-          status:   'beklemede',
-        }),
-      }).catch(() => { /* webhook hatası kullanıcıyı etkilemez */ });
-
       trackEvent('talep_olusturuldu', { kategori: form.kategori, sehir: form.sehir });
       // Günlük sayacı güncelle
       const prev = Number(localStorage.getItem(LS_KEY) ?? 0);
