@@ -36,7 +36,7 @@ export default function EtkinlikDetayPage() {
     (async () => {
       setLoading(true);
       // Try by slug first
-      let snap = await getDocs(query(
+      const snap = await getDocs(query(
         collection(db, 'etkinlikler'),
         where('slug', '==', slug),
         limit(1),

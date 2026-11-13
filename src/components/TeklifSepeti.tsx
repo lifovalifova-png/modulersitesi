@@ -163,7 +163,7 @@ export default function TeklifSepeti() {
   function validate() {
     const e: Record<string, string> = {};
     if (!form.ad.trim())                              e.ad = t('basket.nameError');
-    if (!/^[0-9+\s()\-]{10,}$/.test(form.telefon))  e.telefon = t('basket.phoneError');
+    if (!/^[0-9+\s()-]{10,}$/.test(form.telefon))  e.telefon = t('basket.phoneError');
     if (!form.kvkk)                                   e.kvkk = t('basket.kvkkError');
     setErrors(e);
     return Object.keys(e).length === 0;

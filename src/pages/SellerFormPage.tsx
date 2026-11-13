@@ -180,7 +180,7 @@ export default function SellerFormPage() {
       if (!form.firmaAdi.trim())                      e.firmaAdi    = 'Firma adı zorunludur.';
       if (!/^\d{10}$/.test(form.vergiNo))             e.vergiNo     = 'Tam olarak 10 rakam giriniz.';
       if (!form.firmaYapisi)                          e.firmaYapisi = 'Firma yapısı seçiniz.';
-      if (!/^[0-9+\s()\-]{10,}$/.test(form.telefon)) e.telefon     = 'Geçerli bir telefon giriniz.';
+      if (!/^[0-9+\s()-]{10,}$/.test(form.telefon)) e.telefon     = 'Geçerli bir telefon giriniz.';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.eposta)) e.eposta = 'Geçerli bir e-posta giriniz.';
       if (!form.sehir)                                e.sehir       = 'Şehir seçimi zorunludur.';
     }
