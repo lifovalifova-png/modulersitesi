@@ -73,8 +73,6 @@ export default function FiyatHesaplaPage() {
   const [prices, setPrices] = useState<Record<string, number>>(DEFAULT_PRICES);
   const [loading, setLoading] = useState(false);
 
-  if (flagsLoading || !flags.fiyatHesaplama) return null;
-
   /* Firestore'dan güncel fiyatları çek */
   useEffect(() => {
     getDoc(doc(db, 'settings', 'fiyatlar')).then((snap) => {
@@ -83,6 +81,8 @@ export default function FiyatHesaplaPage() {
       }
     });
   }, []);
+
+  if (flagsLoading || !flags.fiyatHesaplama) return null;
 
   function handleHesapla(e: React.FormEvent) {
     e.preventDefault();

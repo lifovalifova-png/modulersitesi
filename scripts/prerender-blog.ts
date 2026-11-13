@@ -21,7 +21,7 @@ import { renderIcerik } from '../src/lib/renderIcerik';
 
 const BASE_URL = 'https://www.modulerpazar.com';
 
-/** HTML attribute/​text değeri için minimal escape (tırnak & vb. güvenliği) */
+/** HTML attribute/text değeri için minimal escape (tırnak & vb. güvenliği) */
 function esc(s: string): string {
   return s
     .replace(/&/g, '&amp;')

@@ -58,7 +58,7 @@ function QuoteModal({ ilan, type, onClose }: QuoteModalProps) {
   function validate() {
     const e: Record<string, string> = {};
     if (!form.name.trim())                         e.name  = t('listing.nameError');
-    if (!/^[0-9+\s()\-]{10,}$/.test(form.phone)) e.phone = t('listing.phoneError');
+    if (!/^[0-9+\s()-]{10,}$/.test(form.phone)) e.phone = t('listing.phoneError');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = t('listing.emailError');
     if (!form.kvkk)                                e.kvkk  = t('listing.kvkkError');
     setErrors(e);

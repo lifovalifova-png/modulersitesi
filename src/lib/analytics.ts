@@ -32,6 +32,7 @@ export function loadGA(): void {
   document.head.appendChild(script);
 
   window.dataLayer = window.dataLayer || [];
+  // eslint-disable-next-line prefer-rest-params -- gtag.js dataLayer'a arguments nesnesi bekler
   window.gtag = function () { window.dataLayer!.push(arguments); };
   window.gtag('js', new Date());
   window.gtag('config', GA_ID);
